@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://diodv26ariao0"]
+
+[ext_resource type="Script" path="res://Core/TheaterNode.gd" id="1_4l07k"]
+[ext_resource type="PackedScene" uid="uid://07g01eb4b6nx" path="res://Core/TheaterNodeComponents/StageNode.tscn" id="1_hujwy"]
+[ext_resource type="PackedScene" uid="uid://cf8ybpujcepfc" path="res://Core/TheaterNodeComponents/GUINode.tscn" id="2_24c8g"]
+
+[node name="TheaterNode" type="Node"]
+script = ExtResource("1_4l07k")
+act_script_file = "res://TestAssets/script/test_scene_1.tsc"
+
+[node name="StageNode" parent="." instance=ExtResource("1_hujwy")]
+
+[node name="GUINode" parent="." instance=ExtResource("2_24c8g")]
+
+[connection signal="end_of_script" from="." to="." method="_on_end_of_script"]
+[connection signal="can_continue" from="GUINode" to="." method="_on_gui_node_can_continue"]

@@ -1,0 +1,110 @@
+[gd_scene load_steps=8 format=3 uid="uid://cb1ysu6lfx171"]
+
+[ext_resource type="Script" path="res://Core/TheaterNodeComponents/GUINodeComponents/DialogueNode.gd" id="1_p3qt0"]
+[ext_resource type="Texture2D" uid="uid://bdaj0mcn74hkc" path="res://TestAssets/text_window.png" id="2_3cfxu"]
+[ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://TestAssets/LiberationSerif-Regular.ttf" id="3_o2lqq"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4r7j3"]
+texture = ExtResource("2_3cfxu")
+texture_margin_left = 30.0
+texture_margin_top = 15.0
+texture_margin_right = 30.0
+texture_margin_bottom = 15.0
+expand_margin_left = 7.0
+expand_margin_top = 7.0
+expand_margin_right = 7.0
+expand_margin_bottom = 7.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_vlps7"]
+font = ExtResource("3_o2lqq")
+font_size = 24
+font_color = Color(0.160784, 0.054902, 0.0509804, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ow1pm"]
+texture = ExtResource("2_3cfxu")
+texture_margin_left = 30.0
+texture_margin_top = 30.0
+texture_margin_right = 30.0
+texture_margin_bottom = 30.0
+expand_margin_left = 7.0
+expand_margin_top = 7.0
+expand_margin_right = 7.0
+expand_margin_bottom = 7.0
+
+[sub_resource type="LabelSettings" id="LabelSettings_dfva0"]
+font = ExtResource("3_o2lqq")
+font_size = 24
+font_color = Color(0.160784, 0.054902, 0.0509804, 1)
+
+[node name="DialogueNode" type="Control"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_top = -14.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+script = ExtResource("1_p3qt0")
+
+[node name="Speaker" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -255.0
+offset_right = -262.0
+offset_bottom = -194.0
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_4r7j3")
+
+[node name="SpeakerLabel" type="Label" parent="Speaker"]
+layout_mode = 2
+text = "Speaker"
+label_settings = SubResource("LabelSettings_vlps7")
+horizontal_alignment = 1
+
+[node name="Dialogue" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(800, 200)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -200.0
+offset_right = 400.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxTexture_ow1pm")
+
+[node name="DialogueLabel" type="Label" parent="Dialogue"]
+layout_mode = 2
+size_flags_vertical = 1
+text = "Dialogue Line"
+label_settings = SubResource("LabelSettings_dfva0")
+autowrap_mode = 3
+
+[node name="CTC_Indicator" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 370.0
+offset_top = -30.0
+offset_right = 370.0
+offset_bottom = -30.0
+grow_vertical = 2
+
+[node name="CTC_Sprite" type="Polygon2D" parent="CTC_Indicator"]
+color = Color(0.160784, 0.054902, 0.0509804, 1)
+polygon = PackedVector2Array(0, 0, 0, 20, 20, 10)
+
+[connection signal="message_completed" from="." to="." method="_on_message_completed"]
+[connection signal="message_paused" from="." to="." method="_on_message_paused"]

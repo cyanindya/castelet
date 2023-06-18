@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://cf8ybpujcepfc"]
+
+[ext_resource type="PackedScene" uid="uid://cb1ysu6lfx171" path="res://Core/TheaterNodeComponents/GUINodeComponents/DialogueNode.tscn" id="1_h0g72"]
+[ext_resource type="Script" path="res://Core/TheaterNodeComponents/GUINode.gd" id="1_lemi2"]
+
+[node name="GUINode" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_lemi2")
+
+[node name="DialogueNode" parent="." instance=ExtResource("1_h0g72")]
+layout_mode = 1
+anchors_preset = 7
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -38.0
+offset_bottom = -38.0
+grow_vertical = 0
+
+[connection signal="request_continue" from="DialogueNode" to="." method="_on_dialogue_node_request_continue"]
