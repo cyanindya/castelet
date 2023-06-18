@@ -14,5 +14,8 @@ export_presets.cfg
 data_*/
 mono_crash.*.json
 
+# Editor-specific ignores
+.vscode/
+
 # Project-specific ignores
 TestAssets/
