@@ -21,16 +21,20 @@ signal request_continue
 
 # In the beginning, set all child nodes to invisible
 func _ready():
+	
+	if CasteletConfig.base_text_speed != null:
+		cps = CasteletConfig.base_text_speed
+	
 	_hide_subcomponents()
 	hide()
 
 
+# Function to hide all sub-components of dialogue node
 func _hide_subcomponents():
 	
 	$CTC_Indicator.hide()
 	$Speaker.hide()
 	$Dialogue/DialogueLabel.hide()
-	
 
 
 # This is the main function to be called every time we want to display the dialogue.
@@ -150,7 +154,7 @@ func _animate_dialogue():
 	
 
 # Dirty input implementation
-func _unhandled_input(event):
+func _unhandled_input(_event):
 	if Input.is_action_just_pressed("ui_accept"):
 #		_tween.play()
 		if _text.visible_characters < _text_length and _pause_locations.is_empty():

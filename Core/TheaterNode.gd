@@ -97,12 +97,40 @@ func _process_command(command : Dictionary):
 		$GUINode.update_dialogue(command)
 	
 	elif (command["type"] == "scene"):
-		pass
 		
+#		var params = (command['data'] as String).split(".")
+#
+#		$StageNode.scene(params[0], params[1])
+
+		# First, clear the stage node from props
+		for nodes in $StageNode.get_children():
+			if nodes is PropNode:
+				$StageNode.remove_child(nodes)
+
+		if command['data'] != "none":
+
+			# Second, grab the relevant prop and change its appearance
+			var prop_params = (command['data'] as String).split(".")
+
+			var prop : PropNode = AssetsDb.props[prop_params[0]]
+			prop.texture = prop.variants[prop_params[1]]
+
+			# Place the prop on stage. If autoscale isn't defined, set to true.
+			# Then if no position is defined, set it to (0.5, 1) by default
+			prop.position.x = get_viewport().get_visible_rect().size.x * 0.5
+			prop.position.y = get_viewport().get_visible_rect().size.y * 1.0
+
+			$StageNode.add_child(prop)
+
+		_unfold_play()
+
+
 	elif (command["type"] == "show"):
+		_unfold_play()
 		pass
 	
 	elif (command["type"] == "hide"):
+		_unfold_play()
 		pass
 	
 	elif (command["type"] == "bgm" or command["type"] == "sfx"):
@@ -116,21 +144,23 @@ func _process_command(command : Dictionary):
 			$StageNode.refresh_audio(command['args'], (command["type"] as String).to_upper())
 		else:
 			$StageNode.play_audio(command["data"], command['args'], (command["type"] as String).to_upper())
-		_unfold_play()
 	
 	elif command["type"] == "window":
-		if command["data"] == "on":
+		if command["data"] == "show" or command["data"] == "on":
 			$GUINode.show_window()
-		elif command["data"] == "off":
+		elif command["data"] == "hide" or command["data"] == "off":
 			$GUINode.hide_window()
 	
 	elif (command["type"] == "pause"):
+		_unfold_play()
 		pass
 	
 	elif (command["type"] == "transition"):
+		_unfold_play()
 		pass
 		
 	elif (command["type"] == "fade"):
+		_unfold_play()
 		pass
 
 
@@ -142,5 +172,10 @@ func _on_end_of_script() -> void:
 
 
 func _on_gui_node_can_continue():
+	if (_current_command_index < _total_command_count):
+		_unfold_play()
+
+
+func _on_stage_node_can_continue():
 	if (_current_command_index < _total_command_count):
 		_unfold_play()

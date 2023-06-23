@@ -6,11 +6,12 @@
 
 [node name="TheaterNode" type="Node"]
 script = ExtResource("1_4l07k")
-act_script_file = "res://TestAssets/script/test_scene_1.tsc"
+act_script_file = "res://TestAssets/script/test_scene_2.tsc"
 
 [node name="StageNode" parent="." instance=ExtResource("1_hujwy")]
 
 [node name="GUINode" parent="." instance=ExtResource("2_24c8g")]
 
 [connection signal="end_of_script" from="." to="." method="_on_end_of_script"]
+[connection signal="can_continue" from="StageNode" to="." method="_on_stage_node_can_continue"]
 [connection signal="can_continue" from="GUINode" to="." method="_on_gui_node_can_continue"]

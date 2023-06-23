@@ -2,15 +2,6 @@ extends Control
 
 signal can_continue
 
-# Called when the node enters the scene tree for the first time.
-func _ready():
-	pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
-	pass
-
 
 # The function to show the dialogue. The process is as follows:
 # - show the dialogue window if it's hidden
@@ -26,6 +17,7 @@ func show_window():
 
 func hide_window():
 	await $DialogueNode.window_transition(1.0, 0.0)
+	print_debug("foo")
 	emit_signal("can_continue")
 	
 func _on_dialogue_node_request_continue():
