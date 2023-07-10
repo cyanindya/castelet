@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://cf8ybpujcepfc"]
+[gd_scene load_steps=4 format=3 uid="uid://cf8ybpujcepfc"]
 
 [ext_resource type="PackedScene" uid="uid://cb1ysu6lfx171" path="res://Core/TheaterNodeComponents/GUINodeComponents/DialogueNode.tscn" id="1_h0g72"]
 [ext_resource type="Script" path="res://Core/TheaterNodeComponents/GUINode.gd" id="1_lemi2"]
+[ext_resource type="PackedScene" uid="uid://ca1dssn5xvet0" path="res://Core/TheaterNodeComponents/GUINodeComponents/BacklogNode.tscn" id="3_mumyu"]
 
 [node name="GUINode" type="Control"]
 layout_mode = 3
@@ -10,6 +11,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 1
 script = ExtResource("1_lemi2")
 
 [node name="DialogueNode" parent="." instance=ExtResource("1_h0g72")]
@@ -21,4 +23,23 @@ offset_top = -38.0
 offset_bottom = -38.0
 grow_vertical = 0
 
+[node name="ButtonContainers" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -69.0
+offset_bottom = 40.0
+grow_horizontal = 0
+alignment = 2
+
+[node name="BacklogButton" type="Button" parent="ButtonContainers"]
+layout_mode = 2
+text = "Backlog"
+
+[node name="BacklogNode" parent="." instance=ExtResource("3_mumyu")]
+visible = false
+layout_mode = 1
+
 [connection signal="request_continue" from="DialogueNode" to="." method="_on_dialogue_node_request_continue"]
+[connection signal="pressed" from="ButtonContainers/BacklogButton" to="." method="_on_backlog_button_pressed"]

@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3 uid="uid://cgmjjwdjdb72i"]
+
+[ext_resource type="Script" path="res://Core/TheaterNodeComponents/GUINodeComponents/SingleDialogueLogNode.gd" id="1_etkmp"]
+[ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://TestAssets/LiberationSerif-Regular.ttf" id="1_yhm4d"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_dxor5"]
+font = ExtResource("1_yhm4d")
+font_size = 27
+font_color = Color(0.254902, 0.0784314, 0.0784314, 1)
+
+[node name="DialogueLog" type="HBoxContainer"]
+size_flags_horizontal = 3
+size_flags_vertical = 0
+theme_override_constants/separation = 30
+script = ExtResource("1_etkmp")
+
+[node name="SpeakerLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_vertical = 0
+text = "Speaker"
+label_settings = SubResource("LabelSettings_dxor5")
+horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="DialogueLabel" type="Label" parent="."]
+custom_minimum_size = Vector2(800, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Dialogue"
+label_settings = SubResource("LabelSettings_dxor5")
+autowrap_mode = 3

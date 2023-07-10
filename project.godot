@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 AssetsDb="*res://Autoload/AssetsDb.tscn"
 CasteletConfig="*res://Autoload/CasteletConfig.tscn"
 InputManager="*res://Autoload/InputManager.tscn"
+BacklogData="*res://Autoload/BacklogData.tscn"
 
 [display]
 
@@ -38,6 +39,13 @@ version_control/autoload_on_startup=true
 skip_dialogue={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194326,"physical_keycode":0,"key_label":0,"unicode":0,"echo":false,"script":null)
+]
+}
+confirm={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":32,"physical_keycode":0,"key_label":0,"unicode":32,"echo":false,"script":null)
+, Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194309,"physical_keycode":0,"key_label":0,"unicode":0,"echo":false,"script":null)
+, Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":1,"position":Vector2(298, 15),"global_position":Vector2(302, 58),"factor":1.0,"button_index":1,"pressed":true,"double_click":false,"script":null)
 ]
 }
 

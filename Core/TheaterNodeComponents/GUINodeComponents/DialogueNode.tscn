@@ -49,6 +49,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 8
 size_flags_vertical = 8
+mouse_filter = 1
 script = ExtResource("1_p3qt0")
 
 [node name="Speaker" type="PanelContainer" parent="."]
@@ -62,6 +63,7 @@ offset_top = -255.0
 offset_right = -262.0
 offset_bottom = -194.0
 grow_vertical = 0
+mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxTexture_4r7j3")
 
 [node name="SpeakerLabel" type="Label" parent="Speaker"]
@@ -83,6 +85,7 @@ offset_top = -200.0
 offset_right = 400.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 1
 theme_override_styles/panel = SubResource("StyleBoxTexture_ow1pm")
 
 [node name="DialogueLabel" type="Label" parent="Dialogue"]
@@ -101,6 +104,7 @@ offset_top = -30.0
 offset_right = 370.0
 offset_bottom = -30.0
 grow_vertical = 2
+mouse_filter = 1
 
 [node name="CTC_Sprite" type="Polygon2D" parent="CTC_Indicator"]
 color = Color(0.160784, 0.054902, 0.0509804, 1)
