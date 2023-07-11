@@ -1,7 +1,7 @@
 extends Control
 
 @onready var _backlog_container = $PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer
-@onready var dialogue_data_node = load("res://Core/TheaterNodeComponents/GUINodeComponents/SingleDialogueLogNode.tscn")
+@onready var dialogue_data_node = load("res://CasteletCore/GUINode/SingleDialogueLogNode.tscn")
 @onready var _scroll_container = $PanelContainer/VBoxContainer/ScrollContainer
 @onready var _scrollbar = $PanelContainer/VBoxContainer/ScrollContainer.get_v_scroll_bar()
 var max_scroll_length = 0
@@ -36,7 +36,7 @@ func _handle_scrollbar_changed():
 func _on_visibility_changed():
 	if visible:
 		CasteletGameManager.toggle_pause(true)
-		InputManager.set_block_signals(true)
+		CasteletInputManager.set_block_signals(true)
 	else:
 		CasteletGameManager.toggle_pause(false)
-		InputManager.set_block_signals(false)
+		CasteletInputManager.set_block_signals(false)

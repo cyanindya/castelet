@@ -25,10 +25,14 @@ signal progress
 
 func _ready():
 
-	# Initialize some internal signal connections
+	# Initialize some signal connections, whether from internal or other nodes
 	enter_standby.connect(_on_standby)
 	toggle_automode.connect(_on_toggle_automode)
 	progress.connect(_on_progress)
+
+	CasteletInputManager.castelet_ffwd_hold.connect(_on_ffwd_on_hold)
+	CasteletInputManager.castelet_ffwd_toggle.connect(_on_ffwd_toggle)
+	
 
 	# Initialize automode timer
 	_automode_timer = Timer.new()
@@ -76,10 +80,19 @@ func _on_automode_timer_timeout():
 	_standby = false
 	if auto_active:
 		_automode_timer.stop()
-	InputManager.castelet_confirm.emit()
+	CasteletInputManager.castelet_confirm.emit()
 
 
 func _on_progress():
 	_standby = false
 	if auto_active:
 		_automode_timer.stop()
+
+
+func _on_ffwd_on_hold(state: bool):
+	ffwd_active = state
+
+
+func _on_ffwd_toggle():
+	ffwd_active = !ffwd_active
+

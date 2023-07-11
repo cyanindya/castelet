@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dq4wda2o32nn5"]
 
-[ext_resource type="Script" path="res://Autoload/CasteletConfig.gd" id="1_qp7um"]
+[ext_resource type="Script" path="res://CasteletAutoload/CasteletConfig.gd" id="1_qp7um"]
 
 [node name="CasteletConfig" type="Node"]
 script = ExtResource("1_qp7um")

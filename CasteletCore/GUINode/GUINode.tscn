@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://cf8ybpujcepfc"]
 
-[ext_resource type="PackedScene" uid="uid://cb1ysu6lfx171" path="res://Core/TheaterNodeComponents/GUINodeComponents/DialogueNode.tscn" id="1_h0g72"]
-[ext_resource type="Script" path="res://Core/TheaterNodeComponents/GUINode.gd" id="1_lemi2"]
-[ext_resource type="PackedScene" uid="uid://ca1dssn5xvet0" path="res://Core/TheaterNodeComponents/GUINodeComponents/BacklogNode.tscn" id="3_mumyu"]
+[ext_resource type="PackedScene" uid="uid://cb1ysu6lfx171" path="res://CasteletCore/GUINode/DialogueNode.tscn" id="1_h0g72"]
+[ext_resource type="Script" path="res://CasteletCore/GUINode/GUINode.gd" id="1_lemi2"]
+[ext_resource type="PackedScene" uid="uid://ca1dssn5xvet0" path="res://CasteletCore/GUINode/BacklogNode.tscn" id="3_mumyu"]
 
 [node name="GUINode" type="Control"]
 layout_mode = 3
@@ -46,6 +46,7 @@ text = "Auto"
 visible = false
 layout_mode = 1
 
-[connection signal="request_continue" from="DialogueNode" to="." method="_on_dialogue_node_request_continue"]
+[connection signal="message_display_completed" from="DialogueNode" to="." method="_on_dialogue_node_message_display_completed"]
+[connection signal="message_display_paused" from="DialogueNode" to="." method="_on_dialogue_node_message_display_paused"]
 [connection signal="pressed" from="ButtonContainers/BacklogButton" to="." method="_on_backlog_button_pressed"]
 [connection signal="toggled" from="ButtonContainers/AutomodeButton" to="." method="_on_automode_button_toggled"]

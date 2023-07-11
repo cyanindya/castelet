@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://07g01eb4b6nx"]
 
-[ext_resource type="Script" path="res://Core/TheaterNodeComponents/StageNode.gd" id="1_fpiau"]
-[ext_resource type="Script" path="res://Core/TheaterNodeComponents/StageNodeComponents/CustomStreamPlayer.gd" id="2_lckcl"]
+[ext_resource type="Script" path="res://CasteletCore/StageNode/StageNode.gd" id="1_fpiau"]
+[ext_resource type="Script" path="res://CasteletCore/StageNode/CustomStreamPlayer.gd" id="2_lckcl"]
 
 [node name="StageNode" type="Node2D"]
 script = ExtResource("1_fpiau")

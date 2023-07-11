@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://cb1ysu6lfx171"]
 
-[ext_resource type="Script" path="res://Core/TheaterNodeComponents/GUINodeComponents/DialogueNode.gd" id="1_p3qt0"]
+[ext_resource type="Script" path="res://CasteletCore/GUINode/DialogueNode.gd" id="1_p3qt0"]
 [ext_resource type="Texture2D" uid="uid://bdaj0mcn74hkc" path="res://TestAssets/text_window.png" id="2_3cfxu"]
 [ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://TestAssets/LiberationSerif-Regular.ttf" id="3_o2lqq"]
 
@@ -110,5 +110,3 @@ mouse_filter = 1
 color = Color(0.160784, 0.054902, 0.0509804, 1)
 polygon = PackedVector2Array(0, 0, 0, 20, 20, 10)
 
-[connection signal="message_completed" from="." to="." method="_on_message_completed"]
-[connection signal="message_paused" from="." to="." method="_on_message_paused"]

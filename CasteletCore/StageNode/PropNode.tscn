@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://dymvf5b3xs4d4"]
 
-[ext_resource type="Script" path="res://Core/TheaterNodeComponents/StageNodeComponents/PropNode.gd" id="1_yri81"]
+[ext_resource type="Script" path="res://CasteletCore/StageNode/PropNode.gd" id="1_yri81"]
 
 [node name="PropNode" type="Node"]
 script = ExtResource("1_yri81")

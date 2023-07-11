@@ -38,6 +38,8 @@ signal end_of_script
 # The function that is first called when the game starts
 func _ready():
 
+	end_of_script.connect(_on_end_of_script)
+
 	# Connect the game manager signals to relevant callback functions
 	CasteletGameManager.progress.connect(_on_progress)
 	
@@ -120,7 +122,7 @@ func _process_command(command : Dictionary):
 			# Second, grab the relevant prop and change its appearance
 			var prop_params = (command['data'] as String).split(".")
 
-			var prop : PropNode = AssetsDb.props[prop_params[0]]
+			var prop : PropNode = CasteletAssetsManager.props[prop_params[0]]
 			prop.texture = prop.variants[prop_params[1]]
 
 			# Place the prop on stage. If autoscale isn't defined, set to true.
@@ -180,7 +182,6 @@ func _on_end_of_script() -> void:
 	print_debug("End of script reached")
 
 
-# FIXME: this is still somewhat bugged because this can potentially interfere with text in the middle of pausing.
 func _on_progress():
 	if (_current_command_index < _total_command_count):
 		_unfold_play()

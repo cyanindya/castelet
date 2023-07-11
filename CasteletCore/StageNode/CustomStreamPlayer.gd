@@ -68,10 +68,10 @@ func fade_audio(from : float =-20.0, to :=0.0, duration :=1.0):
 func init_stream(track : String, args := {}):
 	
 	if track:
-		if (AssetsDb.audio_shorthand as Dictionary).has(track):
-			stream = AssetsDb.audio_shorthand[track]
+		if (CasteletAssetsManager.audio_shorthand as Dictionary).has(track):
+			stream = CasteletAssetsManager.audio_shorthand[track]
 		else:
-			var full_path = AssetsDb.resource_dir.path_join(track)
+			var full_path = CasteletAssetsManager.resource_dir.path_join(track)
 			stream = load(full_path)
 		
 	set_volume_db = volume_db

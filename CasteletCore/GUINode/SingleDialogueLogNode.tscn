@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://cgmjjwdjdb72i"]
 
-[ext_resource type="Script" path="res://Core/TheaterNodeComponents/GUINodeComponents/SingleDialogueLogNode.gd" id="1_etkmp"]
+[ext_resource type="Script" path="res://CasteletCore/GUINode/SingleDialogueLogNode.gd" id="1_etkmp"]
 [ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://TestAssets/LiberationSerif-Regular.ttf" id="1_yhm4d"]
 
 [sub_resource type="LabelSettings" id="LabelSettings_dxor5"]

@@ -132,7 +132,7 @@ func _parse(command_string : String) -> Dictionary:
 
 # This function serves to automatically map the specified ID of the resource to the resource map
 func _get_speaker_name_from_prop(speaker_id : String) -> String:
-	return AssetsDb.props[speaker_id].prop_name
+	return CasteletAssetsManager.props[speaker_id].prop_name
 	
 
 # The function to detect whether the dialogue has pauses or not.

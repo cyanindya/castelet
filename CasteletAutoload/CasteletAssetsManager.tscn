@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://7e4tgjuend70"]
+
+[ext_resource type="Script" path="res://CasteletAutoload/CasteletAssetsManager.gd" id="1_w7icx"]
+
+[node name="CasteletAssetsManager" type="Node"]
+script = ExtResource("1_w7icx")
+resource_dir = "res://TestAssets"

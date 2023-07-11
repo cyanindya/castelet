@@ -73,10 +73,15 @@ func _load_resources(dir : String) -> void:
 				var res: Resource = load(res_dir.get_current_dir() + "/" + file_name)
 				
 				if res is PropResource:
+					pass
+					
+					
+				
+				if res is PropResource:
 					var new_prop = PropNode.new(res)
 #					prop_resources[res.prop_id] = new_prop
 					props[res.prop_id] = new_prop
-				
+
 				if res is AudioListResource:
 					for item in (res.audio_list as Dictionary):
 						audio_shorthand[item] = load(res.audio_list[item])

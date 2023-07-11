@@ -1,7 +1,5 @@
 extends Node2D
 
-signal can_continue
-
 func scene(prop_name := "", prop_variant := "default", args := {}):
 	
 	clear_props()
@@ -13,11 +11,11 @@ func scene(prop_name := "", prop_variant := "default", args := {}):
 
 func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	
-	# If the prop is not in active props list, grab the reference from AssetsDb
+	# If the prop is not in active props list, grab the reference from CasteletAssetsManager
 	var prop: PropNode = get_node_or_null(prop_name)
 	
 	if prop == null:
-		prop = AssetsDb.props[prop_name]
+		prop = CasteletAssetsManager.props[prop_name]
 		add_child(prop)
 	
 	prop.texture = prop.variants[prop_variant]
@@ -28,7 +26,7 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	prop.position.x = CasteletConfig.base_viewport_width * 0.5
 	prop.position.y = CasteletConfig.base_viewport_height * 1.0
 	
-	emit_signal("can_continue")
+	CasteletGameManager.progress.emit()
 
 
 func hide_prop(prop_name : String):
@@ -36,7 +34,7 @@ func hide_prop(prop_name : String):
 	if prop != null:
 		remove_child(prop)
 	
-	emit_signal("can_continue")
+	CasteletGameManager.progress.emit()
 
 
 func clear_props():
@@ -55,29 +53,29 @@ func play_audio(audio_file : String, args := {}, channel:="BGM"):
 	audio_node.init_stream(audio_file, args)
 	audio_node.play_stream()
 	
-	emit_signal("can_continue")
+	CasteletGameManager.progress.emit()
 
 func refresh_audio(args := {}, channel:="BGM"):
 	var audio_node = get_node(channel)
 	audio_node.init_stream("", args)
 	
-	emit_signal("can_continue")
+	CasteletGameManager.progress.emit()
 
 func stop_audio(channel:="BGM"):
 	var audio_node = get_node(channel)
 	audio_node.stop_stream()
 	
-	emit_signal("can_continue")
+	CasteletGameManager.progress.emit()
 
 func pause_audio(channel:="BGM"):
 	var audio_node = get_node(channel)
 	audio_node.stream_paused = true
 	
-	emit_signal("can_continue")
+	CasteletGameManager.progress.emit()
 
 func resume_audio(channel:="BGM"):
 	var audio_node = get_node(channel)
 	audio_node.stream_paused = false
 	
-	emit_signal("can_continue")
+	CasteletGameManager.progress.emit()
 	
