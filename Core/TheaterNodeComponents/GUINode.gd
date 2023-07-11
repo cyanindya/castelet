@@ -13,13 +13,14 @@ func update_dialogue(dialogue_data : Dictionary):
 
 func show_window():
 	await $DialogueNode.window_transition(0.0, 1.0)
-	emit_signal("can_continue")
+	# emit_signal("can_continue")
+	CasteletGameManager.progress.emit()
 
 
 func hide_window():
 	await $DialogueNode.window_transition(1.0, 0.0)
-	print_debug("foo")
-	emit_signal("can_continue")
+	# emit_signal("can_continue")
+	CasteletGameManager.progress.emit()
 	
 
 func _on_dialogue_node_request_continue():
@@ -29,3 +30,9 @@ func _on_dialogue_node_request_continue():
 func _on_backlog_button_pressed():
 	accept_event()
 	$BacklogNode.show()
+
+
+func _on_automode_button_toggled(button_pressed: bool):
+	accept_event()
+	CasteletGameManager.auto_active = button_pressed
+

@@ -1,15 +1,13 @@
-# The core, topmost-level node of the engine.
+# The core node of the engine.
 # This node serves to read a story file, parse the script contents
-# into commands understandable by Godot Engine, and control the flow of the
-# "drama" based on the script.
+# into commands understandable by Godot Engine, and display the cutscene according to
+# the processed script.
+# However, as this node is not a global node, this node has no control over
+# configurations and things those may interrupt the theater flow (i.e. events) --
+# they go to the relevant Autoload nodes instead.
 #
 # This node takes the following input(s) (AKA exports):
 # - script_file : The script file containing the story to be presented.
-#
-# In addition, this node has several variables those control special functionalities of
-# the node, such as auto-mode and skip mode:
-# - is_skipping
-# - is_auto
 #
 # Excluding the _ready and _process, the functionality of this node is comprised of:
 # _read_script -> open the supplied script file
@@ -33,21 +31,20 @@ var _current_command_index = -1 # start from -1 so we can start from 0
 var _total_command_count = 0
 var _currently_processed_command = {}
 
-# Other variables to control certain functionalities, such as skipping and auto-advance
-var is_skipping := false
-var is_auto := false
-
 # Special signal to be called when end of script is reached
 signal end_of_script
 
 
 # The function that is first called when the game starts
 func _ready():
+
+	# Connect the game manager signals to relevant callback functions
+	CasteletGameManager.progress.connect(_on_progress)
 	
 	# Read and parse the script
 	_read_script()
 	
-	await get_tree().create_timer(1).timeout
+	# await get_tree().create_timer(1).timeout
 	
 	# Go through the parsed commands
 	_unfold_play()
@@ -105,7 +102,7 @@ func _process_command(command : Dictionary):
 	
 	if (command["type"] == "say"):
 		$GUINode.update_dialogue(command)
-		BacklogData.append_dialogue(command)
+		CasteletGameManager.append_dialogue(command)
 	
 	elif (command["type"] == "scene"):
 		
@@ -183,11 +180,7 @@ func _on_end_of_script() -> void:
 	print_debug("End of script reached")
 
 
-func _on_gui_node_can_continue():
-	if (_current_command_index < _total_command_count):
-		_unfold_play()
-
-
-func _on_stage_node_can_continue():
+# FIXME: this is still somewhat bugged because this can potentially interfere with text in the middle of pausing.
+func _on_progress():
 	if (_current_command_index < _total_command_count):
 		_unfold_play()

@@ -7,7 +7,7 @@ extends Control
 var max_scroll_length = 0
 
 func _ready():
-	BacklogData.backlog_update.connect(_on_backlog_update)
+	CasteletGameManager.backlog_update.connect(_on_backlog_update)
 
 	# Credits: https://www.reddit.com/r/godot/comments/qhbi8y/how_to_scroll_a_scrollcontainer_to_the_bottom/
 	_scrollbar.changed.connect(_handle_scrollbar_changed)
@@ -35,6 +35,8 @@ func _handle_scrollbar_changed():
 
 func _on_visibility_changed():
 	if visible:
+		CasteletGameManager.toggle_pause(true)
 		InputManager.set_block_signals(true)
 	else:
+		CasteletGameManager.toggle_pause(false)
 		InputManager.set_block_signals(false)

@@ -22,10 +22,9 @@ signal request_continue
 
 # In the beginning, set all child nodes to invisible
 func _ready():
-
-	if InputManager:
-		InputManager.castelet_confirm.connect(_on_castelet_confirm)
-		InputManager.castelet_skip.connect(_on_castelet_skip)
+	
+	InputManager.castelet_confirm.connect(_on_castelet_confirm)
+	InputManager.castelet_skip.connect(_on_castelet_skip)
 	
 	if CasteletConfig.base_text_speed != null:
 		cps = CasteletConfig.base_text_speed
@@ -44,7 +43,7 @@ func _hide_subcomponents():
 
 func _process(_delta):
 	if _is_skipping:
-		_skip_dialogue()
+		_fast_forward()
 
 
 # This is the main function to be called every time we want to display the dialogue.
@@ -79,7 +78,7 @@ func show_dialogue(speaker : String, dialogue : String, pause_locations : Array=
 	if not _is_skipping:
 		_animate_dialogue()
 	# else:
-	# 	_skip_dialogue()
+	# 	_fast_forward()
 	
 
 
@@ -155,6 +154,7 @@ func _animate_dialogue():
 				_tween.tween_callback(emit_signal.bind("message_paused"))
 				
 				if _pause_durations[i] == 0.0:
+					CasteletGameManager.enter_standby.emit()
 					_tween.tween_callback(_tween.pause)
 				else:
 					_tween.tween_interval(_pause_durations[i])
@@ -166,8 +166,9 @@ func _animate_dialogue():
 	if _text.visible_characters >= _text_length:
 		emit_signal("message_completed")
 
-# TODO: Handle skipping at top-level
-func _skip_dialogue():
+
+# The specific functionality to be called when fast-forwarding is active.
+func _fast_forward():
 	print_debug("Skip mode acitvated")
 	
 	if _tween:
@@ -192,13 +193,14 @@ func _on_castelet_confirm():
 			$CTC_Indicator.hide()
 			_tween.play()
 	elif _text.visible_characters >= _text_length and $CTC_Indicator.visible:
-		emit_signal("request_continue")
+		# emit_signal("request_continue")
+		CasteletGameManager.progress.emit()
 
 
 func _on_castelet_skip(param: bool):
 	if param == true:
 		_is_skipping = true
-		# _skip_dialogue() # For some reasons, there is a delay when implemented here, so we activate it at _process instead
+		# _fast_forward() # For some reasons, there is a delay when implemented here, so we activate it at _process instead
 	else:
 		_is_skipping = false
 		_text.visible_characters = _text_length
@@ -206,6 +208,7 @@ func _on_castelet_skip(param: bool):
 
 
 func _on_message_completed():
+	CasteletGameManager.enter_standby.emit()
 	$CTC_Indicator.show()
 
 

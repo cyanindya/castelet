@@ -37,9 +37,15 @@ alignment = 2
 layout_mode = 2
 text = "Backlog"
 
+[node name="AutomodeButton" type="Button" parent="ButtonContainers"]
+layout_mode = 2
+toggle_mode = true
+text = "Auto"
+
 [node name="BacklogNode" parent="." instance=ExtResource("3_mumyu")]
 visible = false
 layout_mode = 1
 
 [connection signal="request_continue" from="DialogueNode" to="." method="_on_dialogue_node_request_continue"]
 [connection signal="pressed" from="ButtonContainers/BacklogButton" to="." method="_on_backlog_button_pressed"]
+[connection signal="toggled" from="ButtonContainers/AutomodeButton" to="." method="_on_automode_button_toggled"]
