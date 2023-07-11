@@ -2,8 +2,7 @@ extends Control
 
 func _ready():
 
-	CasteletInputManager.castelet_confirm.connect(_dialogue_node_interrupt)
-	# CasteletInputManager.castelet_ffwd_hold.connect(_dialogue_node_interrupt)
+	CasteletGameManager.confirm.connect(_dialogue_node_interrupt)
 
 	if CasteletConfig.base_text_speed != null:
 		$DialogueNode.cps = CasteletConfig.base_text_speed

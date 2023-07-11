@@ -1,26 +1,51 @@
-# The core node of the engine.
-# This node serves to read a story file, parse the script contents
-# into commands understandable by Godot Engine, and display the cutscene according to
-# the processed script.
-# However, as this node is not a global node, this node has no control over
-# configurations and things those may interrupt the theater flow (i.e. events) --
-# they go to the relevant Autoload nodes instead.
+# The main node of this framework.
+# 
+# This node serves to read a story file, parse the script contents into commands understandable by
+# Godot Engine, and display the cutscene according to the processed script.
+# However, since node is NOT a global node, this node has no control over game configurations and
+# things those may interrupt the cutscene flow (i.e. context menu) -- see the relevant Autoload nodes
+# instead.
 #
-# This node takes the following input(s) (AKA exports):
-# - script_file : The script file containing the story to be presented.
+# In general, this node is comprised of the following:
+# Variables:
+# - script_file (export)                	- The .tsc script file containing cutscene data to be presented.
+# - _parsed_script_commands (internal)		- An array of Dictionary data containing script commands to be
+#										  	  executed in Godot Engine.
+# - _current_command_index (internal)		- index of the currently processed command. Set to -1 at the
+#										  	  beginning to handle how cycling through the commands work
+#										  	  (so it would actually start from 0).
+# - _total_command_count (internal)			- The number of extracted commands from the script. Necessary
+#										      to tell the node when to stop trying to cycle through the cutscene.
+# - _currently_processed_command (internal)	- Dictionary data containing the currently processed command.
 #
-# Excluding the _ready and _process, the functionality of this node is comprised of:
-# _read_script -> open the supplied script file
-# _parse_script -> convert the contents of the script file into an array of commands
-# _unfold_play -> refresh the Stage Node or GUI Node once at a time based on the
-#					current command to be read
-# _process_command -> do the actual heavy lifting for updating the Stage and/or Node
-
+# Signals:
+# - end_of_script						- Fired when the end of the script has been reached and no more commands
+#										  in the _parsed_script_commands can be processed.
+#
+# Functions:
+# - _ready() 				            - Called when node has entered scene tree. Perform initialization
+#                                         such as connecting necessary signals to relevant callbacks,
+#                                         and do the first call to the cutscene script.
+# - _read_script()			            - Open the supplied .tsc script file.
+# - _parse_script()			            - convert the contents of the script file into an array of commands
+# - _unfold_play()			            - Go to the next command extracted from the script.
+# - _process_command()			        - Do the actual StageNode/GUINode redraw here based on the
+#                                         command.
+#
+# Signal callbacks:
+# - _on_end_of_script     				- Internal handling of end_of_script signal.
+#										  By default, this hides all child nodes before destroying this
+#										  particular node.
+# - _on_progress                        - Handles CasteletGameManager's progress signal
+#                                         By default, tell this node to go through the next part of the
+#                                         script as long as end-of-script hasn't been reached.
+#
 extends Node
-class_name TheaterNode
+
 
 # The custom script file to display the cutscene from.
 @export_file("*.tsc") var script_file
+
 
 # Script-level variables to control the flow of the story presentation. Comprised of:
 # - an array of parsed commands
@@ -31,6 +56,7 @@ var _current_command_index = -1 # start from -1 so we can start from 0
 var _total_command_count = 0
 var _currently_processed_command = {}
 
+
 # Special signal to be called when end of script is reached
 signal end_of_script
 
@@ -38,15 +64,14 @@ signal end_of_script
 # The function that is first called when the game starts
 func _ready():
 
+	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
-
-	# Connect the game manager signals to relevant callback functions
 	CasteletGameManager.progress.connect(_on_progress)
 	
 	# Read and parse the script
 	_read_script()
 	
-	# await get_tree().create_timer(1).timeout
+	await get_tree().create_timer(1).timeout
 	
 	# Go through the parsed commands
 	_unfold_play()

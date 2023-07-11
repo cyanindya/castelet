@@ -36,7 +36,7 @@ func _handle_scrollbar_changed():
 func _on_visibility_changed():
 	if visible:
 		CasteletGameManager.toggle_pause(true)
-		CasteletInputManager.set_block_signals(true)
+		CasteletGameManager.set_block_signals(true)
 	else:
 		CasteletGameManager.toggle_pause(false)
-		CasteletInputManager.set_block_signals(false)
+		CasteletGameManager.set_block_signals(false)

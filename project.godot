@@ -20,7 +20,7 @@ config/icon="res://icon.svg"
 CasteletAssetsManager="*res://CasteletAutoload/CasteletAssetsManager.tscn"
 CasteletConfig="*res://CasteletAutoload/CasteletConfig.tscn"
 CasteletGameManager="*res://CasteletAutoload/CasteletGameManager.tscn"
-CasteletInputManager="*res://CasteletAutoload/CasteletInputManager.tscn"
+CasteletInputManager="res://CasteletAutoload/CasteletInputManager.tscn"
 
 [display]
 
@@ -33,6 +33,10 @@ window/stretch/mode="canvas_items"
 
 version_control/plugin_name="GitPlugin"
 version_control/autoload_on_startup=true
+
+[editor_plugins]
+
+enabled=PackedStringArray()
 
 [input]
 

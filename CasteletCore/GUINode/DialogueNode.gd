@@ -1,62 +1,79 @@
-# This node serves to control how a dialogue text is displayed (i.e. based on
-# text speed, display instantly on interruption, show "click-to-continue" indicator)
+# This node is where a single line of dialogue is displayed on, and this node serves to
+# control how a dialogue text is displayed (i.e. based on text speed, display instantly
+# on interruption, show "click-to-continue" indicator, etc).
 # Do note that by default, the dialogue box is NOT shown.
 # 
-# For the sake of clarity, here are the following limitations to be imposed on this node:
+# For the sake of clarity, here are the following limitations imposed on this node:
 # - This node is a character dialogue node. It can show the dialogue window, hide it,
 #   and display one given line of dialogue whether gradually or instantenuously (e.g. during
 #   fast-forwarding mode).
-# - Again, this node is only for displaying dialogue. It has no authority to process inputs or changes
-#   from the game, BUT it can be controlled by nodes above to respond accordingly.
+# - Again, this node is only for displaying dialogue. It has no authority to process inputs or
+#   changes from the game, BUT it can be controlled by nodes above to respond accordingly.
 # - This node is NOT SUPPOSED TO INTERACT with the nodes above, or any singletons for that matter.
-#   As such, avoid using singleton events here -- provide relevant functions instead, and let parent
-#   nodes to handle them.
+#   As such, avoid using singleton events here -- provide relevant functions instead, and let
+#   parent nodes to handle them.
 #
 # Because of these limitations, it is entirely possible to instantiate dialogue node as its own
 # without fully relying on Castelet framework's events or predefined input.
-# Just call the proper functions and use appropriate signals, and it should be easily integratable in other nodes.
+# Just call the proper functions and use appropriate signals, and it should be easily integratable
+# in other nodes.
 # 
 # In general, this node is comprised of the following:
 # Variables:
-# - cps (export) - Characters per second - determines how fast one line of dialogue is displayed from start to finish.
-# - window_transition_speed (export) - determines how fast the dialogue window changes visibility
-# - completed - Denotes whether the dialogue has all been displayed or not
-# - _tween (internal) - holds Tween instance to control non-instantenuous dialogue display.
-#                       Due to how the new Tween works, ALWAYS check if a Tween instance exists and kill it before
-#                       creating another Tween instance (i.e. start new tween)
-# - _pause_locations (internal) - The extracted points at which the dialogue display should temporarily be stopped.
-# - _pause_durations (internal) - How long must the node wait before resuming text display at every pause points.
-#                                 0.0 means the node waits for user input (or any sort of interruption) before resuming.
-# - _text_length (internal) - Total amount of characters to be displayed in one line of dialogue.
-#                             Required to handle some pause behaviors.
-# - _next_stop (internal) - Holds data at which point will the text display be paused or stopped.
-#                           Required to handle some pause behaviors.
-# - _text (internal, initialized on ready) - holds the node instance for the dialogue text node
+# - cps (export)                        - Characters per second - determines how fast one line of
+#                                         dialogue is displayed from start to finish.
+# - window_transition_speed (export)    - Determines how fast the dialogue window changes visibility
+# - completed                           - Denotes whether the dialogue has all been displayed or not
+# - _tween (internal)                   - Holds Tween instance to control non-instantenuous dialogue
+#                                         display. Due to how the new Tween works, ALWAYS check if a
+#                                         Tween instance exists and kill it before creating another
+#                                         Tween instance (i.e. start new tween)
+# - _pause_locations (internal)         - The extracted points at which the dialogue display should
+#                                         temporarily be stopped.
+# - _pause_durations (internal)         - How long must the node wait before resuming text display
+#                                         at every pause points.
+#                                         0.0 means the node waits for user input (or any sort of
+#                                         interruption) before resuming.
+# - _text_length (internal)             - Total amount of characters to be displayed in one line of
+#                                         dialogue.
+#                                         Required to handle some pause behaviors.
+# - _next_stop (internal)               - Holds data at which point will the text display be paused
+#                                         or stopped. Required to handle some pause behaviors.
+# - _text (internal, on ready)          - Holds the node instance for the dialogue text node.
 #
 # Signals:
-# - window_transition_completed - Fired when the dialogue box has finished displaying or hiding itself.
-# - message_display_paused - Fired when the dialogue display is stopped in the middle.
-# - message_display_completed - Fired when the dialogue display has been completed.
-# - request_refresh - Can be fired when user wants to display next instance of dialogue.
-#                     Unused in current version -- it is better to handle the redraw request on another, upper-level node.
+# - window_transition_completed         - Fired when the dialogue box has finished displaying or
+#                                         hiding itself.
+# - message_display_paused              - Fired when the dialogue display is stopped in the middle.
+# - message_display_completed           - Fired when the dialogue display has been completed.
+# - request_refresh                     - Can be fired when user wants to display next instance of
+#                                         dialogue. Unused in current version -- it is advisable to
+#                                         handle the redraw request on another, upper-level node.
 #
 # Functions:
-# - show_dialogue() - Called when user wants to display a line of dialogue.
-#                     Input consists the dialogue speaker's name, the dialogue content, "instant" (whether the dialogue will
-#                     be displayed instantenuously or gradually), pause locations, and pause durations.
-# - window_transition() - For manipulating the visibility of this node from the "old" opacity value to the "new" value
-# _animate_dialogue() - Contains a series of tweening operations to display the dialogue gradually.
-# process_interrupt() - Can be called from outside to handle interruptions on text display process (i.e. immediately displays
-#                       all texts upon interruption).
-# _hide_subcomponents() - Hides all child nodes of this node.
+# - _ready() 				            - Called when node has entered scene tree. Perform initialization
+#                                         such as connecting necessary signals to relevant callbacks,
+#                                         and hide this node at start.
+# - show_dialogue()			            - Called when user wants to display a line of dialogue.
+#                     		              Input consists the dialogue speaker's name, the dialogue content,
+#                                         "instant" (whether the dialogue will be displayed instantenuously
+#                                         or gradually), pause locations, and pause durations.
+# - window_transition() 	            - For manipulating the visibility of this node from the "old"
+#                                         opacity value to the "new" value
+# - _animate_dialogue() 	            - Contains a series of tweening operations to display the
+#                                         dialogue gradually.
+# - process_interrupt() 	            - Can be called from outside to handle interruptions on text
+#                                         display process (i.e. immediately displays all texts upon
+#                                         interruption).
+# - _hide_subcomponents()               - Hides all child nodes of this node.
 #
 # Signal callbacks:
-# - _on_window_transition_completed - Internal handling of window_transition_completed signal
-# - _on_message_display_completed - Internal handling of message_display_completed signal
-#                                   Changes the "completed" variable to true and displays click-to-continue indicator
-#                                   by default.
-# - _on_message_display_paused - Internal handling of message_display_paused signal
-#                                Displays click-to-continue indicator by default.
+# - _on_window_transition_completed     - Internal handling of window_transition_completed signal
+# - _on_message_display_completed       - Internal handling of message_display_completed signal
+#                                         Changes the "completed" variable to true and displays
+#                                         click-to-continue indicator by default.
+# - _on_message_display_paused          - Internal handling of message_display_paused signal
+#                                         Displays click-to-continue indicator by default.
 #
 extends Control
 
@@ -228,15 +245,17 @@ func process_interrupt(instant : bool = false):
 	
 	else:
 		if _text.visible_characters < _text_length and _pause_locations.is_empty():
-			_tween.custom_step(INF)
+			if _tween:
+				_tween.custom_step(INF)
 		elif _text.visible_characters < _text_length and not _pause_locations.is_empty():
-			if _tween.is_running():
-				# FIXME: There is discrepancy between the detected next stop and the actual
-				# one.
-				_tween.custom_step((_next_stop - _text.visible_characters)) # Dirty implementation.
-			else:
-				$CTC_Indicator.hide()
-				_tween.play()
+			if _tween:
+				if _tween.is_running():
+					# FIXME: There is discrepancy between the detected next stop and the actual
+					# one.
+					_tween.custom_step((_next_stop - _text.visible_characters)) # Dirty implementation.
+				else:
+					$CTC_Indicator.hide()
+					_tween.play()
 		# elif _text.visible_characters >= _text_length and $CTC_Indicator.visible:
 		# 	request_refresh.emit()
 

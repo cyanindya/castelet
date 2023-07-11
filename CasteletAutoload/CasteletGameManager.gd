@@ -17,6 +17,10 @@ var _standby := false :
 		print_debug(value)
 
 
+signal confirm
+signal ffwd_hold(state : bool)
+signal ffwd_toggle
+
 signal backlog_update(new_data : Dictionary)
 signal toggle_automode
 signal enter_standby
@@ -30,8 +34,8 @@ func _ready():
 	toggle_automode.connect(_on_toggle_automode)
 	progress.connect(_on_progress)
 
-	CasteletInputManager.castelet_ffwd_hold.connect(_on_ffwd_on_hold)
-	CasteletInputManager.castelet_ffwd_toggle.connect(_on_ffwd_toggle)
+	ffwd_hold.connect(_on_ffwd_hold)
+	ffwd_toggle.connect(_on_ffwd_toggle)
 	
 
 	# Initialize automode timer
@@ -80,7 +84,7 @@ func _on_automode_timer_timeout():
 	_standby = false
 	if auto_active:
 		_automode_timer.stop()
-	CasteletInputManager.castelet_confirm.emit()
+	confirm.emit()
 
 
 func _on_progress():
@@ -89,7 +93,7 @@ func _on_progress():
 		_automode_timer.stop()
 
 
-func _on_ffwd_on_hold(state: bool):
+func _on_ffwd_hold(state: bool):
 	ffwd_active = state
 
 
