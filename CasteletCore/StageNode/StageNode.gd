@@ -1,24 +1,11 @@
 extends Node2D
 
-@export_node_path("CasteletGameManager") var game_manager
-@export_node_path("CasteletAssetsManager") var asset_manager
-@export_node_path("CasteletConfig") var config
-@export_node_path("CasteletViewportManager") var vp
-
-func _ready():
-	# Before we begin, make sure the required CasteletGameManager and CasteletAssetsManager instances
-	# are valid, and try to grab it from root node if necessary. Otherwise, throw an error since they're required.
-	if game_manager == null:
-		game_manager = get_node("/root/CasteletGameManager")
-	
-	if asset_manager == null:
-		asset_manager = get_node("/root/CasteletAssetsManager")
-	
-	if config == null:
-		config = get_node("/root/CasteletConfig")
-	
-	if vp == null:
-		vp = get_node("/root/CasteletViewportManager")
+#
+# This node is dependent on the following singletons:
+# - CasteletGameManager
+# - CasteletViewportManager
+# - CasteletAssetsManager
+#
 
 
 func scene(prop_name := "", prop_variant := "default", args := {}):
@@ -36,7 +23,7 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	var prop: PropNode = get_node_or_null(prop_name)
 	
 	if prop == null:
-		prop = asset_manager.props[prop_name]
+		prop = CasteletAssetsManager.props[prop_name]
 		add_child(prop)
 	
 	prop.texture = prop.variants[prop_variant]
@@ -44,11 +31,11 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	if args:
 		pass
 
-	prop.position.x = vp.base_viewport_width * 0.5
-	prop.position.y = vp.base_viewport_height * 1.0
-	prop.default_viewport_scale = vp.base_scale_factor
+	prop.position.x = CasteletViewportManager.base_viewport_width * 0.5
+	prop.position.y = CasteletViewportManager.base_viewport_height * 1.0
+	prop.default_viewport_scale = CasteletViewportManager.base_scale_factor
 	
-	game_manager.progress.emit()
+	CasteletGameManager.progress.emit()
 
 
 func hide_prop(prop_name : String):
@@ -56,7 +43,7 @@ func hide_prop(prop_name : String):
 	if prop != null:
 		remove_child(prop)
 	
-		game_manager.progress.emit()
+		CasteletGameManager.progress.emit()
 
 
 func clear_props():
@@ -69,10 +56,10 @@ func play_audio(audio_file : String, args := {}, channel:="BGM"):
 	
 	var audio_stream : AudioStream
 
-	if (asset_manager.audio_shorthand as Dictionary).has(audio_file):
-		audio_stream = asset_manager.audio_shorthand[audio_file]
+	if (CasteletAssetsManager.audio_shorthand as Dictionary).has(audio_file):
+		audio_stream = CasteletAssetsManager.audio_shorthand[audio_file]
 	else:
-		var full_path = asset_manager.resource_dir.path_join(audio_file)
+		var full_path = CasteletAssetsManager.resource_dir.path_join(audio_file)
 		audio_stream = load(full_path)
 
 	var audio_node = get_node(channel)
@@ -83,29 +70,29 @@ func play_audio(audio_file : String, args := {}, channel:="BGM"):
 	audio_node.init_stream(audio_stream, args)
 	audio_node.play_stream()
 	
-	game_manager.progress.emit()
+	CasteletGameManager.progress.emit()
 
 func refresh_audio(args := {}, channel:="BGM"):
 	var audio_node = get_node(channel)
 	audio_node.init_stream(null, args)
 	
-	game_manager.progress.emit()
+	CasteletGameManager.progress.emit()
 
 func stop_audio(channel:="BGM"):
 	var audio_node = get_node(channel)
 	audio_node.stop_stream()
 	
-	game_manager.progress.emit()
+	CasteletGameManager.progress.emit()
 
 func pause_audio(channel:="BGM"):
 	var audio_node = get_node(channel)
 	audio_node.stream_paused = true
 	
-	game_manager.progress.emit()
+	CasteletGameManager.progress.emit()
 
 func resume_audio(channel:="BGM"):
 	var audio_node = get_node(channel)
 	audio_node.stream_paused = false
 	
-	game_manager.progress.emit()
+	CasteletGameManager.progress.emit()
 	

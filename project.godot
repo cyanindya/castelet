@@ -17,11 +17,11 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-CasteletAssetsManager="res://CasteletAutoload/CasteletAssetsManager.tscn"
-CasteletGameManager="res://CasteletAutoload/CasteletGameManager.tscn"
-CasteletInputManager="res://CasteletAutoload/CasteletInputManager.tscn"
-CasteletConfig="*res://CasteletAutoload/CasteletConfig.gd"
+CasteletAssetsManager="*res://CasteletAutoload/CasteletAssetsManager.tscn"
+CasteletConfig="*res://CasteletAutoload/CasteletConfig.tscn"
+CasteletGameManager="*res://CasteletAutoload/CasteletGameManager.tscn"
 CasteletViewportManager="*res://CasteletAutoload/CasteletViewportManager.tscn"
+CasteletInputManager="res://CasteletAutoload/CasteletInputManager.tscn"
 
 [display]
 

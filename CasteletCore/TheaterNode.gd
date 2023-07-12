@@ -6,6 +6,10 @@
 # things those may interrupt the cutscene flow (i.e. context menu) -- see the relevant Autoload nodes
 # instead.
 #
+# This node is dependent on the following singletons:
+# - CasteletGameManager
+# - CasteletAssetsManager
+#
 # In general, this node is comprised of the following:
 # Variables:
 # - script_file (export)                	- The .tsc script file containing cutscene data to be presented.
@@ -45,8 +49,6 @@ extends Node
 
 # The custom script file to display the cutscene from.
 @export_file("*.tsc") var script_file
-@export_node_path("CasteletGameManager") var game_manager
-@export_node_path("CasteletAssetsManager") var asset_manager
 
 # Script-level variables to control the flow of the story presentation. Comprised of:
 # - an array of parsed commands
@@ -65,19 +67,9 @@ signal end_of_script
 # The function that is first called when the game starts
 func _ready():
 
-	# Before we begin, make sure the required CasteletGameManager and CasteletAssetsManager instances
-	# are valid, and try to grab it from root node if necessary. Otherwise, throw an error since they're required.
-	if game_manager == null:
-		game_manager = get_node("/root/CasteletGameManager")
-		assert(game_manager != null, "Cannot find any valid instance of CasteletGameManager. Check whether the node has been included in the scene tree and try again.")
-	
-	if asset_manager == null:
-		asset_manager = get_node("/root/CasteletAssetsManager")
-		assert(asset_manager != null, "Cannot find any valid instance of CasteletAssetsManager. Check whether the node has been included in the scene tree and try again.")
-
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
-	game_manager.progress.connect(_on_progress)
+	CasteletGameManager.progress.connect(_on_progress)
 	
 	# Read and parse the script
 	_read_script()
@@ -143,11 +135,11 @@ func _process_command(command : Dictionary):
 		# for the proper speaker name. This was moved from ScriptParser to decouple the parser
 		# from asset manager.
 		if (command['speaker'] as String).begins_with("id_"):
-			assert(asset_manager.props[command['speaker'].trim_prefix("id_")], "Cannot find the associated prop data from assets manager. Please check the name of the prop and its associated ID again.")
-			command['speaker'] = asset_manager.props[command['speaker'].trim_prefix("id_")].prop_name
+			assert(CasteletAssetsManager.props[command['speaker'].trim_prefix("id_")], "Cannot find the associated prop data from assets manager. Please check the name of the prop and its associated ID again.")
+			command['speaker'] = CasteletAssetsManager.props[command['speaker'].trim_prefix("id_")].prop_name
 
 		$GUINode.update_dialogue(command)
-		game_manager.append_dialogue(command)
+		CasteletGameManager.append_dialogue(command)
 	
 	elif (command["type"] == "scene"):
 		
@@ -200,8 +192,13 @@ func _process_command(command : Dictionary):
 
 # Signal handling callbacks go here
 func _on_end_of_script() -> void:
+	# Ensures the signal handler is disconnected before this node is destroyed, just in case.
+	CasteletGameManager.progress.disconnect(_on_progress)
+	
+	#
 	$StageNode.hide()
 	$GUINode.hide()
+	
 	queue_free()
 	print_debug("End of script reached")
 

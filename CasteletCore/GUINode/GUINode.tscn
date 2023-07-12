@@ -50,3 +50,4 @@ layout_mode = 1
 [connection signal="message_display_paused" from="DialogueNode" to="." method="_on_dialogue_node_message_display_paused"]
 [connection signal="pressed" from="ButtonContainers/BacklogButton" to="." method="_on_backlog_button_pressed"]
 [connection signal="toggled" from="ButtonContainers/AutomodeButton" to="." method="_on_automode_button_toggled"]
+[connection signal="visibility_changed" from="BacklogNode" to="." method="_on_backlog_window_visibility_changed"]

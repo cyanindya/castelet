@@ -1,7 +1,31 @@
-extends Node
-class_name CasteletGameManager
+# This node is an autoload/singleton node that serves as "game manager" -- namely, to handle
+# various events those happen during runtime. For example, this node keeps tract whether the
+# fast-forward or auto-read mode is activated, and send events/signals related to these changes
+# accordingly.
+# 
+# This node is NOT intended to listen to other nodes, nor is it requiring dependency on another
+# except for CasteletConfig.
+# Instead, this node provides events/signals those can be used by other nodes, and handle
+# changes based on the signals accordingly
+# 
+# This node is dependent on the following autoloads:
+# - CasteletConfig
+#
+# In general, this node is comprised of the following:
+# Variables:
+# - backlog		                        - Contains data of previously-displayed dialogues.
+# - ffwd_active						    - Determines whether fast-forwarding mode is active or not.
+# - auto_active						    - Determines whether auto-read mode is active or not.
+# - _paused (internal)                  - Determines whether the overall Castelet node is paused or not.
+#										  Intended to help with stuffs such as pausing auto-read mode.
+# - _standby (internal)		            - Determines whether the node is currently in standby/idle mode
+#										  or not, and thus can proceed to read next command if prompted.
+# - _automode_timer (internal)          - Holds timer instance to be executed while auto-read is active.
+#
+# Signals:
+#
 
-@export_node_path("CasteletConfig") var config
+extends Node
 
 var backlog = []
 
@@ -31,10 +55,6 @@ signal progress
 
 func _ready():
 
-	if config == null:
-		config = get_node("/root/CasteletConfig")
-		assert(config != null, "Cannot find any valid instance of CasteletConfig. Check whether the node has been included in the scene tree and try again.")
-
 	# Initialize some signal connections, whether from internal or other nodes
 	enter_standby.connect(_on_standby)
 	toggle_automode.connect(_on_toggle_automode)
@@ -47,7 +67,10 @@ func _ready():
 	# Initialize automode timer
 	_automode_timer = Timer.new()
 	add_child(_automode_timer)
-	_automode_timer.wait_time = config.base_automode_timeout
+	if CasteletConfig.base_automode_timeout != null:
+		_automode_timer.wait_time = CasteletConfig.base_automode_timeout
+	else:
+		_automode_timer.wait_time = 3
 	_automode_timer.timeout.connect(_on_automode_timer_timeout)
 
 	if auto_active:

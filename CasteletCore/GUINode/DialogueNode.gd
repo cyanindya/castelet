@@ -278,6 +278,6 @@ func _on_message_display_completed():
 	completed = true
 
 
-func _on_message_display_paused(duration : float):
+func _on_message_display_paused(_duration : float):
 	$CTC_Indicator.show()
 
