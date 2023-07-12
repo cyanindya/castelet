@@ -1,5 +1,7 @@
 extends Node
+class_name CasteletGameManager
 
+@export_node_path("CasteletConfig") var config
 
 var backlog = []
 
@@ -29,6 +31,10 @@ signal progress
 
 func _ready():
 
+	if config == null:
+		config = get_node("/root/CasteletConfig")
+		assert(config != null, "Cannot find any valid instance of CasteletConfig. Check whether the node has been included in the scene tree and try again.")
+
 	# Initialize some signal connections, whether from internal or other nodes
 	enter_standby.connect(_on_standby)
 	toggle_automode.connect(_on_toggle_automode)
@@ -41,7 +47,7 @@ func _ready():
 	# Initialize automode timer
 	_automode_timer = Timer.new()
 	add_child(_automode_timer)
-	_automode_timer.wait_time = CasteletConfig.base_automode_timeout
+	_automode_timer.wait_time = config.base_automode_timeout
 	_automode_timer.timeout.connect(_on_automode_timer_timeout)
 
 	if auto_active:

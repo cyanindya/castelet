@@ -3,9 +3,14 @@ class_name PropNode
 
 var prop_name : String
 var variants := {}
-var default_viewport_scale := 1.0
+var default_viewport_scale := 0.1:
+	set(value):
+		default_viewport_scale = value
+		viewport_scale_changed.emit()
 var _xanchor : float = 0.0
 var _yanchor : float = 0.0
+
+signal viewport_scale_changed
 
 
 func _init(propResource : PropResource, default_variant := "default"):
@@ -29,11 +34,11 @@ func _init(propResource : PropResource, default_variant := "default"):
 
 func _ready():
 	
-	# Calculate the default scale too
-	default_viewport_scale = CasteletConfig.base_scale_factor
+	viewport_scale_changed.connect(_recalculate_scale)
+	texture_changed.connect(_on_texture_changed)
 	
-	_calculate_anchor()
-	scale = Vector2(default_viewport_scale, default_viewport_scale)
+	default_viewport_scale = 1.0
+	_recalculate_scale()
 
 
 func _calculate_anchor():
@@ -42,12 +47,14 @@ func _calculate_anchor():
 	var ysize = get_rect().size.y
 	
 	offset = Vector2(-xsize * _xanchor, -ysize * _yanchor)
-	
+
+
+func _recalculate_scale():
+	_calculate_anchor()
+	scale = Vector2(default_viewport_scale, default_viewport_scale)
+
 
 func _on_texture_changed():
 	# We need to recalculate the rect bounds and the positioning of the offset
-	_calculate_anchor()
-
-func _on_item_rect_changed():
-	# We need to recalculate the rect bounds and the positioning of the offset
-	_calculate_anchor()
+	_recalculate_scale()
+	print_debug(get_rect())

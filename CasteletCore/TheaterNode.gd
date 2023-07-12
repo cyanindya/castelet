@@ -45,7 +45,8 @@ extends Node
 
 # The custom script file to display the cutscene from.
 @export_file("*.tsc") var script_file
-
+@export_node_path("CasteletGameManager") var game_manager
+@export_node_path("CasteletAssetsManager") var asset_manager
 
 # Script-level variables to control the flow of the story presentation. Comprised of:
 # - an array of parsed commands
@@ -64,9 +65,19 @@ signal end_of_script
 # The function that is first called when the game starts
 func _ready():
 
+	# Before we begin, make sure the required CasteletGameManager and CasteletAssetsManager instances
+	# are valid, and try to grab it from root node if necessary. Otherwise, throw an error since they're required.
+	if game_manager == null:
+		game_manager = get_node("/root/CasteletGameManager")
+		assert(game_manager != null, "Cannot find any valid instance of CasteletGameManager. Check whether the node has been included in the scene tree and try again.")
+	
+	if asset_manager == null:
+		asset_manager = get_node("/root/CasteletAssetsManager")
+		assert(asset_manager != null, "Cannot find any valid instance of CasteletAssetsManager. Check whether the node has been included in the scene tree and try again.")
+
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
-	CasteletGameManager.progress.connect(_on_progress)
+	game_manager.progress.connect(_on_progress)
 	
 	# Read and parse the script
 	_read_script()
@@ -118,7 +129,6 @@ func _unfold_play() -> void:
 	
 	# Grab the command to be processed from the array of parsed commands.
 	_currently_processed_command = _parsed_script_commands[_current_command_index]
-	print_debug(_currently_processed_command)
 	_process_command(_currently_processed_command)
 	
 
@@ -128,37 +138,26 @@ func _unfold_play() -> void:
 func _process_command(command : Dictionary):
 	
 	if (command["type"] == "say"):
+
+		# If the speaker data starts with "id_", make sure to check the assets database
+		# for the proper speaker name. This was moved from ScriptParser to decouple the parser
+		# from asset manager.
+		if (command['speaker'] as String).begins_with("id_"):
+			assert(asset_manager.props[command['speaker'].trim_prefix("id_")], "Cannot find the associated prop data from assets manager. Please check the name of the prop and its associated ID again.")
+			command['speaker'] = asset_manager.props[command['speaker'].trim_prefix("id_")].prop_name
+
 		$GUINode.update_dialogue(command)
-		CasteletGameManager.append_dialogue(command)
+		game_manager.append_dialogue(command)
 	
 	elif (command["type"] == "scene"):
 		
-#		var params = (command['data'] as String).split(".")
-#
-#		$StageNode.scene(params[0], params[1])
+		var params = (command['data'] as String).split(".")
 
-		# First, clear the stage node from props
-		for nodes in $StageNode.get_children():
-			if nodes is PropNode:
-				$StageNode.remove_child(nodes)
-
-		if command['data'] != "none":
-
-			# Second, grab the relevant prop and change its appearance
-			var prop_params = (command['data'] as String).split(".")
-
-			var prop : PropNode = CasteletAssetsManager.props[prop_params[0]]
-			prop.texture = prop.variants[prop_params[1]]
-
-			# Place the prop on stage. If autoscale isn't defined, set to true.
-			# Then if no position is defined, set it to (0.5, 1) by default
-			prop.position.x = get_viewport().get_visible_rect().size.x * 0.5
-			prop.position.y = get_viewport().get_visible_rect().size.y * 1.0
-
-			$StageNode.add_child(prop)
-
-		_unfold_play()
-
+		if len(params) > 1:
+			$StageNode.scene(params[0], params[1])
+		else:
+			$StageNode.scene(params[0])
+		
 
 	elif (command["type"] == "show"):
 		_unfold_play()

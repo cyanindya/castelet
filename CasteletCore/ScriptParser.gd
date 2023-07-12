@@ -108,14 +108,17 @@ func _parse(command_string : String) -> Dictionary:
 	result = regex.search(command_string)
 	
 	if result:
-		# If exists, check the speaker code from existing resource.
-		# Otherwise, return an error that said speaker code is undefined.
+		# If the speaker label is not a one-off name, mark it with "id_"
+		# prefix to be checked later in TheaterNode.
+		# While we can just directly reference the asset manager, we want
+		# to decouple it if possible -- parser should just stay as parser
+		# and has no knowledge of other nodes.
 		var speaker = result.get_string(1)
 		if not speaker.is_empty():
 			if speaker.begins_with("\"") and speaker.ends_with("\""):
 				speaker = speaker.replace("\"", "")
 			else:
-				speaker = _get_speaker_name_from_prop(speaker)
+				speaker = "_".join(["id", speaker])
 			
 		var dialogue = _pause_detector(result.get_string(2))
 		
@@ -128,12 +131,7 @@ func _parse(command_string : String) -> Dictionary:
 				"pause_durations": dialogue["pause_durations"] }
 	
 	return {}
-	
-
-# This function serves to automatically map the specified ID of the resource to the resource map
-func _get_speaker_name_from_prop(speaker_id : String) -> String:
-	return CasteletAssetsManager.props[speaker_id].prop_name
-	
+		
 
 # The function to detect whether the dialogue has pauses or not.
 # Returns the clean dialogue and the pause locations and their respective durations

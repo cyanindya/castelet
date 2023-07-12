@@ -7,22 +7,21 @@ extends Control
 var max_scroll_length = 0
 
 func _ready():
-	CasteletGameManager.backlog_update.connect(_on_backlog_update)
 
 	# Credits: https://www.reddit.com/r/godot/comments/qhbi8y/how_to_scroll_a_scrollcontainer_to_the_bottom/
 	_scrollbar.changed.connect(_handle_scrollbar_changed)
 	max_scroll_length = _scrollbar.max_value
 
 
-func _on_return_button_down():
-	accept_event()
-	hide()
-
-
-func _on_backlog_update(dialogue_data : Dictionary):
+func update_backlog(dialogue_data : Dictionary):
 	var dat = dialogue_data_node.instantiate()
 	dat.load_dialogue(dialogue_data['speaker'], dialogue_data['dialogue'])
 	_backlog_container.add_child(dat)
+	
+
+func _on_return_button_down():
+	accept_event()
+	hide()
 
 
 # Credits: https://www.reddit.com/r/godot/comments/qhbi8y/how_to_scroll_a_scrollcontainer_to_the_bottom/
@@ -32,11 +31,3 @@ func _handle_scrollbar_changed():
 		max_scroll_length = _scrollbar.max_value	
 		_scroll_container.scroll_vertical = max_scroll_length
 
-
-func _on_visibility_changed():
-	if visible:
-		CasteletGameManager.toggle_pause(true)
-		CasteletGameManager.set_block_signals(true)
-	else:
-		CasteletGameManager.toggle_pause(false)
-		CasteletGameManager.set_block_signals(false)

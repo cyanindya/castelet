@@ -14,6 +14,7 @@
 #
 
 extends Node
+class_name CasteletAssetsManager
 
 @export_dir var resource_dir : String
 #@onready var props := _load_prop_resources(resource_dir)

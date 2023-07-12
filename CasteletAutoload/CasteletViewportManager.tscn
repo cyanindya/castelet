@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://uiu6am0qswpr"]
+
+[ext_resource type="Script" path="res://CasteletAutoload/CasteletViewportManager.gd" id="1_5jodj"]
+
+[node name="CasteletViewportManager" type="Node"]
+script = ExtResource("1_5jodj")

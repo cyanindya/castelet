@@ -55,5 +55,4 @@ theme_override_constants/separation = 30
 layout_mode = 2
 text = "Return"
 
-[connection signal="visibility_changed" from="." to="." method="_on_visibility_changed"]
 [connection signal="button_down" from="PanelContainer/VBoxContainer/Return Button" to="." method="_on_return_button_down"]
