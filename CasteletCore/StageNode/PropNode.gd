@@ -57,4 +57,3 @@ func _recalculate_scale():
 func _on_texture_changed():
 	# We need to recalculate the rect bounds and the positioning of the offset
 	_recalculate_scale()
-	print_debug(get_rect())

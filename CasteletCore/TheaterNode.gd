@@ -9,6 +9,7 @@
 # This node is dependent on the following singletons:
 # - CasteletGameManager
 # - CasteletAssetsManager
+# - CasteletAudioManager
 #
 # In general, this node is comprised of the following:
 # Variables:
@@ -80,7 +81,7 @@ func _ready():
 	_unfold_play()
 
 
-# The function for opening the act script file
+# The function for opening the story script file
 func _read_script() -> void:
 	
 	# First, check validity of the story script file, then properly open the file.
@@ -160,22 +161,28 @@ func _process_command(command : Dictionary):
 		pass
 	
 	elif (command["type"] == "bgm" or command["type"] == "sfx"):
+		
 		if command['data'] == "stop":
-			$StageNode.stop_audio((command["type"] as String).to_upper())
+			CasteletAudioManager.stop_audio((command["type"] as String).to_upper())
 		elif command['data'] == "pause":
-			$StageNode.pause_audio((command["type"] as String).to_upper())
+			CasteletAudioManager.pause_audio((command["type"] as String).to_upper())
 		elif command['data'] == "resume":
-			$StageNode.resume_audio((command["type"] as String).to_upper())
+			CasteletAudioManager.resume_audio((command["type"] as String).to_upper())
 		elif command['data'] == "":
-			$StageNode.refresh_audio(command['args'], (command["type"] as String).to_upper())
+			CasteletAudioManager.refresh_audio(command['args'], (command["type"] as String).to_upper())
 		else:
-			$StageNode.play_audio(command["data"], command['args'], (command["type"] as String).to_upper())
+			CasteletAudioManager.play_audio(command["data"], command['args'], (command["type"] as String).to_upper())
+		
+		
+		CasteletGameManager.progress.emit()
 	
 	elif command["type"] == "window":
 		if command["data"] == "show" or command["data"] == "on":
 			$GUINode.show_window()
 		elif command["data"] == "hide" or command["data"] == "off":
 			$GUINode.hide_window()
+		
+		# CasteletGameManager.progress.emit()
 	
 	elif (command["type"] == "pause"):
 		_unfold_play()

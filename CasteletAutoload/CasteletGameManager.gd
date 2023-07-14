@@ -40,7 +40,6 @@ var _paused := false
 var _standby := false :
 	set(value):
 		_standby = value
-		print_debug(value)
 
 
 signal confirm
