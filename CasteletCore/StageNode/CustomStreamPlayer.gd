@@ -124,8 +124,6 @@ func init_queue(input_queue = [], args := {}):
 	queue = input_queue
 	queue_length = len(queue)
 
-	await finished_timer.timeout
-
 	init_stream(queue[0] as AudioStream, args)
 	stream.set_loop(false)
 
