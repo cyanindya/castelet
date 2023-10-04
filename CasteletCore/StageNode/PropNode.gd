@@ -3,9 +3,9 @@ class_name PropNode
 
 var prop_name : String
 var variants := {}
-var default_viewport_scale := 0.1:
+var in_viewport_scale := 0.1:
 	set(value):
-		default_viewport_scale = value
+		in_viewport_scale = value
 		viewport_scale_changed.emit()
 var _xanchor : float = 0.0
 var _yanchor : float = 0.0
@@ -37,7 +37,7 @@ func _ready():
 	viewport_scale_changed.connect(_recalculate_scale)
 	texture_changed.connect(_on_texture_changed)
 	
-	default_viewport_scale = 1.0
+	in_viewport_scale = 1.0
 	_recalculate_scale()
 
 
@@ -51,7 +51,7 @@ func _calculate_anchor():
 
 func _recalculate_scale():
 	_calculate_anchor()
-	scale = Vector2(default_viewport_scale, default_viewport_scale)
+	scale = Vector2(in_viewport_scale, in_viewport_scale)
 
 
 func _on_texture_changed():

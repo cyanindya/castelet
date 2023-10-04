@@ -22,18 +22,48 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	# If the prop is not in active props list, grab the reference from CasteletAssetsManager
 	var prop: PropNode = get_node_or_null(prop_name)
 	
+	# Default x-position and y-position value
+	var xpos = 0.5
+	var ypos = 1.0
+	var scale_factor = 1.0
+	
+	# If this is a newly shown prop, add it to the stage. Otherwise, keep
+	# track of the last known location
 	if prop == null:
 		prop = CasteletAssetsManager.props[prop_name]
 		add_child(prop)
+	else:
+		xpos = prop.position.x / CasteletViewportManager.base_viewport_width
+		ypos = prop.position.y / CasteletViewportManager.base_viewport_height
+		scale_factor = prop.in_viewport_scale / CasteletViewportManager.base_scale_factor
 	
-	prop.texture = prop.variants[prop_variant]
-
+	# Check if the defined prop has the particular variant. Otherwise, send
+	# a warning and display null object instead.
+	if (prop.variants.has(prop_variant)):
+		prop.texture = prop.variants[prop_variant]
+	else:
+		prop.texture = null
+		print_debug("The variant is not defined in the prop resource dictionary. Skipping.")
+	
+	# Pass the optional arguments
 	if args:
-		pass
-
-	prop.position.x = CasteletViewportManager.base_viewport_width * 0.5
-	prop.position.y = CasteletViewportManager.base_viewport_height * 1.0
-	prop.default_viewport_scale = CasteletViewportManager.base_scale_factor
+		print_debug(args)
+		if args.has("x"):
+			xpos = float(args['x'])
+		if args.has("y"):
+			ypos = float(args['y'])
+		if args.has("flip"):
+			if args["flip"] == "true":
+				prop.flip_h = true
+			else:
+				prop.flip_h = false
+		if args.has("scale"):
+			scale_factor = float(args["scale"])
+	
+	# Properly display the prop now
+	prop.position.x = CasteletViewportManager.base_viewport_width * xpos
+	prop.position.y = CasteletViewportManager.base_viewport_height * ypos
+	prop.in_viewport_scale = CasteletViewportManager.base_scale_factor * scale_factor
 	
 	CasteletGameManager.progress.emit()
 

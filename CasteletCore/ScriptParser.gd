@@ -95,6 +95,8 @@ func _parse(command_string : String) -> Dictionary:
 		for rs in arg_result:
 			args[rs.get_string(1)] = rs.get_string(2)
 		
+#		print_debug(args)
+		
 		# Map the keyword type and the data to be processed.
 		return {"type" : action, "data": param, "args": args}
 	

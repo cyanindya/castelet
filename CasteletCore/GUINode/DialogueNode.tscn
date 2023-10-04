@@ -1,40 +1,9 @@
-[gd_scene load_steps=8 format=3 uid="uid://cb1ysu6lfx171"]
+[gd_scene load_steps=5 format=3 uid="uid://cb1ysu6lfx171"]
 
 [ext_resource type="Script" path="res://CasteletCore/GUINode/DialogueNode.gd" id="1_p3qt0"]
-[ext_resource type="Texture2D" uid="uid://bdaj0mcn74hkc" path="res://TestAssets/text_window.png" id="2_3cfxu"]
-[ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://TestAssets/LiberationSerif-Regular.ttf" id="3_o2lqq"]
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_4r7j3"]
-texture = ExtResource("2_3cfxu")
-texture_margin_left = 30.0
-texture_margin_top = 15.0
-texture_margin_right = 30.0
-texture_margin_bottom = 15.0
-expand_margin_left = 7.0
-expand_margin_top = 7.0
-expand_margin_right = 7.0
-expand_margin_bottom = 7.0
-
-[sub_resource type="LabelSettings" id="LabelSettings_vlps7"]
-font = ExtResource("3_o2lqq")
-font_size = 24
-font_color = Color(0.160784, 0.054902, 0.0509804, 1)
-
-[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_ow1pm"]
-texture = ExtResource("2_3cfxu")
-texture_margin_left = 30.0
-texture_margin_top = 30.0
-texture_margin_right = 30.0
-texture_margin_bottom = 30.0
-expand_margin_left = 7.0
-expand_margin_top = 7.0
-expand_margin_right = 7.0
-expand_margin_bottom = 7.0
-
-[sub_resource type="LabelSettings" id="LabelSettings_dfva0"]
-font = ExtResource("3_o2lqq")
-font_size = 24
-font_color = Color(0.160784, 0.054902, 0.0509804, 1)
+[ext_resource type="StyleBox" uid="uid://c2c1o4ao7016i" path="res://DefaultAssets/DefaultSpeakerWindow.tres" id="2_krm3u"]
+[ext_resource type="LabelSettings" uid="uid://jbdwm54u7iyv" path="res://DefaultAssets/DefaultDialogueTypesetting.tres" id="3_kbtf1"]
+[ext_resource type="StyleBox" uid="uid://bnnm0ag6717jh" path="res://DefaultAssets/DefaultDialogueWindow.tres" id="4_hbdqr"]
 
 [node name="DialogueNode" type="Control"]
 layout_mode = 3
@@ -64,12 +33,12 @@ offset_right = -262.0
 offset_bottom = -194.0
 grow_vertical = 0
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxTexture_4r7j3")
+theme_override_styles/panel = ExtResource("2_krm3u")
 
 [node name="SpeakerLabel" type="Label" parent="Speaker"]
 layout_mode = 2
 text = "Speaker"
-label_settings = SubResource("LabelSettings_vlps7")
+label_settings = ExtResource("3_kbtf1")
 horizontal_alignment = 1
 
 [node name="Dialogue" type="PanelContainer" parent="."]
@@ -86,13 +55,13 @@ offset_right = 400.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxTexture_ow1pm")
+theme_override_styles/panel = ExtResource("4_hbdqr")
 
 [node name="DialogueLabel" type="Label" parent="Dialogue"]
 layout_mode = 2
 size_flags_vertical = 1
 text = "Dialogue Line"
-label_settings = SubResource("LabelSettings_dfva0")
+label_settings = ExtResource("3_kbtf1")
 autowrap_mode = 3
 
 [node name="CTC_Indicator" type="Control" parent="."]
@@ -109,4 +78,3 @@ mouse_filter = 1
 [node name="CTC_Sprite" type="Polygon2D" parent="CTC_Indicator"]
 color = Color(0.160784, 0.054902, 0.0509804, 1)
 polygon = PackedVector2Array(0, 0, 0, 20, 20, 10)
-

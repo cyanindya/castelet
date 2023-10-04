@@ -50,6 +50,8 @@ extends Node
 
 # The custom script file to display the cutscene from.
 @export_file("*.tsc") var script_file
+#@export var default_dialogue_box : StyleBoxTexture
+#@export var default_speaker_box : StyleBoxTexture
 
 # Script-level variables to control the flow of the story presentation. Comprised of:
 # - an array of parsed commands
@@ -67,6 +69,12 @@ signal end_of_script
 
 # The function that is first called when the game starts
 func _ready():
+#
+#	if (default_dialogue_box != null):
+#		$GUINode/DialogueNode/Dialogue.add_theme_stylebox_override("panel", default_dialogue_box)
+#	if (default_speaker_box != null):
+#		$GUINode/DialogueNode/Speaker.add_theme_stylebox_override("panel", default_speaker_box)
+#
 
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
@@ -136,8 +144,12 @@ func _process_command(command : Dictionary):
 		# for the proper speaker name. This was moved from ScriptParser to decouple the parser
 		# from asset manager.
 		if (command['speaker'] as String).begins_with("id_"):
-			assert(CasteletAssetsManager.props[command['speaker'].trim_prefix("id_")], "Cannot find the associated prop data from assets manager. Please check the name of the prop and its associated ID again.")
-			command['speaker'] = CasteletAssetsManager.props[command['speaker'].trim_prefix("id_")].prop_name
+			# assert(CasteletAssetsManager.props[command['speaker'].trim_prefix("id_")], "Cannot find the associated prop data from assets manager. Please check the name of the prop and its associated ID again.")
+			if not (CasteletAssetsManager.props.has(command['speaker'].trim_prefix("id_"))):
+				print_debug("The defined prop does not actually exist. Temporarily assigning prop ID as speaker label.")
+				command['speaker'] = command['speaker'].trim_prefix("id_")
+			else:
+				command['speaker'] = CasteletAssetsManager.props[command['speaker'].trim_prefix("id_")].prop_name
 
 		$GUINode.update_dialogue(command)
 		CasteletGameManager.append_dialogue(command)
@@ -145,20 +157,30 @@ func _process_command(command : Dictionary):
 	elif (command["type"] == "scene"):
 		
 		var params = (command['data'] as String).split(".")
-
+		
 		if len(params) > 1:
-			$StageNode.scene(params[0], params[1])
+			$StageNode.scene(params[0], params[1], command["args"])
 		else:
-			$StageNode.scene(params[0])
+			$StageNode.scene(params[0], 'default', command["args"])
 		
 
 	elif (command["type"] == "show"):
-		_unfold_play()
-		pass
+		
+		
+		var params = (command['data'] as String).split(".")
+		
+		if len(params) > 1:
+			$StageNode.show_prop(params[0], params[1], command["args"])
+		else:
+			$StageNode.show_prop(params[0], 'default', command["args"])
+			
 	
 	elif (command["type"] == "hide"):
-		_unfold_play()
-		pass
+		
+		var params = (command['data'] as String).split(".")
+		
+		$StageNode.hide_prop(params[0])
+		
 	
 	elif (command["type"] == "bgm" or command["type"] == "sfx"):
 		
@@ -202,7 +224,7 @@ func _on_end_of_script() -> void:
 	# Ensures the signal handler is disconnected before this node is destroyed, just in case.
 	CasteletGameManager.progress.disconnect(_on_progress)
 	
-	#
+	# 
 	$StageNode.hide()
 	$GUINode.hide()
 	
@@ -212,4 +234,5 @@ func _on_end_of_script() -> void:
 
 func _on_progress():
 	if (_current_command_index < _total_command_count):
+#		print_orphan_nodes()
 		_unfold_play()

@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://ca1dssn5xvet0"]
 
-[ext_resource type="Texture2D" uid="uid://bdaj0mcn74hkc" path="res://TestAssets/text_window.png" id="1_duv51"]
+[ext_resource type="Texture2D" uid="uid://bdaj0mcn74hkc" path="res://DefaultAssets/text_window.png" id="1_duv51"]
 [ext_resource type="Script" path="res://CasteletCore/GUINode/BacklogNode.gd" id="1_x7jn2"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_bmo02"]
