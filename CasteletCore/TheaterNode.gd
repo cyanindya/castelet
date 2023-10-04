@@ -112,6 +112,7 @@ func _parse_script(script_file_contents : String) -> void:
 	_parsed_script_commands = parser.parse_script(script_file_contents)
 	_total_command_count = len(_parsed_script_commands)
 	
+	print_debug(_parsed_script_commands)
 
 
 # The function to be called to process and display EACH parsed command.
@@ -183,7 +184,7 @@ func _process_command(command : Dictionary):
 		
 	
 	elif (command["type"] == "bgm" or command["type"] == "sfx"):
-		
+
 		if command['data'] == "stop":
 			CasteletAudioManager.stop_audio((command["type"] as String).to_upper())
 		elif command['data'] == "pause":
@@ -193,8 +194,12 @@ func _process_command(command : Dictionary):
 		elif command['data'] == "":
 			CasteletAudioManager.refresh_audio(command['args'], (command["type"] as String).to_upper())
 		else:
-			CasteletAudioManager.play_audio(command["data"], command['args'], (command["type"] as String).to_upper())
-		
+			# print_debug(command["data"])
+			if String(command["data"]).begins_with('['):
+				CasteletAudioManager.queue_audio(command["data"].trim_prefix('[').trim_suffix(']').split(', '),
+										command['args'], (command["type"] as String).to_upper())
+			else:
+				CasteletAudioManager.play_audio(command["data"], command['args'], (command["type"] as String).to_upper())
 		
 		CasteletGameManager.progress.emit()
 	

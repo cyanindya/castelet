@@ -18,13 +18,29 @@ var set_volume_db := 0.0
 var max_loop_count : int = 0
 var current_loop_count : int = 0
 
+var queue := []
+var queue_id = 0
+var queue_length = 0
+
+# Borrowed from https://github.com/godotengine/godot/issues/56156#issuecomment-1727974198
+# signal audio_finished
+@onready var finished_timer = Timer.new()
+
 func _ready():
 	finished.connect(_on_finished)
+	finished_timer.timeout.connect(_on_finished_timer_timeout)
+	add_child(finished_timer)
+	# audio_finished.connect(_on_finished)
+
+func _exit_tree():
+	finished.disconnect(_on_finished)
+	finished_timer.timeout.disconnect(_on_finished_timer_timeout)
+	# audio_finished.disconnect(_on_finished)
 
 # Handle custom end-point and fadeout during frame updates.
 func _process(_delta):
 	if is_playing:
-		if loop:
+		if loop and len(queue) == 0:
 			if ((end_point != -1) and get_playback_position() >= end_point):
 				seek(loop_from)
 		else:
@@ -35,16 +51,37 @@ func _process(_delta):
 				# Make sure to fire the fadeout tween only once.
 					if _audio_tween == null or (_audio_tween != null and not _audio_tween.is_running()):
 						stop_stream()
-				else:
-					finished.emit()
+				# else:
+				# 	finished.emit()
+
+# func _check_is_finished():
+# 	if not playing:
+# 		audio_finished.emit()
+# 		finished_timer.stop()
+# 		return
+
+func _on_finished_timer_timeout():
+	finished.emit()
 
 # Because Godot has no signal for signifying loop is performed, for finite loop,
 # we make use of the "finished" signal instead since technically the loop is off
 # (in other words, we manually replay it)
 func _on_finished():
-	if max_loop_count > 0 and current_loop_count < max_loop_count:
+	if len(queue) == 0 and max_loop_count > 0 and current_loop_count < max_loop_count:
 		current_loop_count += 1
 		play(loop_from)
+	else:
+		if queue_id < queue_length - 1:
+			queue_id += 1
+			init_stream(queue[queue_id])
+			end_point = queue[queue_id].get_length()
+			play_stream()
+		else:
+			if loop:
+				queue_id = 0
+				init_stream(queue[queue_id])
+				end_point = queue[queue_id].get_length()
+				play_stream()
 	
 
 # This class doesn't allow overriding play() function apparently, so to implement
@@ -55,7 +92,7 @@ func play_stream():
 		fade_audio(mute_volume_db, set_volume_db, fadein)
 	
 	play(start_point)
-	print_debug(end_point)
+	finished_timer.start(end_point - loop_from)
 
 
 # Ditto for stop() function.
@@ -78,6 +115,20 @@ func fade_audio(from : float =-20.0, to :=0.0, duration :=1.0):
 	_audio_tween = create_tween()
 	_audio_tween.tween_property(self, "volume_db", to, duration).from(from)
 
+func clear_queue():
+	queue = []
+	queue_id = 0
+	queue_length = 0
+
+func init_queue(input_queue = [], args := {}):
+	queue = input_queue
+	queue_length = len(queue)
+
+	await finished_timer.timeout
+
+	init_stream(queue[0] as AudioStream, args)
+	stream.set_loop(false)
+
 
 # A custom function to set up the stream player parameters (e.g. fadein and
 # fadeout time) before actually playing the audio.
@@ -93,10 +144,12 @@ func init_stream(track : AudioStream, args := {}):
 		# finite loop option right now, so for now, we actually disable
 		# the loop option and make use of "finished" signal instead
 		if (args['loop'] == "true" and not args.has("loopcount")):
-			stream.set_loop(true)
+			if stream != null:
+				stream.set_loop(true)
 			loop = true
 		else:
-			stream.set_loop(false)
+			if stream != null:
+				stream.set_loop(false)
 			loop = false
 	
 	if args.has("volume"):
@@ -115,7 +168,7 @@ func init_stream(track : AudioStream, args := {}):
 	if args.has("to"):
 		end_point = args['to'] as float
 	else:
-		if end_point == -1:
+		if end_point == -1 and stream != null:
 			end_point = stream.get_length()
 	
 	if args.has("loopfrom"):
@@ -123,7 +176,8 @@ func init_stream(track : AudioStream, args := {}):
 	else:
 		if loop_from == -1:
 			loop_from = start_point
-	stream.set_loop_offset(loop_from)
+	if stream != null:
+		stream.set_loop_offset(loop_from)
 	
 	if args.has("loopcount"):
 		max_loop_count = args['loopcount'] as int

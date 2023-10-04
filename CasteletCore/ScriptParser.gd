@@ -78,8 +78,14 @@ func _parse(command_string : String) -> Dictionary:
 	# If it is, perform stage update (including show/hide window).
 	# Otherwise, treat it as dialogue line (or return errors if the pattern is
 	# unrecognized).
-	regex.compile("(*UCP)^@\\b(\\w+)(?: )*(\\b[\\w\\d_\\.]+\\b(?!:)|(?:\")[\\w\\d\\._,/ ]+(?:\"))*")
+	regex.compile("(*UCP)^@(\\w*)(?: )*(\\[[\\w\\d_\\.\\/,\", ]*\\])")
 	var result = regex.search(command_string)
+	
+	# If the first returns none, assume it is because the parameters are enclosed by [] -- usually
+	# for queue-ing audio files
+	if not result:
+		regex.compile("(*UCP)^@\\b(\\w+)(?: )*(\\b[\\w\\d_\\.]+\\b(?!:)|(?:\")[\\w\\d\\._,/ ]+(?:\"))*")
+		result = regex.search(command_string)
 	
 	if result:
 		
