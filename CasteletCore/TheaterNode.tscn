@@ -6,7 +6,6 @@
 
 [node name="TheaterNode" type="Node"]
 script = ExtResource("1_4l07k")
-script_file = "res://TestAssets/script/test_scene_2.tsc"
 
 [node name="StageNode" parent="." instance=ExtResource("1_hujwy")]
 

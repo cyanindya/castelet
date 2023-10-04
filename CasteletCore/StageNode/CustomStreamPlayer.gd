@@ -9,26 +9,42 @@ class_name CustomStreamPlayer
 var fadein = 0.0
 var fadeout = 0.0
 var start_point = 0.0
-var loop_point = -1
+var loop_from = -1
 var end_point = -1
 var loop = false
 var _audio_tween : Tween
 var mute_volume_db := -40.0
 var set_volume_db := 0.0
+var max_loop_count : int = 0
+var current_loop_count : int = 0
 
+func _ready():
+	finished.connect(_on_finished)
 
 # Handle custom end-point and fadeout during frame updates.
 func _process(_delta):
 	if is_playing:
 		if loop:
 			if ((end_point != -1) and get_playback_position() >= end_point):
-				seek(loop_point)
+				seek(loop_from)
 		else:
 			if ((end_point != -1) and get_playback_position() >= end_point - fadeout):
-				
+				# Check if currently in finite loop mode and has reached the limit
+				# or not
+				if current_loop_count >= max_loop_count:
 				# Make sure to fire the fadeout tween only once.
-				if not _audio_tween.is_running():
-					stop_stream()
+					if _audio_tween == null or (_audio_tween != null and not _audio_tween.is_running()):
+						stop_stream()
+				else:
+					finished.emit()
+
+# Because Godot has no signal for signifying loop is performed, for finite loop,
+# we make use of the "finished" signal instead since technically the loop is off
+# (in other words, we manually replay it)
+func _on_finished():
+	if max_loop_count > 0 and current_loop_count < max_loop_count:
+		current_loop_count += 1
+		play(loop_from)
 	
 
 # This class doesn't allow overriding play() function apparently, so to implement
@@ -39,6 +55,7 @@ func play_stream():
 		fade_audio(mute_volume_db, set_volume_db, fadein)
 	
 	play(start_point)
+	print_debug(end_point)
 
 
 # Ditto for stop() function.
@@ -72,7 +89,10 @@ func init_stream(track : AudioStream, args := {}):
 	set_volume_db = volume_db
 	
 	if args.has("loop"):
-		if (args['loop'] == "true"):
+		# Godot does not have inherent loop signal or inherent
+		# finite loop option right now, so for now, we actually disable
+		# the loop option and make use of "finished" signal instead
+		if (args['loop'] == "true" and not args.has("loopcount")):
 			stream.set_loop(true)
 			loop = true
 		else:
@@ -99,10 +119,16 @@ func init_stream(track : AudioStream, args := {}):
 			end_point = stream.get_length()
 	
 	if args.has("loopfrom"):
-		loop_point = args["loopfrom"]
+		loop_from = args["loopfrom"]
 	else:
-		if loop_point == -1:
-			loop_point = start_point
+		if loop_from == -1:
+			loop_from = start_point
+	stream.set_loop_offset(loop_from)
+	
+	if args.has("loopcount"):
+		max_loop_count = args['loopcount'] as int
+		if max_loop_count < 0:
+			max_loop_count = 0
 	
 
 # Function to convert determined value of volume (within percent) to dB
