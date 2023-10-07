@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://c13xwfknn0lie"]
 
 [ext_resource type="Script" path="res://CasteletAutoload/CasteletAudioManager.gd" id="1_xv1vu"]
-[ext_resource type="Script" path="res://CasteletCore/StageNode/CustomStreamPlayer.gd" id="2_sd3yx"]
+[ext_resource type="Script" path="res://CasteletCore/StageNode/CasteletStreamPlayer.gd" id="2_sd3yx"]
 
 [node name="CasteletAudioManager" type="Node"]
 script = ExtResource("1_xv1vu")

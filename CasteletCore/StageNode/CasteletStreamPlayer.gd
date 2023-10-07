@@ -4,7 +4,7 @@
 # points.
 
 extends AudioStreamPlayer
-class_name CustomStreamPlayer
+class_name CasteletStreamPlayer
 
 var fadein = 0.0
 var fadeout = 0.0
@@ -77,7 +77,7 @@ func _on_finished():
 			end_point = queue[queue_id].get_length()
 			play_stream()
 		else:
-			if loop:
+			if loop and len(queue) > 0:
 				queue_id = 0
 				init_stream(queue[queue_id])
 				end_point = queue[queue_id].get_length()
@@ -123,6 +123,8 @@ func clear_queue():
 func init_queue(input_queue = [], args := {}):
 	queue = input_queue
 	queue_length = len(queue)
+
+	# TODO: enable "queue audio and wait until current track finishes playing"
 
 	init_stream(queue[0] as AudioStream, args)
 	stream.set_loop(false)

@@ -14,7 +14,8 @@ func scene(prop_name := "", prop_variant := "default", args := {}):
 	
 	if prop_name != "none":
 		show_prop(prop_name, prop_variant, args)
-	
+	else:
+		CasteletGameManager.progress.emit()
 	
 
 func show_prop(prop_name := "", prop_variant := "default", args := {}):
@@ -39,24 +40,19 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	
 	# Check if the defined prop has the particular variant. Otherwise, send
 	# a warning and display null object instead.
-	if (prop.variants.has(prop_variant)):
-		prop.texture = prop.variants[prop_variant]
-	else:
-		prop.texture = null
-		print_debug("The variant is not defined in the prop resource dictionary. Skipping.")
+	prop.set_variant(prop_variant)
 	
 	# Pass the optional arguments
 	if args:
-		print_debug(args)
 		if args.has("x"):
 			xpos = float(args['x'])
 		if args.has("y"):
 			ypos = float(args['y'])
 		if args.has("flip"):
 			if args["flip"] == "true":
-				prop.flip_h = true
+				prop.set_flip(true)
 			else:
-				prop.flip_h = false
+				prop.set_flip(false)
 		if args.has("scale"):
 			scale_factor = float(args["scale"])
 	
