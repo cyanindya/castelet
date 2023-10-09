@@ -1,9 +1,9 @@
 # Castelet Visual Novel Framework
 
 ## What is Castelet?
-**Castelet** is a visual novel framework built on Godot Engine. The aim of this project is to facilitate Godot Engine users to easily integrate visual novel-like story presentation into their projects by using dedicated script files. The scripting language of Castelet is deliberately designed to be similar with existing script-based visual novel development kits such as Ren'Py and Naninovel, thus helping users to focus on developing the narrative content.
+**Castelet** is a visual novel framework built on Godot Engine. The aim of this project is to facilitate visual novel-like story presentation into their projects by using dedicated script files. The scripting language of Castelet is deliberately designed to be similar with existing script-based visual novel development kits such as Ren'Py and Naninovel, thus helping to focus on developing the narrative content.
 
-This project is a personal hobby project and thus will be updated on irregular basis, and as such, this is still *heavily* in progress. If you wish to use a more 'complete' framework, it is advised to check out other projects such as [Rakugo Dialogue System](https://github.com/rakugoteam/Rakugo-Dialogue-System) or Dialogic.
+This project is a personal hobby project and thus will be updated on irregular basis, and as such, this is still *heavily* in progress. If you wish to use a more 'complete' framework, it is advised to check out other projects such as [Rakugo Dialogue System](https://github.com/rakugoteam/Rakugo-Dialogue-System) or [Dialogic](https://github.com/coppolaemilio/dialogic).
 
 The development roadmap of this project can be viewed in this [public Trello board](https://trello.com/b/wMPIttki/castelet).
 
@@ -27,10 +27,10 @@ Perhaps, it may be desirable for you to use some of existing nodes or resources 
 - `StageNode` is where all of your visual assets (backgrounds, characters, event illustrations) are displayed.
 - `GUINode` is the file responsible for displaying the dialogue from your script and control various GUI elements related to Castelet, such as dialogue history (backlog) window or quick-menu buttons.
 
-See the documentation for details.
+Do note that as more features are added, these components will be reworked later.
 
 ## Documentation
-The complete documentation for Castelet can be found here.
+(in progress)
 
 ## Contact and Support
 If you found issues or suggestions, feel free to open up an issue in the Issues tab. Do note that the development is mainly conducted based on the published development roadmap above -- and as such, certain non-critical requests may have to wait.
