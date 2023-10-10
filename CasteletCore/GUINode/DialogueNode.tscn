@@ -1,9 +1,13 @@
-[gd_scene load_steps=5 format=3 uid="uid://cb1ysu6lfx171"]
+[gd_scene load_steps=9 format=3 uid="uid://cb1ysu6lfx171"]
 
 [ext_resource type="Script" path="res://CasteletCore/GUINode/DialogueNode.gd" id="1_p3qt0"]
 [ext_resource type="StyleBox" uid="uid://c2c1o4ao7016i" path="res://DefaultAssets/DefaultSpeakerWindow.tres" id="2_krm3u"]
-[ext_resource type="LabelSettings" uid="uid://jbdwm54u7iyv" path="res://DefaultAssets/DefaultDialogueTypesetting.tres" id="3_kbtf1"]
+[ext_resource type="Theme" uid="uid://d4mfepejhjvvg" path="res://DefaultAssets/DefaultDialogueRichTextTypesetting.tres" id="3_qmuy1"]
 [ext_resource type="StyleBox" uid="uid://bnnm0ag6717jh" path="res://DefaultAssets/DefaultDialogueWindow.tres" id="4_hbdqr"]
+[ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://DefaultAssets/fonts/LiberationSerif-Regular.ttf" id="4_u25vh"]
+[ext_resource type="FontFile" uid="uid://kgrh7hs65hcq" path="res://DefaultAssets/fonts/LiberationSerif-Bold.ttf" id="5_505fp"]
+[ext_resource type="FontFile" uid="uid://c713e1fx4f7r2" path="res://DefaultAssets/fonts/LiberationSerif-Italic.ttf" id="6_vy27i"]
+[ext_resource type="FontFile" uid="uid://ddr1ne202uwas" path="res://DefaultAssets/fonts/LiberationSerif-BoldItalic.ttf" id="7_mhb2j"]
 
 [node name="DialogueNode" type="Control"]
 layout_mode = 3
@@ -35,11 +39,21 @@ grow_vertical = 0
 mouse_filter = 1
 theme_override_styles/panel = ExtResource("2_krm3u")
 
-[node name="SpeakerLabel" type="Label" parent="Speaker"]
+[node name="SpeakerLabel" type="RichTextLabel" parent="Speaker"]
 layout_mode = 2
+mouse_filter = 2
+theme = ExtResource("3_qmuy1")
+theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
+theme_override_fonts/normal_font = ExtResource("4_u25vh")
+theme_override_fonts/bold_font = ExtResource("5_505fp")
+theme_override_fonts/italics_font = ExtResource("6_vy27i")
+theme_override_fonts/bold_italics_font = ExtResource("7_mhb2j")
+bbcode_enabled = true
 text = "Speaker"
-label_settings = ExtResource("3_kbtf1")
-horizontal_alignment = 1
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+shortcut_keys_enabled = false
 
 [node name="Dialogue" type="PanelContainer" parent="."]
 custom_minimum_size = Vector2(800, 200)
@@ -57,12 +71,20 @@ grow_vertical = 0
 mouse_filter = 1
 theme_override_styles/panel = ExtResource("4_hbdqr")
 
-[node name="DialogueLabel" type="Label" parent="Dialogue"]
+[node name="DialogueLabel" type="RichTextLabel" parent="Dialogue"]
 layout_mode = 2
-size_flags_vertical = 1
+mouse_filter = 2
+theme = ExtResource("3_qmuy1")
+theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
+theme_override_constants/line_separation = 5
+theme_override_fonts/normal_font = ExtResource("4_u25vh")
+theme_override_fonts/bold_font = ExtResource("5_505fp")
+theme_override_fonts/italics_font = ExtResource("6_vy27i")
+theme_override_fonts/bold_italics_font = ExtResource("7_mhb2j")
+bbcode_enabled = true
 text = "Dialogue Line"
-label_settings = ExtResource("3_kbtf1")
-autowrap_mode = 3
+scroll_active = false
+shortcut_keys_enabled = false
 
 [node name="CTC_Indicator" type="Control" parent="."]
 layout_mode = 1

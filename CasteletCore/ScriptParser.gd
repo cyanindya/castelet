@@ -144,13 +144,20 @@ func _parse(command_string : String) -> Dictionary:
 # The function to detect whether the dialogue has pauses or not.
 # Returns the clean dialogue and the pause locations and their respective durations
 # if applicable.
-# TODO: convert to a more general parser for detecting more tags.
+# TODO: convert to a more general parser for detecting more tags and variables.
 func _pause_detector(dialogue_string : String) -> Dictionary:
 	
+	# Regular expressions for detecting pauses
 	var pause_regex = RegEx.new()
-	pause_regex.compile("{(?:p|w)(?:=(\\d*\\.*\\d*))*}") # example format: {p=2.5}, {w}, {p=2}
+	pause_regex.compile("\\[(?:w)(?:=(\\d*\\.*\\d*))*\\]") # example format: [w=2.5], [w], [w=2]
 	
 	var temp_result = pause_regex.search_all(dialogue_string)
+
+	# Regular expressions for searching BBCodes (for correcting offsets)
+	var bbcode_start_regex = RegEx.new()
+	var bbcode_end_regex = RegEx.new()
+	bbcode_start_regex.compile("\\[(?!\\/|\\bw\\b)(.*?)\\]") # search for everything except for custom wait
+	bbcode_end_regex.compile("\\[\\/(.*?)\\]")
 	
 	if temp_result:
 		
@@ -169,6 +176,16 @@ func _pause_detector(dialogue_string : String) -> Dictionary:
 			var previous_tags := pause_regex.search_all(dialogue_string.left(left))
 			for prev in previous_tags:
 				left -= prev.get_string().length()
+			
+			# Calculate offset caused by BBCodes
+			var bbcode_tags_start := bbcode_start_regex.search_all(dialogue_string.left(left))
+			for bbcode_tag_start in bbcode_tags_start:
+				left -= bbcode_tag_start.get_string().length()
+			var bbcode_tags_end := bbcode_end_regex.search_all(dialogue_string.left(left))
+			for bbcode_tag_end in bbcode_tags_end:
+				left -= bbcode_tag_end.get_string().length()
+
+			# Finally append the pause location
 			pause_locations.append(left)
 			
 			# Check the duration of the pause. If no duration is specified, set it

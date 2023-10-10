@@ -112,14 +112,18 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 	
 	completed = false
 
+	print_debug(dialogue)
+
 	# For each call, hide the click-to-continue indicator first.
 	# It will be shown again when user can continue.
 	$CTC_Indicator.hide()
 	
 	# Preemptively set the speaker name and the dialogue to be displayed
 	# before actually showing them, as well as some control variables.
-	$Speaker/SpeakerLabel.text = speaker
-	$Dialogue/DialogueLabel.text = dialogue
+	$Speaker/SpeakerLabel.clear()
+	$Dialogue/DialogueLabel.clear()
+	$Speaker/SpeakerLabel.append_text(speaker)
+	$Dialogue/DialogueLabel.append_text(dialogue)
 	_pause_locations = pause_locations
 	_pause_durations = pause_durations
 	_text_length = len(dialogue)
@@ -222,6 +226,8 @@ func _animate_dialogue():
 				if _pause_durations[i] == 0.0:
 					_tween.tween_callback(_tween.pause)
 				else:
+					# FIXME: using tween_interval will automatically display remaining text instead
+					# of stopping at pause if it is interrupted before the pause.
 					_tween.tween_interval(_pause_durations[i])
 				
 				starting = _next_stop + 1
