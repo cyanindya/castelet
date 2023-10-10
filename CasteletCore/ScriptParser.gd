@@ -173,15 +173,16 @@ func _pause_detector(dialogue_string : String) -> Dictionary:
 			# (Credits to World Eater Games here: https://worldeater-dev.itch.io/
 			# bittersweet-birthday/devlog/224241/howto-a-simple-dialogue-system-in-godot)
 			var left := rs.get_start() as int
-			var previous_tags := pause_regex.search_all(dialogue_string.left(left))
+			var initial_left = left
+			var previous_tags := pause_regex.search_all(dialogue_string.left(initial_left))
 			for prev in previous_tags:
 				left -= prev.get_string().length()
 			
 			# Calculate offset caused by BBCodes
-			var bbcode_tags_start := bbcode_start_regex.search_all(dialogue_string.left(left))
+			var bbcode_tags_start := bbcode_start_regex.search_all(dialogue_string.left(initial_left))
 			for bbcode_tag_start in bbcode_tags_start:
 				left -= bbcode_tag_start.get_string().length()
-			var bbcode_tags_end := bbcode_end_regex.search_all(dialogue_string.left(left))
+			var bbcode_tags_end := bbcode_end_regex.search_all(dialogue_string.left(initial_left))
 			for bbcode_tag_end in bbcode_tags_end:
 				left -= bbcode_tag_end.get_string().length()
 
