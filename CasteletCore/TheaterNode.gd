@@ -151,9 +151,13 @@ func _process_command(command : Dictionary):
 				command['speaker'] = command['speaker'].trim_prefix("id_")
 			else:
 				command['speaker'] = CasteletAssetsManager.props[command['speaker'].trim_prefix("id_")].prop_name
-
-		$GUINode.update_dialogue(command)
-		CasteletGameManager.append_dialogue(command)
+		
+		if command["speaker"] != "extend":
+			$GUINode.update_dialogue(command)
+			CasteletGameManager.append_dialogue(command)
+		else:
+			$GUINode.extend_dialogue(command)
+			CasteletGameManager.append_dialogue_extend(command)
 	
 	elif (command["type"] == "scene"):
 		

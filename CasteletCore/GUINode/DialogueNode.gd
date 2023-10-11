@@ -149,6 +149,45 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 		_text.visible = true
 		message_display_completed.emit()
 	
+	
+func extend_dialogue(dialogue : String = "", instant : bool = false,
+	pause_locations : Array = [], pause_durations : Array = []):
+
+	completed = false
+	var starting_length := len($Dialogue/DialogueLabel.get_parsed_text())
+
+	# print_debug(starting_length)
+	print_debug(dialogue)
+
+	# For each call, hide the click-to-continue indicator first.
+	# It will be shown again when user can continue.
+	$CTC_Indicator.hide()
+
+	# Preemptively set the speaker name and the dialogue to be displayed
+	# before actually showing them, as well as some control variables.
+	$Dialogue/DialogueLabel.append_text(dialogue)
+	_pause_locations = []
+	for _pause in pause_locations:
+		_pause_locations.append(_pause + starting_length)
+	_pause_durations = pause_durations
+	_text_length = starting_length + len(dialogue)
+
+	if not _pause_locations.is_empty(): # Add the text length as the final stop
+		_pause_locations.append(_text_length)
+
+	# If the window is hidden, show it using tween/transition.
+	if not visible:
+		window_transition(0.0, 1.0)
+		await window_transition_completed
+
+	# Actually display the dialogue.
+	if not instant:
+		_animate_dialogue(starting_length)
+	else:
+		_text.visible_characters =  _text_length
+		_text.visible = true
+		message_display_completed.emit()
+
 
 
 func window_transition(old: float = 0.0, new: float = 1.0):
@@ -177,7 +216,7 @@ func window_transition(old: float = 0.0, new: float = 1.0):
 	window_transition_completed.emit()
 
 
-func _animate_dialogue():
+func _animate_dialogue(initial_visible_characters := 0):
 
 	# First, calculate the time required to display all texts based on the set speed
 	var duration := (_text_length / cps) as float
@@ -197,11 +236,11 @@ func _animate_dialogue():
 	# pauses and their duration.
 	if _pause_locations.is_empty():
 		_tween.tween_property(_text, "visible_characters",
-			_text_length, duration).from(0)
+			_text_length, duration).from(initial_visible_characters)
 	else:
 		# Temporary variable to store last starting point of the tween
-		var starting : int = 0
-		_text.visible_characters = 0
+		var starting : int = initial_visible_characters
+		_text.visible_characters = initial_visible_characters
 		
 		# Create additional tweens based on the pause locations and their
 		# durations. If the pause value is 0, it means it waits for user input
@@ -234,7 +273,7 @@ func _animate_dialogue():
 	
 	# Wait for the message display to complete before sending the signal
 	await _tween.finished
-	
+
 	if _text.visible_characters >= _text_length:
 		message_display_completed.emit()
 

@@ -30,6 +30,11 @@ func update_dialogue(dialogue_data : Dictionary):
 		dialogue_data["pause_locations"], dialogue_data["pause_durations"])
 
 
+func extend_dialogue(dialogue_data : Dictionary):
+	$DialogueNode.extend_dialogue(dialogue_data["dialogue"], CasteletGameManager.ffwd_active,
+		dialogue_data["pause_locations"], dialogue_data["pause_durations"])
+		
+
 func show_window():
 	await $DialogueNode.window_transition(0.0, 1.0)
 	CasteletGameManager.progress.emit()
@@ -70,8 +75,8 @@ func _on_backlog_button_pressed():
 	accept_event()
 	$BacklogNode.show()
 
-func _on_backlog_updated(backlog_entry : Dictionary):
-	$BacklogNode.update_backlog(backlog_entry)
+func _on_backlog_updated(backlog_entry : Dictionary, replace = false):
+	$BacklogNode.update_backlog(backlog_entry, replace)
 
 func _on_backlog_window_visibility_changed():
 	CasteletGameManager.toggle_pause($BacklogNode.visible)

@@ -125,6 +125,8 @@ func _parse(command_string : String) -> Dictionary:
 		if not speaker.is_empty():
 			if speaker.begins_with("\"") and speaker.ends_with("\""):
 				speaker = speaker.replace("\"", "")
+			elif speaker == "extend":
+				pass
 			else:
 				speaker = "_".join(["id", speaker])
 			
