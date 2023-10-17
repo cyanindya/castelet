@@ -1,7 +1,11 @@
 # A class containing parser to extract script lines and convert it into
 # Godot-readable format, which will be processed in TheaterNode afterwards.
 # 
+# This is an extremely primitive parser and is written on the basis of
+# "as long as it works". The parser will be rewritten later.
+# 
 # The general rule of thumb of how it works is as follows:
+# - Read the extracted file data line-by-line.
 # - When a comment notation appears on the front (#), the line of the script
 #   will be ignored.
 # - When line break (\\) appears at the end, the currently processed line
@@ -11,11 +15,12 @@
 #   containing operation type, the value for update, and additional arguments
 #   related to the operation.
 # - Dialogue has three possible formats
-#   prop_id "Dialogue"
-#   "Dialogue" (narrator)
-#   "Speaker" "Dialogue"
-# - Dialogue lines will be checked through parser for custom tags (e.g. for pausing
-#   text)
+#   - prop_id "Dialogue"
+#   - "Dialogue" (narrator)
+#   - "Speaker" "Dialogue"
+# - Dialogue lines will be chopped into speaker and unparsed dialogue data,
+#   which may contain BBCode tags and custom tags. Custom tags are used for
+#   flow and position control (e.g. for pausing text)
 # 
 #  The script will throw error if the detected pattern strays from the rules.
 
@@ -71,6 +76,21 @@ func _split_string_by_lines(raw_string : String) -> Array:
 # update.
 func _parse(command_string : String) -> Dictionary:
 	
+	var command = {}
+
+	# First, check if the command is a keyword or not (preceded with @).
+	# If it is, perform stage update (including show/hide window).
+	# Otherwise, treat it as dialogue line (or return errors if the pattern is
+	# unrecognized).
+	command = stage_command_processor(command_string)
+	if command.size() == 0:
+		command = dialogue_processor(command_string)
+	
+	return command
+
+
+func stage_command_processor(command_string : String) -> Dictionary:
+	
 	# Create new RegEx instance.
 	var regex = RegEx.new()
 	
@@ -101,10 +121,16 @@ func _parse(command_string : String) -> Dictionary:
 		for rs in arg_result:
 			args[rs.get_string(1)] = rs.get_string(2)
 		
-#		print_debug(args)
-		
 		# Map the keyword type and the data to be processed.
 		return {"type" : action, "data": param, "args": args}
+	
+	return {}
+
+
+func dialogue_processor(command_string : String) -> Dictionary:
+	
+	# Create new RegEx instance.
+	var regex = RegEx.new()
 	
 	# Otherwise, check the pattern for dialogue-type command first
 	# speaker "dialogue"
@@ -113,7 +139,7 @@ func _parse(command_string : String) -> Dictionary:
 	# dialogue is spoken by narrator.
 	regex.clear()
 	regex.compile("^(\".*\"|\\w*)(?: )*\"(.*)\"")
-	result = regex.search(command_string)
+	var result = regex.search(command_string)
 	
 	if result:
 		# If the speaker label is not a one-off name, mark it with "id_"
@@ -138,16 +164,28 @@ func _parse(command_string : String) -> Dictionary:
 		
 		return { "type" : "say", "speaker" : speaker, "dialogue" : dialogue["final_string"],
 				"pause_locations": dialogue["pause_locations"],
-				"pause_durations": dialogue["pause_durations"] }
-	
+				"pause_durations": dialogue["pause_durations"],
+				"auto_dismiss" : dialogue["auto_dismiss"]
+			}
+
 	return {}
-		
 
 # The function to detect whether the dialogue has pauses or not.
 # Returns the clean dialogue and the pause locations and their respective durations
 # if applicable.
 # TODO: convert to a more general parser for detecting more tags and variables.
 func _pause_detector(dialogue_string : String) -> Dictionary:
+
+	var nowait_regex = RegEx.new()
+	nowait_regex.compile("(\\[nw\\])$")
+
+	var nowait_result = nowait_regex.search(dialogue_string)
+
+	var auto_dismiss = false
+	if nowait_result:
+		auto_dismiss = true
+		# print_debug("nowait tag detected")
+		dialogue_string = nowait_regex.sub(dialogue_string, "", true)
 	
 	# Regular expressions for detecting pauses
 	var pause_regex = RegEx.new()
@@ -187,7 +225,7 @@ func _pause_detector(dialogue_string : String) -> Dictionary:
 			var bbcode_tags_end := bbcode_end_regex.search_all(dialogue_string.left(initial_left))
 			for bbcode_tag_end in bbcode_tags_end:
 				left -= bbcode_tag_end.get_string().length()
-
+			
 			# Finally append the pause location
 			pause_locations.append(left)
 			
@@ -199,7 +237,9 @@ func _pause_detector(dialogue_string : String) -> Dictionary:
 				pause_durations.append(rs.get_string(1) as float)
 		
 		return {"final_string" : pause_regex.sub(dialogue_string, "", true),
-				"pause_locations": pause_locations, "pause_durations" : pause_durations}
+				"pause_locations": pause_locations, "pause_durations" : pause_durations,
+				"auto_dismiss" : auto_dismiss
+			}
 	
-	return {"final_string" : dialogue_string, "pause_locations": [], "pause_durations": []}
+	return {"final_string" : dialogue_string, "pause_locations": [], "pause_durations": [], "auto_dismiss" : auto_dismiss}
 	

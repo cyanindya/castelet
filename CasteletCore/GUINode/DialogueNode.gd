@@ -80,6 +80,7 @@ extends Control
 @export var cps : float = 20
 @export var window_transition_speed : float = 0.5
 var completed = false
+var auto_dismiss = false
 
 var _tween : Tween
 var _pause_locations : Array = []
@@ -91,7 +92,7 @@ var _next_stop = 0
 
 signal window_transition_completed
 signal message_display_paused(duration : float)
-signal message_display_completed
+signal message_display_completed(auto : bool)
 # signal request_refresh
 
 
@@ -108,9 +109,15 @@ func _ready():
 	
 
 func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool = false,
-					pause_locations : Array = [], pause_durations : Array = []):
+					pause_locations : Array = [], pause_durations : Array = [],
+					auto = false):
 	
 	completed = false
+	auto_dismiss = auto
+
+	var starting_length := 0
+	if speaker == "extend":
+		starting_length = len($Dialogue/DialogueLabel.get_parsed_text())
 
 	print_debug(dialogue)
 
@@ -120,13 +127,19 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 	
 	# Preemptively set the speaker name and the dialogue to be displayed
 	# before actually showing them, as well as some control variables.
-	$Speaker/SpeakerLabel.clear()
-	$Dialogue/DialogueLabel.clear()
-	$Speaker/SpeakerLabel.append_text(speaker)
+	if speaker != "extend":
+		$Speaker/SpeakerLabel.clear()
+		$Dialogue/DialogueLabel.clear()
+		$Speaker/SpeakerLabel.append_text(speaker)
 	$Dialogue/DialogueLabel.append_text(dialogue)
-	_pause_locations = pause_locations
+	
+	_pause_locations = []
+	for _pause in pause_locations:
+		_pause_locations.append(_pause + starting_length)
 	_pause_durations = pause_durations
-	_text_length = len(dialogue)
+	
+	_text_length = starting_length + len(dialogue)
+
 	if not _pause_locations.is_empty(): # Add the text length as the final stop
 		_pause_locations.append(_text_length)
 
@@ -143,52 +156,12 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 	
 	# Actually display the dialogue.
 	if not instant:
-		_animate_dialogue()
+		_animate_dialogue(starting_length)
 	else:
 		_text.visible_characters = _text_length
 		_text.visible = true
-		message_display_completed.emit()
+		message_display_completed.emit(auto_dismiss)
 	
-	
-func extend_dialogue(dialogue : String = "", instant : bool = false,
-	pause_locations : Array = [], pause_durations : Array = []):
-
-	completed = false
-	var starting_length := len($Dialogue/DialogueLabel.get_parsed_text())
-
-	# print_debug(starting_length)
-	print_debug(dialogue)
-
-	# For each call, hide the click-to-continue indicator first.
-	# It will be shown again when user can continue.
-	$CTC_Indicator.hide()
-
-	# Preemptively set the speaker name and the dialogue to be displayed
-	# before actually showing them, as well as some control variables.
-	$Dialogue/DialogueLabel.append_text(dialogue)
-	_pause_locations = []
-	for _pause in pause_locations:
-		_pause_locations.append(_pause + starting_length)
-	_pause_durations = pause_durations
-	_text_length = starting_length + len(dialogue)
-
-	if not _pause_locations.is_empty(): # Add the text length as the final stop
-		_pause_locations.append(_text_length)
-
-	# If the window is hidden, show it using tween/transition.
-	if not visible:
-		window_transition(0.0, 1.0)
-		await window_transition_completed
-
-	# Actually display the dialogue.
-	if not instant:
-		_animate_dialogue(starting_length)
-	else:
-		_text.visible_characters =  _text_length
-		_text.visible = true
-		message_display_completed.emit()
-
-
 
 func window_transition(old: float = 0.0, new: float = 1.0):
 	
@@ -275,7 +248,7 @@ func _animate_dialogue(initial_visible_characters := 0):
 	await _tween.finished
 
 	if _text.visible_characters >= _text_length:
-		message_display_completed.emit()
+		message_display_completed.emit(auto_dismiss)
 
 
 func process_interrupt(instant : bool = false):
@@ -286,7 +259,7 @@ func process_interrupt(instant : bool = false):
 		if _text.visible_characters < _text_length:
 			_text.visible_characters = _text_length
 		_text.visible = true
-		message_display_completed.emit()
+		message_display_completed.emit(auto_dismiss)
 	
 	else:
 		if _text.visible_characters < _text_length and _pause_locations.is_empty():
@@ -318,11 +291,12 @@ func _on_window_transition_completed():
 	pass
 
 
-func _on_message_display_completed():
+func _on_message_display_completed(_auto = false):
 	$CTC_Indicator.show()
 	completed = true
 
 
 func _on_message_display_paused(_duration : float):
 	$CTC_Indicator.show()
+	completed = false
 

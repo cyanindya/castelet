@@ -84,8 +84,8 @@ func append_dialogue(dialogue_data: Dictionary):
 func append_dialogue_extend(dialogue_data: Dictionary):
 	var current_dialogue = backlog.pop_back()
 	current_dialogue['dialogue'] += dialogue_data['dialogue']
+	current_dialogue['auto_dismiss'] = dialogue_data['auto_dismiss']
 	backlog.append(current_dialogue)
-	print_debug(backlog[-1])
 
 	backlog_update.emit(current_dialogue, true)
 	

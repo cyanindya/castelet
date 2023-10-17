@@ -27,13 +27,7 @@ func _process(_delta):
 # - when it finishes displaying, send a signal that the script can proceed
 func update_dialogue(dialogue_data : Dictionary):
 	$DialogueNode.show_dialogue(dialogue_data["speaker"], dialogue_data["dialogue"], CasteletGameManager.ffwd_active,
-		dialogue_data["pause_locations"], dialogue_data["pause_durations"])
-
-
-func extend_dialogue(dialogue_data : Dictionary):
-	$DialogueNode.extend_dialogue(dialogue_data["dialogue"], CasteletGameManager.ffwd_active,
-		dialogue_data["pause_locations"], dialogue_data["pause_durations"])
-		
+		dialogue_data["pause_locations"], dialogue_data["pause_durations"], dialogue_data["auto_dismiss"])
 
 func show_window():
 	await $DialogueNode.window_transition(0.0, 1.0)
@@ -67,8 +61,11 @@ func _on_dialogue_node_message_display_paused(duration : float):
 		CasteletGameManager.enter_standby.emit()
 
 
-func _on_dialogue_node_message_display_completed():
-	CasteletGameManager.enter_standby.emit()
+func _on_dialogue_node_message_display_completed(auto = false):
+	if auto:
+		CasteletGameManager.progress.emit()
+	else:
+		CasteletGameManager.enter_standby.emit()
 
 
 func _on_backlog_button_pressed():
