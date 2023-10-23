@@ -80,6 +80,7 @@ extends Control
 @export var cps : float = 20
 @export var window_transition_speed : float = 0.5
 var completed = false
+var auto_dismiss = false
 
 var _tween : Tween
 var _pause_locations : Array = []
@@ -91,7 +92,7 @@ var _next_stop = 0
 
 signal window_transition_completed
 signal message_display_paused(duration : float)
-signal message_display_completed
+signal message_display_completed(auto : bool)
 # signal request_refresh
 
 
@@ -108,9 +109,16 @@ func _ready():
 	
 
 func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool = false,
-					pause_locations : Array = [], pause_durations : Array = []):
+					args = {}):
 	
 	completed = false
+
+	if args.has("auto_dismiss"):
+		auto_dismiss = args["auto_dismiss"]
+
+	var starting_length := 0
+	if speaker == "extend":
+		starting_length = len($Dialogue/DialogueLabel.get_parsed_text())
 
 	# For each call, hide the click-to-continue indicator first.
 	# It will be shown again when user can continue.
@@ -118,11 +126,22 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 	
 	# Preemptively set the speaker name and the dialogue to be displayed
 	# before actually showing them, as well as some control variables.
-	$Speaker/SpeakerLabel.text = speaker
-	$Dialogue/DialogueLabel.text = dialogue
-	_pause_locations = pause_locations
-	_pause_durations = pause_durations
-	_text_length = len(dialogue)
+	if speaker != "extend":
+		$Speaker/SpeakerLabel.clear()
+		$Dialogue/DialogueLabel.clear()
+		$Speaker/SpeakerLabel.append_text(speaker)
+	$Dialogue/DialogueLabel.append_text(dialogue)
+	
+	_pause_locations = []
+	_pause_durations = []
+	if args.has("pause_locations"):
+		for _pause in args["pause_locations"]:
+			_pause_locations.append(_pause + starting_length)
+	if args.has("pause_durations"):
+		_pause_durations = args["pause_durations"]
+	
+	_text_length = starting_length + len(dialogue)
+
 	if not _pause_locations.is_empty(): # Add the text length as the final stop
 		_pause_locations.append(_text_length)
 
@@ -139,13 +158,12 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 	
 	# Actually display the dialogue.
 	if not instant:
-		_animate_dialogue()
+		_animate_dialogue(starting_length)
 	else:
 		_text.visible_characters = _text_length
 		_text.visible = true
-		message_display_completed.emit()
+		message_display_completed.emit(auto_dismiss)
 	
-
 
 func window_transition(old: float = 0.0, new: float = 1.0):
 	
@@ -173,7 +191,7 @@ func window_transition(old: float = 0.0, new: float = 1.0):
 	window_transition_completed.emit()
 
 
-func _animate_dialogue():
+func _animate_dialogue(initial_visible_characters := 0):
 
 	# First, calculate the time required to display all texts based on the set speed
 	var duration := (_text_length / cps) as float
@@ -193,11 +211,11 @@ func _animate_dialogue():
 	# pauses and their duration.
 	if _pause_locations.is_empty():
 		_tween.tween_property(_text, "visible_characters",
-			_text_length, duration).from(0)
+			_text_length, duration).from(initial_visible_characters)
 	else:
 		# Temporary variable to store last starting point of the tween
-		var starting : int = 0
-		_text.visible_characters = 0
+		var starting : int = initial_visible_characters
+		_text.visible_characters = initial_visible_characters
 		
 		# Create additional tweens based on the pause locations and their
 		# durations. If the pause value is 0, it means it waits for user input
@@ -222,15 +240,17 @@ func _animate_dialogue():
 				if _pause_durations[i] == 0.0:
 					_tween.tween_callback(_tween.pause)
 				else:
+					# FIXME: using tween_interval will automatically display remaining text instead
+					# of stopping at pause if it is interrupted before the pause.
 					_tween.tween_interval(_pause_durations[i])
 				
 				starting = _next_stop + 1
 	
 	# Wait for the message display to complete before sending the signal
 	await _tween.finished
-	
+
 	if _text.visible_characters >= _text_length:
-		message_display_completed.emit()
+		message_display_completed.emit(auto_dismiss)
 
 
 func process_interrupt(instant : bool = false):
@@ -241,7 +261,7 @@ func process_interrupt(instant : bool = false):
 		if _text.visible_characters < _text_length:
 			_text.visible_characters = _text_length
 		_text.visible = true
-		message_display_completed.emit()
+		message_display_completed.emit(auto_dismiss)
 	
 	else:
 		if _text.visible_characters < _text_length and _pause_locations.is_empty():
@@ -273,11 +293,12 @@ func _on_window_transition_completed():
 	pass
 
 
-func _on_message_display_completed():
+func _on_message_display_completed(_auto = false):
 	$CTC_Indicator.show()
 	completed = true
 
 
 func _on_message_display_paused(_duration : float):
 	$CTC_Indicator.show()
+	completed = false
 

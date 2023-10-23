@@ -46,7 +46,7 @@ signal confirm
 signal ffwd_hold(state : bool)
 signal ffwd_toggle
 
-signal backlog_update(new_data : Dictionary)
+signal backlog_update(new_data : Dictionary, replace : bool)
 signal toggle_automode
 signal enter_standby
 signal progress
@@ -78,8 +78,18 @@ func _ready():
 
 func append_dialogue(dialogue_data: Dictionary):
 	backlog.append(dialogue_data)
-	backlog_update.emit(dialogue_data)
+	backlog_update.emit(dialogue_data, false)
 
+
+func append_dialogue_extend(dialogue_data: Dictionary):
+	var current_dialogue = backlog.pop_back()
+	current_dialogue['dialogue'] += dialogue_data['dialogue']
+	if current_dialogue["args"].has("auto_dismiss"):
+		current_dialogue['args']['auto_dismiss'] = dialogue_data['args']['auto_dismiss']
+	backlog.append(current_dialogue)
+
+	backlog_update.emit(current_dialogue, true)
+	
 
 func toggle_pause(state : bool):
 	_paused = state

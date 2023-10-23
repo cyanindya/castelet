@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://6grd7dg47tt"
-path="res://.godot/imported/LiberationSerif-Regular.ttf-845966b7b8351fad49f39df3f239f99b.fontdata"
+uid="uid://c713e1fx4f7r2"
+path="res://.godot/imported/LiberationSerif-Italic.ttf-2a2c80b6f88c221efa63d794eab881e0.fontdata"
 
 [deps]
 
-source_file="res://DefaultAssets/LiberationSerif-Regular.ttf"
-dest_files=["res://.godot/imported/LiberationSerif-Regular.ttf-845966b7b8351fad49f39df3f239f99b.fontdata"]
+source_file="res://DefaultAssets/fonts/LiberationSerif-Italic.ttf"
+dest_files=["res://.godot/imported/LiberationSerif-Italic.ttf-2a2c80b6f88c221efa63d794eab881e0.fontdata"]
 
 [params]
 

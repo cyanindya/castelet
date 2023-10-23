@@ -13,10 +13,14 @@ func _ready():
 	max_scroll_length = _scrollbar.max_value
 
 
-func update_backlog(dialogue_data : Dictionary):
-	var dat = dialogue_data_node.instantiate()
-	dat.load_dialogue(dialogue_data['speaker'], dialogue_data['dialogue'])
-	_backlog_container.add_child(dat)
+func update_backlog(dialogue_data : Dictionary, replace = false):
+	if replace:
+		_backlog_container.get_child(-1).load_dialogue(dialogue_data['speaker'], dialogue_data['dialogue'])
+	else:
+		var dat = dialogue_data_node.instantiate()
+		dat.load_dialogue(dialogue_data['speaker'], dialogue_data['dialogue'])
+		_backlog_container.add_child(dat)
+
 	
 
 func _on_return_button_down():

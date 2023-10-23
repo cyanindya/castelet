@@ -49,10 +49,12 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 		if args.has("y"):
 			ypos = float(args['y'])
 		if args.has("flip"):
-			if args["flip"] == "true":
-				prop.set_flip(true)
-			else:
-				prop.set_flip(false)
+			prop.set_flip(args["flip"])
+			
+			# if args["flip"] == "true":
+			# 	prop.set_flip(true)
+			# else:
+			# 	prop.set_flip(false)
 		if args.has("scale"):
 			scale_factor = float(args["scale"])
 	

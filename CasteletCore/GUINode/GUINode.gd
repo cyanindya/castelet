@@ -26,9 +26,10 @@ func _process(_delta):
 # - show the text gradually based on text speed, 
 # - when it finishes displaying, send a signal that the script can proceed
 func update_dialogue(dialogue_data : Dictionary):
-	$DialogueNode.show_dialogue(dialogue_data["speaker"], dialogue_data["dialogue"], CasteletGameManager.ffwd_active,
-		dialogue_data["pause_locations"], dialogue_data["pause_durations"])
-
+	$DialogueNode.show_dialogue(dialogue_data["speaker"], dialogue_data["dialogue"],
+								CasteletGameManager.ffwd_active,
+								dialogue_data["args"]
+								)
 
 func show_window():
 	await $DialogueNode.window_transition(0.0, 1.0)
@@ -62,16 +63,19 @@ func _on_dialogue_node_message_display_paused(duration : float):
 		CasteletGameManager.enter_standby.emit()
 
 
-func _on_dialogue_node_message_display_completed():
-	CasteletGameManager.enter_standby.emit()
+func _on_dialogue_node_message_display_completed(auto = false):
+	if auto:
+		CasteletGameManager.progress.emit()
+	else:
+		CasteletGameManager.enter_standby.emit()
 
 
 func _on_backlog_button_pressed():
 	accept_event()
 	$BacklogNode.show()
 
-func _on_backlog_updated(backlog_entry : Dictionary):
-	$BacklogNode.update_backlog(backlog_entry)
+func _on_backlog_updated(backlog_entry : Dictionary, replace = false):
+	$BacklogNode.update_backlog(backlog_entry, replace)
 
 func _on_backlog_window_visibility_changed():
 	CasteletGameManager.toggle_pause($BacklogNode.visible)

@@ -50,7 +50,7 @@ func _load_resources(dir : String) -> void:
 		# files to iterate through.
 		while file_name != "":
 			
-			print_debug(file_name + " at " + res_dir.get_current_dir())
+			# print_debug(file_name + " at " + res_dir.get_current_dir())
 			
 			# If the current filename is a sub-directory, perform recursive call
 			# of this function by supplementing the subdirectory name,
@@ -93,7 +93,7 @@ func _load_resources(dir : String) -> void:
 		res_dir.list_dir_end()
 		
 	else:
-		print_debug("Cannot open the specified assets folder. Please re-check the location.")
+		printerr("Cannot open the specified assets folder. Please re-check the location.")
 #		return {}
 	
 #	return prop_resources
