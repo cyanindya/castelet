@@ -41,6 +41,8 @@ const KEYWORDS := {
 	WINDOW = "window",
 	LABEL = "label",
 	TRANSITION = "transition",
+	JUMP = "jump",
+	CHOICE = "choice",
 }
 
 var _source_string = ""

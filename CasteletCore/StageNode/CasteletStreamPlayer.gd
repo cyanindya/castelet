@@ -143,7 +143,7 @@ func init_stream(track : AudioStream, args := {}):
 		# Godot does not have inherent loop signal or inherent
 		# finite loop option right now, so for now, we actually disable
 		# the loop option and make use of "finished" signal instead
-		if (args['loop'] == "true" and not args.has("loopcount")):
+		if (args['loop'] == true and not args.has("loopcount")):
 			if stream != null:
 				stream.set_loop(true)
 			loop = true

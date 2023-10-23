@@ -5,14 +5,37 @@ var name = ""
 var body = []
 var checkpoints = {}
 
+var _current_index = -1
+var body_size = 0
+
 func _init(tree_name : String):
 	self.name = tree_name
 
 func _to_string() -> String:
-	return "CasteletSyntaxTree { name : %s,\nbody : %s,\ncheckpoints : %s }" % [self.name, self.body, self.checkpoints]
+	return "CasteletSyntaxTree { name : %s,body : %s, checkpoints : %s }" % [self.name, self.body, self.checkpoints]
 
 func append(expression : BaseExpression):
 	self.body.append(expression)
+	self.body_size += 1
+
+func reset():
+	self._current_index = -1
+
+func peek() -> BaseExpression:
+	print_debug(self.is_at_end())
+	if not self.is_at_end():
+		return self.body[self._current_index + 1]
+	print("no more!")
+	return null
+
+func next() -> BaseExpression:
+	if not self.is_at_end():
+		self._current_index += 1
+		return self.body[self._current_index]
+	return null
+
+func is_at_end() -> bool:
+	return self._current_index >= self.body_size - 1
 
 class BaseExpression:
 	var type = ""
@@ -23,7 +46,7 @@ class BaseExpression:
 		self.value = expression_value
 
 	func _to_string():
-		return "BaseExpression(%s, %s)" % [self.type, self.value]
+		return "BaseExpression {type: %s,\n value: %s}" % [self.type, self.value]
 
 class StageCommandExpression:
 	extends BaseExpression
@@ -36,7 +59,7 @@ class StageCommandExpression:
 		self.args = expression_args
 	
 	func _to_string():
-		return "StageCommandExpression(%s, %s, %s)" % [self.type, self.value, self.args]
+		return "StageCommandExpression{type: %s,\n value: %s,\n args:%s}" % [self.type, self.value, self.args]
 
 class CommandArgExpression:
 	extends BaseExpression
@@ -49,26 +72,21 @@ class CommandArgExpression:
 		self.value = arg_value
 	
 	func _to_string():
-		return "CommandArgExpression(%s, %s)" % [self.param, self.value]
+		return "CommandArgExpression{param: %s, value: %s}" % [self.param, self.value]
 
 class DialogueExpression:
 	extends BaseExpression
 	var speaker = ""
 	var dialogue = ""
-	var pause_locations = []
-	var pause_durations = []
-	var auto_dismiss = false
+	var args = {}
 
-	func _init(speaker_name : String, dialogue_text : String, pauses = [], durations = [],
-		auto_dismiss_on_end = false):
+	func _init(speaker_name : String, dialogue_text : String, arguments = {}):
 		self.speaker = speaker_name
 		self.dialogue = dialogue_text
-		self.pause_locations = pauses
-		self.pause_durations = durations
-		self.auto_dismiss = auto_dismiss_on_end
+		self.args = arguments
 
 	func assign_prop_notation():
 		self.speaker = "id_" + self.speaker
 	
 	func _to_string():
-		return "DialogueExpression(%s, %s)" % [self.speaker, self.dialogue]
+		return "DialogueExpression{speaker: %s, dialogue: %s, args: %s}" % [self.speaker, self.dialogue, self.args]

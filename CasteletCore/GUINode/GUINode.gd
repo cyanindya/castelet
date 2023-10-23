@@ -26,8 +26,10 @@ func _process(_delta):
 # - show the text gradually based on text speed, 
 # - when it finishes displaying, send a signal that the script can proceed
 func update_dialogue(dialogue_data : Dictionary):
-	$DialogueNode.show_dialogue(dialogue_data["speaker"], dialogue_data["dialogue"], CasteletGameManager.ffwd_active,
-		dialogue_data["pause_locations"], dialogue_data["pause_durations"], dialogue_data["auto_dismiss"])
+	$DialogueNode.show_dialogue(dialogue_data["speaker"], dialogue_data["dialogue"],
+								CasteletGameManager.ffwd_active,
+								dialogue_data["args"]
+								)
 
 func show_window():
 	await $DialogueNode.window_transition(0.0, 1.0)

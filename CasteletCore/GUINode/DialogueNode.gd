@@ -109,11 +109,12 @@ func _ready():
 	
 
 func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool = false,
-					pause_locations : Array = [], pause_durations : Array = [],
-					auto = false):
+					args = {}):
 	
 	completed = false
-	auto_dismiss = auto
+
+	if args.has("auto_dismiss"):
+		auto_dismiss = args["auto_dismiss"]
 
 	var starting_length := 0
 	if speaker == "extend":
@@ -134,9 +135,13 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 	$Dialogue/DialogueLabel.append_text(dialogue)
 	
 	_pause_locations = []
-	for _pause in pause_locations:
-		_pause_locations.append(_pause + starting_length)
-	_pause_durations = pause_durations
+	_pause_durations = []
+	print(args)
+	if args.has("pause_locations"):
+		for _pause in args["pause_locations"]:
+			_pause_locations.append(_pause + starting_length)
+	if args.has("pause_durations"):
+		_pause_durations = args["pause_durations"]
 	
 	_text_length = starting_length + len(dialogue)
 

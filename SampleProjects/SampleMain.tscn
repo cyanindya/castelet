@@ -1,10 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://c2njk281byjdp"]
+[gd_scene load_steps=2 format=3 uid="uid://c2njk281byjdp"]
 
 [ext_resource type="Script" path="res://SampleProjects/SampleMain.gd" id="1_na02m"]
-[ext_resource type="PackedScene" uid="uid://diodv26ariao0" path="res://CasteletCore/TheaterNode.tscn" id="2_3nkcu"]
 
 [node name="SampleMain" type="Node"]
 script = ExtResource("1_na02m")
-
-[node name="TheaterNode" parent="." instance=ExtResource("2_3nkcu")]
-script_file = "res://TestAssets/script/test_scene_2.tsc"
