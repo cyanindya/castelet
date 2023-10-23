@@ -76,7 +76,7 @@ func _parse_token():
 		self._tokens.next()
 	
 	elif next_token_preview.type == Tokenizer.TOKENS.EOF:
-		print_debug("End of _tokens list reached")
+		# print_debug("End of _tokens list reached")
 		self._tokens.next()
 	else:
 		push_error("Unidentified token with type %s. Skipping." % next_token_preview.type)
@@ -325,4 +325,6 @@ func _extract_custom_non_bbcode_tags(dialogue_string : String) -> Dictionary:
 						}
 				}
 	
-	return {"dialogue" : dialogue_string, "args" : {}}
+	return {"dialogue" : dialogue_string, "args" : { "pause_locations": [],
+			"pause_durations" : [], "auto_dismiss" : auto_dismiss,}
+			}

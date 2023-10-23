@@ -7,7 +7,6 @@ var _current_index := -1
 func _init(file_content : String):
 	self._text = file_content
 	self._stream_length = len(file_content)
-	print_debug("Stream length: ", self._stream_length)
 
 
 func peek_next_char() -> String:

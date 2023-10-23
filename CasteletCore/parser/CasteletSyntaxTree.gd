@@ -22,10 +22,8 @@ func reset():
 	self._current_index = -1
 
 func peek() -> BaseExpression:
-	print_debug(self.is_at_end())
 	if not self.is_at_end():
 		return self.body[self._current_index + 1]
-	print("no more!")
 	return null
 
 func next() -> BaseExpression:

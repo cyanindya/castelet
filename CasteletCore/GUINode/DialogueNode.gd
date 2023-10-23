@@ -120,8 +120,6 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 	if speaker == "extend":
 		starting_length = len($Dialogue/DialogueLabel.get_parsed_text())
 
-	print_debug(dialogue)
-
 	# For each call, hide the click-to-continue indicator first.
 	# It will be shown again when user can continue.
 	$CTC_Indicator.hide()
@@ -136,7 +134,6 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 	
 	_pause_locations = []
 	_pause_durations = []
-	print(args)
 	if args.has("pause_locations"):
 		for _pause in args["pause_locations"]:
 			_pause_locations.append(_pause + starting_length)

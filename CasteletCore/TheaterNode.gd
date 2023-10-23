@@ -36,7 +36,6 @@ func _next():
 
 	# If end of script is reached, terminate.
 	if self._tree.is_at_end():
-		print("foo")
 		emit_signal("end_of_script")
 		return
 	
@@ -125,7 +124,7 @@ func _update_dialogue():
 	# for the proper speaker name.
 	if command.speaker.begins_with("id_"):
 		if not (CasteletAssetsManager.props.has(command.speaker.trim_prefix("id_"))):
-			print_debug("The defined prop does not actually exist." +
+			push_warning("The defined prop does not actually exist." +
 				" Temporarily assigning prop ID as speaker label.")
 			dialogue["speaker"] = command.speaker.trim_prefix("id_")
 		else:
@@ -135,7 +134,7 @@ func _update_dialogue():
 	$GUINode.update_dialogue(dialogue)
 
 	# Append current dialogue to the seen-dialogue cache
-	if dialogue.speaker != "extend":
+	if command.speaker != "extend":
 		CasteletGameManager.append_dialogue(dialogue)
 	else:
 		CasteletGameManager.append_dialogue_extend(dialogue)
