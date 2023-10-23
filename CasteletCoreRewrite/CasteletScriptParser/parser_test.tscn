@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bx7jlyyvlx7fa"]
+
+[ext_resource type="Script" path="res://CasteletCoreRewrite/CasteletScriptParser/ParserTest.gd" id="1_pf6gf"]
+
+[node name="ParserTest" type="Node"]
+script = ExtResource("1_pf6gf")

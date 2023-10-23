@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://cjjjjxcq7852o"]
-
-[ext_resource type="Script" path="res://CasteletCore/ParserTest.gd" id="1_hemce"]
-
-[node name="ParserTest" type="Node"]
-script = ExtResource("1_hemce")
