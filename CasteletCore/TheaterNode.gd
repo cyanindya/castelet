@@ -4,29 +4,35 @@
 # and updates the stage and GUI nodes accordingly. This node is akin to
 # a movie player, although it is intended only for a single scene/script file.
 # This node only needs to play the script based on the syntax tree, and has no
-# need to know where it is currently at
+# need to know where it is currently at.
 # 
-# Management of all of the scenes, however, is done in other node.
+# Management of all of the scenes, however, should be done in other node.
 # 
 # To properly play/pause/stop the scene, use the following functions:
-# 
+# - play(from_beginning) - start or resume the scene
+# - pause() - makes sure _next() won't be triggered while pause is active
+# - stop() - stops the scene playback and reset to the beginning
+# - end() - terminates this node.
 
 extends Node
 
 const Tokenizer = preload("parser/Tokenizer.gd")
 
 var _tree : CasteletSyntaxTree
+var _paused = false
 
 signal end_of_script
+
 
 func load_ast(scene_tree : CasteletSyntaxTree):
 	self._tree = scene_tree
 
-func _ready():
 
+func _ready():
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
 	CasteletGameManager.progress.connect(_on_progress)
+
 
 func _next():
 
@@ -140,23 +146,41 @@ func _update_dialogue():
 		CasteletGameManager.append_dialogue_extend(dialogue)
 
 func _on_end_of_script():
+	print_debug("End of script reached")
+
+# Only progress when not paused.
+# (Requires more testing with multiple scenes active)
+func _on_progress():
+	if not _paused:
+		if not self._tree.is_at_end():
+			_next()
+		else:
+			end_of_script.emit()
+
+
+func play_scene(from_beginning = true):
+	if from_beginning:
+		_tree.reset()
+	_paused = false
+	_next()
+
+func pause_scene():
+	_paused = true	
+
+func stop_scene():
+	_tree.reset()
+
+# Terminates this node. Intended to be called
+func end():
+	
+	stop_scene()
+
 	# Ensures the signal handler is disconnected before this node is destroyed, just in case.
 	CasteletGameManager.progress.disconnect(_on_progress)
-	
-	
+	end_of_script.disconnect(_on_end_of_script)
+
 	$StageNode.hide()
 	$GUINode.hide()
 	
 	queue_free()
-	print_debug("End of script reached")
-
-
-func _on_progress():
-	if not self._tree.is_at_end():
-		_next()
-	else:
-		end_of_script.emit()
-
-
-func play_scene():
-	_next()
+	

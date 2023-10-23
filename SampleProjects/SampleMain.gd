@@ -11,3 +11,6 @@ func _ready():
 	
 	add_child(script)
 	script.play_scene()
+
+	await script.end_of_script
+	script.end()
