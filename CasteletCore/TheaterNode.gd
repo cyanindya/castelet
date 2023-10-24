@@ -24,8 +24,9 @@ var _paused = false
 signal end_of_script
 
 
-func load_ast(scene_tree : CasteletSyntaxTree):
-	self._tree = scene_tree
+func load_script(script_id : String):
+	print_debug(CasteletGameManager.script_trees)
+	self._tree = CasteletGameManager.script_trees[script_id]
 
 
 func _ready():

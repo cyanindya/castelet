@@ -23,6 +23,7 @@ CasteletGameManager="*res://CasteletAutoload/CasteletGameManager.tscn"
 CasteletAudioManager="*res://CasteletAutoload/CasteletAudioManager.tscn"
 CasteletViewportManager="*res://CasteletAutoload/CasteletViewportManager.tscn"
 CasteletInputManager="res://CasteletAutoload/CasteletInputManager.tscn"
+CasteletResourceLoader="*res://CasteletAutoload/CasteletResourceLoader.gd"
 
 [display]
 
