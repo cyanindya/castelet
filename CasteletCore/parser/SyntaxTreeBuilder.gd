@@ -230,6 +230,7 @@ func _parse_dialogue():
 	var speaker = ""
 	var dialogue = ""
 	var args = {}
+	var formatter = []
 
 	# Throw the immediate next token into token cache first.
 	_token_cache.append(self._tokens.next())
@@ -244,17 +245,51 @@ func _parse_dialogue():
 			_token_cache.append(self._tokens.next())
 		
 		# If a plus sign is available, expect another string literal to be joined later.
-		elif next_token_preview.type == Tokenizer.TOKENS.OPERATOR and next_token_preview.value == "+":
+		elif next_token_preview.type == Tokenizer.TOKENS.OPERATOR:
+			if next_token_preview.value == "+":
 			
-			while next_token_preview.type != Tokenizer.TOKENS.STRING_LITERAL:
+				while next_token_preview.type != Tokenizer.TOKENS.STRING_LITERAL:
+					self._tokens.next()
+					next_token_preview = _tokens.peek()
+
+					if next_token_preview.type in [Tokenizer.TOKENS.SYMBOL, Tokenizer.TOKENS.OPERATOR]:
+						push_error("Expected a string literal to be joined with previous string literal, but found %s token instead" % next_token_preview.type)
+				
+				# Discard this present token and join its contents with the last one available in token cache.
+				_token_cache[-1].value += self._tokens.next().value
+			
+			elif next_token_preview.value == "%":
+				# TODO: bracketed formatter
 				self._tokens.next()
 				next_token_preview = _tokens.peek()
 
-				if next_token_preview.type in [Tokenizer.TOKENS.SYMBOL, Tokenizer.TOKENS.OPERATOR]:
-					push_error("Expected a string literal to be joined with previous string literal, but found %s token instead" % next_token_preview.type)
-			
-			# Discard this present token and join its contents with the last one available in token cache.
-			_token_cache[-1].value += self._tokens.next().value
+				if next_token_preview.type == Tokenizer.TOKENS.OPERATOR and next_token_preview.value == "[":
+					self._tokens.next()
+
+					while next_token_preview.value != "]":
+						next_token_preview = _tokens.peek()
+
+						if next_token_preview.type in [Tokenizer.TOKENS.SYMBOL,
+							Tokenizer.TOKENS.STRING_LITERAL, Tokenizer.TOKENS.NUMBER, Tokenizer.TOKENS.BOOLEAN]:
+							formatter.append(next_token_preview)
+						elif next_token_preview.type == Tokenizer.TOKENS.OPERATOR and next_token_preview.value in [",", "]"]:
+							pass
+						else:
+							push_error(next_token_preview)
+						
+						self._tokens.next()
+						
+					self._tokens.next()
+
+				elif next_token_preview.type == Tokenizer.TOKENS.SYMBOL:
+					formatter.append(next_token_preview.value)
+
+					self._tokens.next()
+				
+				else:
+					push_error()
+
+
 		
 		# Otherwise, throw an error
 		else:
@@ -294,13 +329,14 @@ func _parse_dialogue():
 	
 	_token_cache.clear()
 
-	# Lastly, extract custom tags such as wait [w] and auto-dismiss [nw].
+	# Lastly, extract custom tags such as wait {w} and auto-dismiss {nw}.
 	# They're not meant to be custom BBCodes and can interfere with other
 	# functionalities those don't need them (e.g. dialogue history), so
 	# we extract them here and store it into the expression instead.
 	var dialogue_processed : Dictionary = _extract_custom_non_bbcode_tags(dialogue)
 	for arg in dialogue_processed["args"].keys():
 		args[arg] = dialogue_processed["args"][arg]
+	args["formatter"] = formatter
 
 	return CasteletSyntaxTree.DialogueExpression.new(speaker,
 			dialogue_processed["dialogue"], args)

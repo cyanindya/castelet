@@ -147,6 +147,19 @@ func _update_dialogue():
 		"args" : command.args,
 	}
 
+	# FIXME: breaks the pause location detection
+	var formatter = []
+	for vr in dialogue["args"]["formatter"]:
+		print_debug(vr)
+		if vr.type == Tokenizer.TOKENS.SYMBOL:
+			if vr.value.begins_with("persistent"):
+				formatter.append(CasteletGameManager.castelet_persistent_variables[vr.value.trim_prefix("persistent.")])
+			else:
+				formatter.append(CasteletGameManager.castelet_variables[vr.value])
+		else:
+			formatter.append(vr.value)
+	dialogue["dialogue"] = dialogue["dialogue"] % formatter
+
 	# If the speaker data starts with "id_", make sure to check the assets database
 	# for the proper speaker name.
 	if command.speaker.begins_with("id_"):

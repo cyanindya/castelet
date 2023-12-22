@@ -119,15 +119,9 @@ func modify_variable(variable : String, value):
 	castelet_variables[variable] = value
 	print_debug(castelet_variables.keys())
 
-	# progress.emit()
-
-
 func modify_persistent_variable(variable : String, value):
 	castelet_persistent_variables[variable] = value
-	print_debug(castelet_persistent_variables.keys())
-
-	# progress.emit()
-	
+	print_debug(castelet_persistent_variables.keys())	
 
 func _on_standby():
 	_standby = true
