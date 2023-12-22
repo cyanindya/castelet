@@ -88,3 +88,28 @@ class DialogueExpression:
 	
 	func _to_string():
 		return "DialogueExpression{speaker: %s, dialogue: %s, args: %s}" % [self.speaker, self.dialogue, self.args]
+
+class VariableExpression:
+	extends BaseExpression
+	
+	func _init(val : String):
+		self.type = "Variable"
+		self.value = val
+
+	func _to_string():
+		return "VariableExpression{name: %s}" % [self.value]
+
+
+class AssignmentExpression:
+	extends BaseExpression
+
+	var lhs : VariableExpression
+	var rhs : BaseExpression
+
+	func _init(left_hand : VariableExpression, right_hand : BaseExpression):
+		self.type = "Assignment"
+		self.lhs = left_hand
+		self.rhs = right_hand
+
+	func _to_string():
+		return "AssignmentExpression{left hand: %s, right hand: %s}" % [self.lhs, self.rhs]

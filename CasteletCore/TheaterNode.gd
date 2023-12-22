@@ -57,6 +57,8 @@ func _next():
 			_update_audio_channel()
 		elif next.type == Tokenizer.KEYWORDS.VOICE:
 			pass
+		elif next.type == Tokenizer.KEYWORDS.TRANSITION:
+			_update_transition()
 		elif next.type == Tokenizer.KEYWORDS.WINDOW:
 			_update_window()
 		else:
@@ -88,6 +90,13 @@ func _hide_stage_prop():
 	var params = (command.value[0] as String).split(".")
 	$StageNode.hide_prop(params[0])
 	
+func _update_transition():
+	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
+
+	# Check transition type
+	
+
+	# Check if a target exists in tree node.
 
 func _update_audio_channel():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()

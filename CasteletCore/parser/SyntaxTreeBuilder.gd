@@ -57,6 +57,9 @@ func _parse_token():
 		# Stage commands (denoted by @ operator in beginning of line)
 		if next_token_preview.value == "@":
 			return self._parse_commands()
+		# Variable assignment (denoted by $ operator in beginning of line)
+		elif next_token_preview.value == "$":
+			return self._parse_assignment()
 		else:
 			# TODO: handle variable assignment
 			self._tokens.next()
@@ -72,7 +75,7 @@ func _parse_token():
 		return self._parse_dialogue()
 	
 	# Skip newlines and comments
-	elif next_token_preview.type == Tokenizer.TOKENS.NEWLINE or next_token_preview.type == Tokenizer.TOKENS.COMMENT:
+	elif next_token_preview.type in [Tokenizer.TOKENS.NEWLINE, Tokenizer.TOKENS.COMMENT]:
 		self._tokens.next()
 	
 	elif next_token_preview.type == Tokenizer.TOKENS.EOF:
@@ -112,7 +115,7 @@ func _parse_commands():
 		self._tokens.next()
 		next_token_preview = _tokens.peek()
 
-		while next_token_preview.type == Tokenizer.TOKENS.SYMBOL or next_token_preview.value == ",":
+		while next_token_preview.type in [Tokenizer.TOKENS.SYMBOL, ","]:
 			var token = self._tokens.next()
 			if next_token_preview.type == Tokenizer.TOKENS.SYMBOL:
 				value.append(token.value)
@@ -137,6 +140,57 @@ func _parse_commands():
 		args[argument.param] = argument.value
 
 	return CasteletSyntaxTree.StageCommandExpression.new(type, value, args)
+
+# TODO: Parse branching, binary operations
+func _parse_assignment():
+	var lh
+	var rh
+	var operators = []
+
+	var temp = ""
+	
+	# Advance the tokenizer iteration
+	self._tokens.next()
+	
+	# Next, check the token to see if it is (a) a symbol and (b) it has
+	# same value as any listed in the KEYWORDS.
+	var next_token_preview = self._tokens.peek()
+
+	# Do some checking before parsing the symbol as variable:
+	## Check if it is a symbol token
+	## Check if it is not part of reserved keyword already
+	## Put on temporary variable, then do some more checking.
+	## If the next token is not part of valid operator (either assignment
+	## operator or compound assignment), throw an error.
+	if next_token_preview.type != Tokenizer.TOKENS.SYMBOL:
+		push_error()
+	if next_token_preview.value in Tokenizer.KEYWORDS.values():
+		push_error("Invalid variable name. The name is already part of reserved keyword.")
+	
+	temp = self._tokens.next()
+
+	next_token_preview = self._tokens.peek()
+	
+	# TODO: check for compound operators
+	if next_token_preview.type != Tokenizer.TOKENS.OPERATOR:
+		push_error()
+	if next_token_preview.value != "=":
+		push_error()
+	
+	lh = CasteletSyntaxTree.VariableExpression.new(temp.value)
+	operators = [self._tokens.next().value]
+
+	# TODO: check for binary expressions
+	temp = self._tokens.next()
+	rh = CasteletSyntaxTree.BaseExpression.new(temp.type, temp.value)
+	
+	next_token_preview = self._tokens.peek()
+	if next_token_preview.type != Tokenizer.TOKENS.NEWLINE:
+		push_error()
+
+	return CasteletSyntaxTree.AssignmentExpression.new(lh, rh)
+	
+
 
 
 func _parse_args():

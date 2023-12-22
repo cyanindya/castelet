@@ -11,19 +11,9 @@ config_version=5
 [application]
 
 config/name="Castelet"
-run/main_scene="res://SampleProjects/SampleMain.tscn"
+run/main_scene="res://CasteletCore/parser/parser_test.tscn"
 config/features=PackedStringArray("4.0", "Forward Plus")
 config/icon="res://icon.svg"
-
-[autoload]
-
-CasteletAssetsManager="*res://CasteletAutoload/CasteletAssetsManager.tscn"
-CasteletConfig="*res://CasteletAutoload/CasteletConfig.tscn"
-CasteletGameManager="*res://CasteletAutoload/CasteletGameManager.tscn"
-CasteletAudioManager="*res://CasteletAutoload/CasteletAudioManager.tscn"
-CasteletViewportManager="*res://CasteletAutoload/CasteletViewportManager.tscn"
-CasteletInputManager="res://CasteletAutoload/CasteletInputManager.tscn"
-CasteletResourceLoader="*res://CasteletAutoload/CasteletResourceLoader.gd"
 
 [display]
 

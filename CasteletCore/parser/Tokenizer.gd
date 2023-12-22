@@ -23,7 +23,7 @@ const INPUT_TYPES := {
 	DIALOGUE = "Dialogue",
 }
 
-const OPERATORS := ["@", "[", "]", "+", "-", ":", ","]
+const OPERATORS := ["@", "[", "]", "+", "-", ":", ",", "$", "="]
 
 const VALID_SYMBOL_TERMINATORS := [" ", "\r", "\n", ":", ",", "[", "]"]
 const CONDITIONALS := ["and", "or", "not"]

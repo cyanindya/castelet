@@ -6,8 +6,8 @@
 
 extends RefCounted
 
-const Tokenizer = preload("Tokenizer.gd")
-const SyntaxTreeBuilder = preload("SyntaxTreeBuilder.gd")
+# const Tokenizer = preload("Tokenizer.gd")
+# const SyntaxTreeBuilder = preload("SyntaxTreeBuilder.gd")
 
 func load_script_file(script_file : String) -> String:
 	var content = ""
@@ -21,16 +21,16 @@ func load_script_file(script_file : String) -> String:
 	
 	return content
 
-func execute_parser(input_file : String):
-	var file_content = load_script_file(input_file)
-	# print_debug(file_content)
+# func execute_parser(input_file : String):
+# 	var file_content = load_script_file(input_file)
+# 	# print_debug(file_content)
 
-	var tokenizer = Tokenizer.new(file_content)
-	tokenizer.tokenize()
-	# print_debug(tokenizer.tokens)
+# 	var tokenizer = Tokenizer.new(file_content)
+# 	tokenizer.tokenize()
+# 	# print_debug(tokenizer.tokens)
 	
-	var tree_builder = SyntaxTreeBuilder.new(input_file.get_file(), tokenizer)
-	var tree = tree_builder.parse()
-	# print_debug(tree.body)
+# 	var tree_builder = SyntaxTreeBuilder.new(input_file.get_file(), tokenizer)
+# 	var tree = tree_builder.parse()
+# 	# print_debug(tree.body)
 	
-	return tree
+# 	return tree
