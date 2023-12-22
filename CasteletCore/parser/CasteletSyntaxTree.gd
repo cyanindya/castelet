@@ -8,6 +8,14 @@ var checkpoints = {}
 var _current_index = -1
 var body_size = 0
 
+const BINARY_OPERATORS = {
+	"=" : "Assignment",
+	"+" : "Summation",
+	"-" : "Subtraction",
+	"*" : "Multiplication",
+	"/" : "Division",
+}
+
 func _init(tree_name : String):
 	self.name = tree_name
 
@@ -100,14 +108,30 @@ class VariableExpression:
 		return "VariableExpression{name: %s}" % [self.value]
 
 
-class AssignmentExpression:
+class BinaryExpression:
 	extends BaseExpression
 
-	var lhs : VariableExpression
-	var rhs : BaseExpression
+	var lhs : BaseExpression # Left-hand side
+	var rhs : BaseExpression # Right-hand side
+	var op : String # Operator
+
+	func _init(left_hand : BaseExpression, right_hand : BaseExpression, operator : String):
+
+		if operator not in BINARY_OPERATORS.keys():
+			push_error("Invalid binary operation. The operator is not part of valid operator.")
+
+		self.type = BINARY_OPERATORS[operator]
+		self.lhs = left_hand
+		self.rhs = right_hand
+	
+	func _to_string():
+		return "BinaryExpression{left hand: %s, right hand: %s,}" % [self.lhs, self.rhs]
+
+class AssignmentExpression:
+	extends BinaryExpression
 
 	func _init(left_hand : VariableExpression, right_hand : BaseExpression):
-		self.type = "Assignment"
+		self.type = BINARY_OPERATORS["="]
 		self.lhs = left_hand
 		self.rhs = right_hand
 

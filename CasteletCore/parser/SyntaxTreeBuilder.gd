@@ -145,7 +145,7 @@ func _parse_commands():
 func _parse_assignment():
 	var lh
 	var rh
-	var operators = []
+	var operators = [] # TODO: rewrite this for compound assignment
 
 	var temp = ""
 	
@@ -178,7 +178,7 @@ func _parse_assignment():
 		push_error()
 	
 	lh = CasteletSyntaxTree.VariableExpression.new(temp.value)
-	operators = [self._tokens.next().value]
+	self._tokens.next()
 
 	# TODO: check for binary expressions
 	temp = self._tokens.next()
