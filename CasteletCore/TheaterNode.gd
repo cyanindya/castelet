@@ -63,6 +63,17 @@ func _next():
 			_update_window()
 		else:
 			pass
+	elif next is CasteletSyntaxTree.AssignmentExpression:
+		var assignment = self._tree.next()
+		
+		if (assignment.lhs.value as String).begins_with("persistent"):
+			CasteletGameManager.modify_persistent_variable(
+				(assignment.lhs.value as String).trim_prefix("persistent."), assignment.rhs.value)
+		else:
+			CasteletGameManager.modify_variable(assignment.lhs.value, assignment.rhs.value)
+		
+		CasteletGameManager.progress.emit()
+		
 	elif next is CasteletSyntaxTree.DialogueExpression:
 		_update_dialogue()
 	else:
