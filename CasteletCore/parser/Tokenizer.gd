@@ -13,6 +13,7 @@ const TOKENS := {
 	OPERATOR = "Operator",
 	SYMBOL = "Symbol",
 	BOOLEAN = "Boolean",
+	BRACES = "Braces", # for [](){}
 	NUMBER = "Number",
 	COMMENT = "Comment",
 	EOF = "End Of File",
@@ -23,9 +24,12 @@ const INPUT_TYPES := {
 	DIALOGUE = "Dialogue",
 }
 
-const OPERATORS := ["@", "[", "]", "+", "-", ":", ",", "$", "=", "%"]
+const OPERATORS := ["@", "[", "]", ":", ",", "$"]
+const MATH_OPERATORS := ["+", "-", "/", "*",  "%", "^"]
+const ASSIGNMENT_OPERATORS := ["=", "+=", "-=", "/=", "*=", "%="]
 
-const VALID_SYMBOL_TERMINATORS := [" ", "\r", "\n", ":", ",", "[", "]"]
+const VALID_SYMBOL_TERMINATORS := [" ", "\r", "\n", ":", ","]
+const BRACES_PAREN := ["[", "]", "(", ")", "{", "}"]
 const CONDITIONALS := ["and", "or", "not"]
 const BOOLEAN_VALUES = [ "true", "false" ]
 
@@ -68,6 +72,17 @@ func next() -> CasteletToken:
 		push_error("End of token list reached.")
 		return CasteletToken.new("", "")
 
+func current() -> CasteletToken:
+	return self.tokens[_token_index]
+
+func prev() -> CasteletToken:
+	if not self._token_index == 0:
+		self._token_index -= 1
+		return self.tokens[_token_index]
+	else:
+		push_error("Currently at the beginning of token list. Cannot step back.")
+		return CasteletToken.new("", "")
+	
 func is_eof_token() -> bool:
 	return self._token_index == self._number_of_tokens - 1
 
@@ -98,8 +113,12 @@ func _generate_next_token() -> CasteletToken:
 			return _tokenize_number()
 
 		# Operators
-		elif next_char in OPERATORS:
+		elif next_char in OPERATORS + MATH_OPERATORS + ASSIGNMENT_OPERATORS:
 			return _tokenize_operator()
+		
+		# Brackets and parentheses
+		elif next_char in BRACES_PAREN:
+			return _tokenize_braces()
 		
 		# Newlines (both CR-LF and LF)
 		elif next_char == "\r":
@@ -165,7 +184,7 @@ func _tokenize_number() -> CasteletToken:
 				push_error("Decimal error. The value already has decimal separator.")
 		elif num_regex.search(next_char):
 			val += self._input_stream.get_next_char()
-		elif next_char in VALID_SYMBOL_TERMINATORS:
+		elif next_char in VALID_SYMBOL_TERMINATORS or next_char in BRACES_PAREN:
 			break
 		else:
 			push_error("Unidentified character %s inside number." %next_char)
@@ -191,8 +210,17 @@ func _tokenize_lf() -> CasteletToken:
 func _tokenize_operator() -> CasteletToken:
 	var val = ""
 	val += self._input_stream.get_next_char()
+
+	# Check if this one is currently a math operator and possibly a compound
+	if val in MATH_OPERATORS and self._input_stream.peek_next_char() == "=":
+		val += self._input_stream.get_next_char()
+
 	return CasteletToken.new(TOKENS.OPERATOR, val)
 
+func _tokenize_braces() -> CasteletToken:
+	var val = ""
+	val += self._input_stream.get_next_char()
+	return CasteletToken.new(TOKENS.BRACES, val)
 
 func _tokenize_string_literal() -> CasteletToken:
 	self._input_stream.get_next_char()
@@ -235,7 +263,7 @@ func _tokenize_symbol() -> CasteletToken:
 
 		if symbol_regex.search(next_char):
 			val += self._input_stream.get_next_char()
-		elif next_char in VALID_SYMBOL_TERMINATORS:
+		elif next_char in VALID_SYMBOL_TERMINATORS or next_char in BRACES_PAREN:
 			break
 		else:
 			push_error("Unidentified character %s inside symbol" %next_char)

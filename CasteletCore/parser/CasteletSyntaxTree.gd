@@ -137,3 +137,28 @@ class AssignmentExpression:
 
 	func _to_string():
 		return "AssignmentExpression{left hand: %s, right hand: %s}" % [self.lhs, self.rhs]
+
+
+class CompoundAssignmentExpression:
+	extends AssignmentExpression
+
+	var compound_operator = ""
+
+	func _init(left_hand : VariableExpression, right_hand : BaseExpression, operator : String):
+		super._init(left_hand, right_hand)
+		self.compound_operator = operator
+
+	func _to_string():
+		return "CompoundAssignmentExpression{left hand: %s, right hand: %s, operator: %s}" % [self.lhs, self.rhs, self.compound_operator]
+		
+
+class StatementExpression:
+	extends BaseExpression
+
+	func _init(statement : String):
+		self.type = "Statement"
+		self.value = statement
+	
+	func _to_string():
+		return "StatementExpression{statement: %s}" % [self.value]
+	

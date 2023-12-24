@@ -66,13 +66,42 @@ func _next():
 			_update_window()
 		else:
 			pass
+	elif next is CasteletSyntaxTree.StatementExpression:
+		var expression = self._tree.next()
+
+		var expr = Expression.new()
+		var error = expr.parse(expression.value)
+		if error != OK:
+			print_debug(expr.get_error_text())
+			return
+		expr.execute([], self)
+
+		CasteletGameManager.progress.emit()
+	
 	elif next is CasteletSyntaxTree.AssignmentExpression:
 		var assignment = self._tree.next()
+		var is_persistent = (assignment.lhs.value as String).begins_with("persistent.")
+		var varname = assignment.lhs.value
+		var var_storage = CasteletGameManager.vars
+		if is_persistent:
+			varname = (assignment.lhs.value as String).trim_prefix("persistent.")
+			var_storage = CasteletGameManager.persistent
 		
-		if (assignment.lhs.value as String).begins_with("persistent."):
-			CasteletGameManager.persistent[(assignment.lhs.value as String).split("")[1]] = assignment.rhs.value
+		if assignment is CasteletSyntaxTree.CompoundAssignmentExpression:
+			if assignment.compound_operator == "+=":
+				var_storage[varname] += assignment.rhs.value
+			elif assignment.compound_operator == "-=":
+				var_storage[varname] -= assignment.rhs.value
+			elif assignment.compound_operator == "/=":
+				var_storage[varname] /= assignment.rhs.value
+			elif assignment.compound_operator == "*=":
+				var_storage[varname] *= assignment.rhs.value
+			elif assignment.compound_operator == "^=":
+				var_storage[varname] ^= assignment.rhs.value
+			elif assignment.compound_operator == "%=":
+				var_storage[varname] %= assignment.rhs.value
 		else:
-			CasteletGameManager.vars[assignment.lhs.value] = assignment.rhs.value
+			var_storage[varname] = assignment.rhs.value
 		
 		CasteletGameManager.progress.emit()
 		
@@ -80,6 +109,7 @@ func _next():
 		_update_dialogue()
 	else:
 		self._tree.next()
+
 
 func _update_stage_prop():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
