@@ -20,6 +20,8 @@ const Tokenizer = preload("parser/Tokenizer.gd")
 
 var _tree : CasteletSyntaxTree
 var _paused = false
+var DialogueTools = load("CasteletCore/DialogueTools.gd")
+var dialogue_tools
 
 signal end_of_script
 
@@ -30,6 +32,7 @@ func load_script(script_id : String):
 
 
 func _ready():
+	dialogue_tools = DialogueTools.new()
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
 	CasteletGameManager.progress.connect(_on_progress)
@@ -66,11 +69,10 @@ func _next():
 	elif next is CasteletSyntaxTree.AssignmentExpression:
 		var assignment = self._tree.next()
 		
-		if (assignment.lhs.value as String).begins_with("persistent"):
-			CasteletGameManager.modify_persistent_variable(
-				(assignment.lhs.value as String).trim_prefix("persistent."), assignment.rhs.value)
+		if (assignment.lhs.value as String).begins_with("persistent."):
+			CasteletGameManager.persistent[(assignment.lhs.value as String).split("")[1]] = assignment.rhs.value
 		else:
-			CasteletGameManager.modify_variable(assignment.lhs.value, assignment.rhs.value)
+			CasteletGameManager.vars[assignment.lhs.value] = assignment.rhs.value
 		
 		CasteletGameManager.progress.emit()
 		
@@ -147,18 +149,38 @@ func _update_dialogue():
 		"args" : command.args,
 	}
 
-	# FIXME: breaks the pause location detection
+	# Read if any variables/values to be interpolated exist
 	var formatter = []
 	for vr in dialogue["args"]["formatter"]:
-		print_debug(vr)
+		var val;
 		if vr.type == Tokenizer.TOKENS.SYMBOL:
-			if vr.value.begins_with("persistent"):
-				formatter.append(CasteletGameManager.castelet_persistent_variables[vr.value.trim_prefix("persistent.")])
+			if vr.value.begins_with("persistent."):
+				val = CasteletGameManager.persistent[vr.value.trim_prefix("persistent.")]
 			else:
-				formatter.append(CasteletGameManager.castelet_variables[vr.value])
+				val = CasteletGameManager.vars[vr.value]
 		else:
-			formatter.append(vr.value)
+			val = vr.value
+		if vr.type == Tokenizer.TOKENS.NUMBER:
+			val = val as float
+		elif vr.type == Tokenizer.TOKENS.BOOLEAN:
+			if val == "true":
+				val = true
+			else:
+				val = false
+		else:
+			pass
+		formatter.append(val)
 	dialogue["dialogue"] = dialogue["dialogue"] % formatter
+
+	# Lastly, extract custom tags such as wait [w] and auto-dismiss [nw].
+	# They're not meant to be custom BBCodes and can interfere with other
+	# functionalities those don't need them (e.g. dialogue history), so
+	# we extract them here and store it into the expression instead.
+	var dialogue_processed : Dictionary = dialogue_tools.extract_custom_non_bbcode_tags(dialogue["dialogue"])
+	for arg in dialogue_processed["args"].keys():
+		dialogue["args"][arg] = dialogue_processed["args"][arg]
+	dialogue["dialogue"] = dialogue_processed["dialogue"]
+	print_debug(dialogue)
 
 	# If the speaker data starts with "id_", make sure to check the assets database
 	# for the proper speaker name.

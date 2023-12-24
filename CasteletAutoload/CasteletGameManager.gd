@@ -29,8 +29,8 @@ extends Node
 
 var parser = preload("res://CasteletCore/parser/CasteletScriptParser.gd").new()
 var script_trees = {}
-var castelet_variables = {}
-var castelet_persistent_variables = {}
+var vars = {}
+var persistent = {}
 
 var backlog = []
 
@@ -113,15 +113,6 @@ func toggle_pause(state : bool):
 
 	if auto_active:
 		_automode_timer.paused = _paused
-
-
-func modify_variable(variable : String, value):
-	castelet_variables[variable] = value
-	print_debug(castelet_variables.keys())
-
-func modify_persistent_variable(variable : String, value):
-	castelet_persistent_variables[variable] = value
-	print_debug(castelet_persistent_variables.keys())	
 
 func _on_standby():
 	_standby = true
