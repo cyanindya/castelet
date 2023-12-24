@@ -57,17 +57,17 @@ func _on_automode_button_toggled(button_pressed: bool):
 # func _on_dialogue_node_request_refresh():
 # 	CasteletGameManager.progress.emit()
 
-
-func _on_dialogue_node_message_display_paused(duration : float):
-	if duration == 0.0:
-		CasteletGameManager.enter_standby.emit()
-
-
-func _on_dialogue_node_message_display_completed(auto = false):
-	if auto:
-		CasteletGameManager.progress.emit()
+# To avoid execution order conflict, we use the signal from DialogueNode that will only
+# be emitted when all of the status changes had been completed.
+func _on_dialogue_node_dialogue_window_status_changed(completed, completed_auto, duration):
+	if not completed:
+		if duration == 0.0:
+			CasteletGameManager.enter_standby.emit()
 	else:
-		CasteletGameManager.enter_standby.emit()
+		if completed_auto:
+			CasteletGameManager.progress.emit()
+		else:
+			CasteletGameManager.enter_standby.emit()
 
 
 func _on_backlog_button_pressed():
@@ -80,3 +80,4 @@ func _on_backlog_updated(backlog_entry : Dictionary, replace = false):
 func _on_backlog_window_visibility_changed():
 	CasteletGameManager.toggle_pause($BacklogNode.visible)
 	CasteletGameManager.set_block_signals($BacklogNode.visible)
+

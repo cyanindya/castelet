@@ -154,5 +154,3 @@ func _on_ffwd_hold(state: bool):
 func _on_ffwd_toggle():
 	ffwd_active = !ffwd_active
 
-func test():
-	print_debug("test")
