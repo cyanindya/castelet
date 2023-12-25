@@ -120,12 +120,13 @@ class BinaryExpression:
 		if operator not in BINARY_OPERATORS.keys():
 			push_error("Invalid binary operation. The operator is not part of valid operator.")
 
-		self.type = BINARY_OPERATORS[operator]
+		self.type = "Binary"
 		self.lhs = left_hand
 		self.rhs = right_hand
+		self.op = operator
 	
 	func _to_string():
-		return "BinaryExpression{left hand: %s, right hand: %s,}" % [self.lhs, self.rhs]
+		return "BinaryExpression{left hand: %s, right hand: %s, op : %s}" % [self.lhs, self.rhs, self.op]
 
 class AssignmentExpression:
 	extends BinaryExpression

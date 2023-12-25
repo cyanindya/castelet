@@ -174,16 +174,10 @@ func _parse_statement():
 		if current.type != Tokenizer.TOKENS.SYMBOL:
 			push_error("The next token indicates assignment, but the current token is not a valid symbol token.")
 		return _parse_assignment()
-	# Third priority is a standard binary expression
-	elif next_token_preview.value in Tokenizer.MATH_OPERATORS + Tokenizer.COMPARISON_OPERATORS:
+	# Third priority is either a standard binary or unary expression
+	else:
 		return _parse_binary()
 	
-	if current.type in [Tokenizer.TOKENS.BOOLEAN, Tokenizer.TOKENS.SYMBOL, Tokenizer.TOKENS.STRING_LITERAL, Tokenizer.TOKENS.NUMBER]:
-		return CasteletSyntaxTree.BaseExpression.new(current.type, current.value)
-	else:
-		push_error("Invalid token: %s" % current)
-		return null
-
 
 func _parse_function():
 	var func_name = self._tokens.current().value
@@ -257,12 +251,42 @@ func _parse_assignment():
 	else:
 		return CasteletSyntaxTree.AssignmentExpression.new(lh, rh)
 
+
 func _parse_binary():
 	var lh
-	var rh
-	var operator = ""
+	# var rh
+	# var operator = ""
 
-	return CasteletSyntaxTree.BinaryExpression.new(lh, rh, operator)
+	
+	var current = self._tokens.current() # left hand side
+	# var next_token_preview = self._tokens.peek() # operator
+
+	if current.type in [Tokenizer.TOKENS.BOOLEAN, Tokenizer.TOKENS.STRING_LITERAL, Tokenizer.TOKENS.NUMBER]:
+		lh = CasteletSyntaxTree.BaseExpression.new(current.type, current.value)
+	elif current.type == Tokenizer.TOKENS.SYMBOL:
+		lh = CasteletSyntaxTree.VariableExpression.new(current.value)
+	else:
+		self._tokens.prev()
+		lh =  _parse_statement()
+
+	return _check_precedence(lh)
+
+
+# Adapted from lisperator's parser (https://lisperator.net/pltut/parser/the-parser)
+func _check_precedence(lhs : CasteletSyntaxTree.BaseExpression, cur_precedence := 0):
+	
+	var op = self._tokens.peek().value # operator
+
+	if op in Tokenizer.MATH_OPERATORS + Tokenizer.COMPARISON_OPERATORS:
+		var next_precedence = OPERATOR_PRECEDENCE[op]
+		self._tokens.next()
+		if next_precedence > cur_precedence:
+			var rhs = _check_precedence(_parse_statement(), next_precedence)
+			var bin = CasteletSyntaxTree.BinaryExpression.new(lhs, rhs, op)
+			return _check_precedence(bin, cur_precedence)
+
+	return lhs
+
 
 func _parse_args():
 	var param = ""
@@ -330,7 +354,6 @@ func _parse_dialogue():
 				_token_cache[-1].value += self._tokens.next().value
 			
 			elif next_token_preview.value == "%":
-				# TODO: bracketed formatter
 				self._tokens.next()
 				next_token_preview = _tokens.peek()
 
@@ -353,7 +376,7 @@ func _parse_dialogue():
 					self._tokens.next()
 
 				elif next_token_preview.type == Tokenizer.TOKENS.SYMBOL:
-					formatter.append(next_token_preview.value)
+					formatter.append(next_token_preview)
 
 					self._tokens.next()
 				

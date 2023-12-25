@@ -80,17 +80,7 @@ func _next():
 			func_name = fnc_name[-1]
 		
 		for arg_tree in fnc.vals:
-			if arg_tree.type == Tokenizer.TOKENS.STRING_LITERAL:
-				args.append(arg_tree.value)
-			elif arg_tree.type == Tokenizer.TOKENS.NUMBER:
-				args.append(arg_tree.value as float)
-			elif arg_tree.type == Tokenizer.TOKENS.BOOLEAN:
-				if arg_tree.value == "true":
-					args.append(true)
-				elif arg_tree.value == "false":
-					args.append(false)
-			elif arg_tree is CasteletSyntaxTree.FunctionCallExpression:
-				pass # TODO
+			args.append(_translate_expression(arg_tree))
 		
 		var func_callable = Callable(caller_object, func_name)
 		func_callable.callv(args)
@@ -106,21 +96,23 @@ func _next():
 			varname = (assignment.lhs.value as String).trim_prefix("persistent.")
 			var_storage = CasteletGameManager.persistent
 		
+		var result = _translate_expression(assignment.rhs)
+
 		if assignment is CasteletSyntaxTree.CompoundAssignmentExpression:
 			if assignment.compound_operator == "+=":
-				var_storage[varname] += assignment.rhs.value
+				var_storage[varname] += result
 			elif assignment.compound_operator == "-=":
-				var_storage[varname] -= assignment.rhs.value
+				var_storage[varname] -= result
 			elif assignment.compound_operator == "/=":
-				var_storage[varname] /= assignment.rhs.value
+				var_storage[varname] /= result
 			elif assignment.compound_operator == "*=":
-				var_storage[varname] *= assignment.rhs.value
+				var_storage[varname] *= result
 			elif assignment.compound_operator == "^=":
-				var_storage[varname] ^= assignment.rhs.value
+				var_storage[varname] ^= result
 			elif assignment.compound_operator == "%=":
-				var_storage[varname] %= assignment.rhs.value
+				var_storage[varname] %= result
 		else:
-			var_storage[varname] = assignment.rhs.value
+			var_storage[varname] = result
 		
 		CasteletGameManager.progress.emit()
 		
@@ -128,6 +120,68 @@ func _next():
 		_update_dialogue()
 	else:
 		self._tree.next()
+
+func _translate_expression(expr : CasteletSyntaxTree.BaseExpression):
+
+	var expr_result
+
+	if expr is CasteletSyntaxTree.BinaryExpression:
+		expr_result = _process_binary(expr)
+	elif expr is CasteletSyntaxTree.VariableExpression:
+		var is_persistent = (expr.value as String).begins_with("persistent.")
+		var varname = expr.value
+		var var_storage = CasteletGameManager.vars
+		if is_persistent:
+			varname = (expr.value as String).trim_prefix("persistent.")
+			var_storage = CasteletGameManager.persistent
+
+		expr_result = var_storage[varname]
+	elif expr is CasteletSyntaxTree.FunctionCallExpression:
+		pass #TODO
+	else:
+		if expr.type == Tokenizer.TOKENS.BOOLEAN:
+			if expr.value == "true":
+				expr_result = true
+			else:
+				expr_result = false
+		elif expr.type == Tokenizer.TOKENS.NUMBER:
+			expr_result = expr.value as float
+		else:
+			expr_result = expr.value as String
+	
+	return expr_result
+
+func _process_binary(expr : CasteletSyntaxTree.BinaryExpression):
+
+	var left_hand
+	var right_hand
+	var op = expr.op
+
+	left_hand = _translate_expression(expr.lhs)
+	right_hand = _translate_expression(expr.rhs)
+
+	if (op == "+"):
+		return left_hand + right_hand
+	elif (op == "-"):
+		return left_hand - right_hand
+	elif (op == "/"):
+		return left_hand / right_hand
+	elif (op == "*"):
+		return left_hand * right_hand
+	elif (op == "%"):
+		return left_hand % right_hand
+	elif (op == ">"):
+		return left_hand > right_hand
+	elif (op == ">="):
+		return left_hand >= right_hand
+	elif (op == "=="):
+		return left_hand == right_hand
+	elif (op == "<"):
+		return left_hand < right_hand
+	elif (op == "<="):
+		return left_hand <= right_hand
+	elif (op == "!="):
+		return left_hand != right_hand
 
 
 func _update_stage_prop():
@@ -202,6 +256,7 @@ func _update_dialogue():
 	var formatter = []
 	for vr in dialogue["args"]["formatter"]:
 		var val;
+		print(vr)
 		if vr.type == Tokenizer.TOKENS.SYMBOL:
 			if vr.value.begins_with("persistent."):
 				val = CasteletGameManager.persistent[vr.value.trim_prefix("persistent.")]
