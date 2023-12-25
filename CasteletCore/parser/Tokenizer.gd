@@ -25,7 +25,8 @@ const INPUT_TYPES := {
 }
 
 const OPERATORS := ["@", "[", "]", ":", ",", "$"]
-const MATH_OPERATORS := ["+", "-", "/", "*",  "%", "^"]
+const MATH_OPERATORS := ["+", "-", "/", "*",  "%", "^", "="]
+const COMPARISON_OPERATORS := [">", ">=", "<", "<=", "==", "!="]
 const ASSIGNMENT_OPERATORS := ["=", "+=", "-=", "/=", "*=", "%="]
 
 const VALID_SYMBOL_TERMINATORS := [" ", "\r", "\n", ":", ","]

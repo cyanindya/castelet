@@ -66,15 +66,34 @@ func _next():
 			_update_window()
 		else:
 			pass
-	elif next is CasteletSyntaxTree.StatementExpression:
-		var expression = self._tree.next()
-
-		var expr = Expression.new()
-		var error = expr.parse(expression.value)
-		if error != OK:
-			print_debug(expr.get_error_text())
-			return
-		expr.execute([], self)
+	elif next is CasteletSyntaxTree.FunctionCallExpression:
+		var caller_object = self
+		var func_name = ""
+		var args = []
+		
+		var fnc = self._tree.next()
+		var fnc_name = fnc.func_name.split(".")
+		if len(fnc_name) > 1:
+			caller_object = get_node("/root/" + fnc_name[0])
+			func_name = fnc_name[-1]
+		else:
+			func_name = fnc_name[-1]
+		
+		for arg_tree in fnc.vals:
+			if arg_tree.type == Tokenizer.TOKENS.STRING_LITERAL:
+				args.append(arg_tree.value)
+			elif arg_tree.type == Tokenizer.TOKENS.NUMBER:
+				args.append(arg_tree.value as float)
+			elif arg_tree.type == Tokenizer.TOKENS.BOOLEAN:
+				if arg_tree.value == "true":
+					args.append(true)
+				elif arg_tree.value == "false":
+					args.append(false)
+			elif arg_tree is CasteletSyntaxTree.FunctionCallExpression:
+				pass # TODO
+		
+		var func_callable = Callable(caller_object, func_name)
+		func_callable.callv(args)
 
 		CasteletGameManager.progress.emit()
 	

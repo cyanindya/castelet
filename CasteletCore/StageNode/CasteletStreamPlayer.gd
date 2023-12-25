@@ -13,8 +13,8 @@ var loop_from = -1
 var end_point = -1
 var loop = false
 var _audio_tween : Tween
-var mute_volume_db := -40.0
-var set_volume_db := 0.0
+var mute_vol_db := -40.0
+var set_vol_db := 0.0
 var max_loop_count : int = 0
 var current_loop_count : int = 0
 
@@ -89,7 +89,7 @@ func _on_finished():
 func play_stream():
 	
 	if (fadein > 0.0):
-		fade_audio(mute_volume_db, set_volume_db, fadein)
+		fade_audio(mute_vol_db, set_vol_db, fadein)
 	
 	play(start_point)
 	finished_timer.start(end_point - loop_from)
@@ -99,10 +99,10 @@ func play_stream():
 func stop_stream():
 	
 	if (fadeout > 0.0):
-		fade_audio(set_volume_db, mute_volume_db, fadeout)
+		fade_audio(set_vol_db, mute_vol_db, fadeout)
 		await _audio_tween.finished
 	stop()
-	volume_db = set_volume_db
+	volume_db = set_vol_db
 
 
 # Fadein and fadeout has inherently similar way of working, so we'll just write
@@ -137,7 +137,7 @@ func init_stream(track : AudioStream, args := {}):
 	if track != null:
 		stream = track
 		
-	set_volume_db = volume_db
+	set_vol_db = volume_db
 	
 	if args.has("loop"):
 		# Godot does not have inherent loop signal or inherent
@@ -153,8 +153,8 @@ func init_stream(track : AudioStream, args := {}):
 			loop = false
 	
 	if args.has("volume"):
-		set_volume_db = _convert_ratio_to_db(args["volume"] as float)
-		volume_db = set_volume_db
+		set_vol_db = _convert_ratio_to_db(args["volume"] as float)
+		volume_db = set_vol_db
 	
 	if args.has("fadein"):
 		fadein = args['fadein'] as float

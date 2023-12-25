@@ -162,3 +162,19 @@ class StatementExpression:
 	func _to_string():
 		return "StatementExpression{statement: %s}" % [self.value]
 	
+class FunctionCallExpression:
+	extends BaseExpression
+
+	var func_name = ""
+	var vars = []
+	var vals = []
+
+	func _init(function_name : String, input_vars = [], input_vals = []):
+		self.type = "Function"
+		self.func_name = function_name
+		self.vars = input_vars
+		self.vals = input_vals
+	
+	func _to_string():
+		return "FunctionCallExpression{func_name: %s, vars: %s, vals: %s}" % [self.func_name, self.vars, self.vals]
+	

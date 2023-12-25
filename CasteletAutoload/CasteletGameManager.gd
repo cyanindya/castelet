@@ -154,3 +154,5 @@ func _on_ffwd_hold(state: bool):
 func _on_ffwd_toggle():
 	ffwd_active = !ffwd_active
 
+func print(s1 : String, s2: String):
+	prints(s1, s2)

@@ -252,13 +252,7 @@ func _animate_dialogue(initial_visible_characters := 0):
 	# Wait for the message display to complete before sending the signal
 	await _tween.finished
 
-	# Debugging line to trace the source of [nw] tag bug
-	print_debug("foo")
-	print_debug(_text.visible_characters)
-	print_debug(_text_length)
-
 	if _text.visible_characters >= _text_length:
-		print_debug("meow")
 		message_display_completed.emit(auto_dismiss)
 
 
@@ -303,9 +297,6 @@ func _on_window_transition_completed():
 
 
 func _on_message_display_completed(auto = false):
-	# Debugging line to trace the source of [nw] tag bug
-	print_debug("bar")
-
 	$CTC_Indicator.show()
 	completed = true
 	dialogue_window_status_changed.emit(true, auto, 0.0)

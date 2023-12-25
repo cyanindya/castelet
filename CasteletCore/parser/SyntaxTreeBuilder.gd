@@ -23,6 +23,14 @@ extends RefCounted
 
 const Tokenizer = preload("Tokenizer.gd")
 const CasteletToken = Tokenizer.CasteletToken
+const OPERATOR_PRECEDENCE = {
+	"=": 1,
+	"||": 2,
+	"&&": 3,
+	"<": 7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
+	"+": 10, "-": 10,
+	"*": 20, "/": 20, "%": 20,
+}
 
 var _name = ""
 var _tokens : Tokenizer
@@ -60,6 +68,10 @@ func _parse_token():
 		# GDScript-adjacent statements (denoted by $ operator in beginning of line)
 		# similar to in-script Python statements in Ren'Py
 		elif next_token_preview.value == "$":
+			
+			# Advance the tokenizer iteration (unless called by _parse_function or similar, should be at $)
+			self._tokens.next()
+			
 			return self._parse_statement()
 		else:
 			# TODO: handle variable assignment
@@ -144,53 +156,73 @@ func _parse_commands():
 
 func _parse_statement():
 	
-	# Advance the tokenizer iteration
-	self._tokens.next()
-	
 	# There are a few possibilities for the statements. As such, first,
 	# we need to make sure whether the current token is a symbol and
 	# check what awaits next
-	var current = self._tokens.next()
+	var current = self._tokens.next() # current position is whatever symbol/string/number it is
 	var next_token_preview = self._tokens.peek()
-	if current.type == Tokenizer.TOKENS.SYMBOL:
-		# - The statement contains assignment operations
-		if next_token_preview.type == Tokenizer.TOKENS.OPERATOR and next_token_preview.value in Tokenizer.ASSIGNMENT_OPERATORS:
-			return _parse_assignment()
-		# - The statement is a function call
-		elif next_token_preview.type == Tokenizer.TOKENS.BRACES and next_token_preview.value == "(":
-			return _parse_function()
-	
-	# - The statement is neither of them, but nevertheless a valid
-	#   GDScript expression.
-	#   Note that they may not always work in practice -- use them
-	#   at your own risk
-	
-	# Next, check the token to see if it is (a) a symbol and (b) it has
-	# same value as any listed in the KEYWORDS.
-	var statement = ""
-	statement += current.value
+	# print_debug(self._tokens.current(), self._tokens.peek())
 
-	while next_token_preview.type != Tokenizer.TOKENS.NEWLINE:
-		if next_token_preview.type == Tokenizer.TOKENS.STRING_LITERAL:
-			statement += '"' + next_token_preview.value + '"'
-		else:
-			statement += next_token_preview.value
-		self._tokens.next()
-		next_token_preview = self._tokens.peek()
+	# First priority is function call
+	if next_token_preview.value == "(":
+		# Check if current token is a symbol. If it is, proceed. If it isn't, error.
+		if current.type != Tokenizer.TOKENS.SYMBOL:
+			push_error("The next token indicates function call, but the current token is not a valid symbol token.")
+		return _parse_function()
+	# Second priority is assignment
+	elif next_token_preview.value in Tokenizer.ASSIGNMENT_OPERATORS:
+		if current.type != Tokenizer.TOKENS.SYMBOL:
+			push_error("The next token indicates assignment, but the current token is not a valid symbol token.")
+		return _parse_assignment()
+	# Third priority is a standard binary expression
+	elif next_token_preview.value in Tokenizer.MATH_OPERATORS + Tokenizer.COMPARISON_OPERATORS:
+		return _parse_binary()
+	
+	if current.type in [Tokenizer.TOKENS.BOOLEAN, Tokenizer.TOKENS.SYMBOL, Tokenizer.TOKENS.STRING_LITERAL, Tokenizer.TOKENS.NUMBER]:
+		return CasteletSyntaxTree.BaseExpression.new(current.type, current.value)
+	else:
+		push_error("Invalid token: %s" % current)
+		return null
 
-	return CasteletSyntaxTree.StatementExpression.new(statement)
 
 func _parse_function():
-	pass
+	var func_name = self._tokens.current().value
+	var vars = []
+	var vals = []
 
-# TODO: Parse branching, binary operations
+	var current = self._tokens.next() # (
+	var next = self._tokens.peek()
+
+	while next.value != ")":
+		
+		current = self._tokens.next()
+		next = self._tokens.peek()
+
+		if current.value == ",":
+			continue
+
+		if next.type == Tokenizer.TOKENS.NEWLINE:
+			push_error("No closing parentheses detected to terminate the function")
+		if next.type == Tokenizer.TOKENS.OPERATOR and next.value == "=":
+			if current.type == Tokenizer.TOKENS.SYMBOL:
+				vars.append(current.value)
+			else:
+				push_error("Expected function parameter name.")
+		else:
+			self._tokens.prev()
+			var value_expression_type = _parse_statement()
+			vals.append(value_expression_type)
+
+	self._tokens.next() # )
+
+	return CasteletSyntaxTree.FunctionCallExpression.new(func_name, vars, vals)
+
+
 func _parse_assignment():
 	var lh
 	var rh
 	var operator = ""
 
-	var temp = ""
-	
 	# Next, check the token to see if it is (a) a symbol and (b) it has
 	# same value as any listed in the KEYWORDS.
 	var current = self._tokens.current()
@@ -209,7 +241,6 @@ func _parse_assignment():
 	
 	next_token_preview = self._tokens.peek()
 	
-	# TODO: check for compound operators
 	if next_token_preview.type != Tokenizer.TOKENS.OPERATOR:
 		push_error()
 	if next_token_preview.value not in Tokenizer.ASSIGNMENT_OPERATORS:
@@ -218,19 +249,20 @@ func _parse_assignment():
 	lh = CasteletSyntaxTree.VariableExpression.new(current.value)
 	operator = self._tokens.next().value
 
-	# TODO: check for binary expressions
-	temp = self._tokens.next()
-	rh = CasteletSyntaxTree.BaseExpression.new(temp.type, temp.value)
-	
-	next_token_preview = self._tokens.peek()
-	if next_token_preview.type != Tokenizer.TOKENS.NEWLINE:
-		push_error()
+	# Parse the right-hand side.
+	rh = _parse_statement()
 	
 	if operator in Tokenizer.ASSIGNMENT_OPERATORS and operator != "=":
 		return CasteletSyntaxTree.CompoundAssignmentExpression.new(lh, rh, operator)
 	else:
 		return CasteletSyntaxTree.AssignmentExpression.new(lh, rh)
-	
+
+func _parse_binary():
+	var lh
+	var rh
+	var operator = ""
+
+	return CasteletSyntaxTree.BinaryExpression.new(lh, rh, operator)
 
 func _parse_args():
 	var param = ""
