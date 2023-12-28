@@ -11,7 +11,7 @@ extends Node
 func _unhandled_input(event):
 
 	var single_key_press : bool = not (event is InputEventKey and event.echo)
-	
+
 	if event.is_action("confirm") and event.pressed and single_key_press:
 		CasteletGameManager.confirm.emit()
 	

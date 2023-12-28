@@ -4,7 +4,7 @@
 # - CasteletConfig
 #
 
-extends Control
+extends CanvasLayer
 
 func _ready():
 
@@ -50,7 +50,7 @@ func _dialogue_node_interrupt(instant : bool = false):
 
 
 func _on_automode_button_toggled(button_pressed: bool):
-	accept_event()
+	$QuickMenuControl.accept_event()
 	CasteletGameManager.auto_active = button_pressed
 
 
@@ -71,7 +71,7 @@ func _on_dialogue_node_dialogue_window_status_changed(completed, completed_auto,
 
 
 func _on_backlog_button_pressed():
-	accept_event()
+	$QuickMenuControl.accept_event()
 	$BacklogNode.show()
 
 func _on_backlog_updated(backlog_entry : Dictionary, replace = false):

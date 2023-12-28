@@ -103,6 +103,13 @@ func set_variant(variant: String):
 	else:
 		texture = null
 		print_debug("The variant is not defined in the prop resource dictionary. Skipping.")
-		
+
+func get_active_variant():
+	return _active_variant
+
 func set_flip(flip_state := false):
 	_is_flipped = flip_state
+
+func get_flip():
+	return _is_flipped
+	

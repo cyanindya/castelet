@@ -27,20 +27,18 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	var xpos = 0.5
 	var ypos = 1.0
 	var scale_factor = 1.0
+	var flip = null
 	
 	# If this is a newly shown prop, add it to the stage. Otherwise, keep
 	# track of the last known location
 	if prop == null:
 		prop = CasteletAssetsManager.props[prop_name]
 		add_child(prop)
+		# prop.visible = false
 	else:
 		xpos = prop.position.x / CasteletViewportManager.base_viewport_width
 		ypos = prop.position.y / CasteletViewportManager.base_viewport_height
 		scale_factor = prop.in_viewport_scale / CasteletViewportManager.base_scale_factor
-	
-	# Check if the defined prop has the particular variant. Otherwise, send
-	# a warning and display null object instead.
-	prop.set_variant(prop_variant)
 	
 	# Pass the optional arguments
 	if args:
@@ -49,7 +47,7 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 		if args.has("y"):
 			ypos = float(args['y'])
 		if args.has("flip"):
-			prop.set_flip(args["flip"])
+			flip = args["flip"]
 			
 			# if args["flip"] == "true":
 			# 	prop.set_flip(true)
@@ -58,6 +56,13 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 		if args.has("scale"):
 			scale_factor = float(args["scale"])
 	
+	
+	# Check if the defined prop has the particular variant. Otherwise, send
+	# a warning and display null object instead.
+	prop.set_variant(prop_variant)
+	if flip != null:
+		prop.set_flip(flip)
+
 	# Properly display the prop now
 	prop.position.x = CasteletViewportManager.base_viewport_width * xpos
 	prop.position.y = CasteletViewportManager.base_viewport_height * ypos

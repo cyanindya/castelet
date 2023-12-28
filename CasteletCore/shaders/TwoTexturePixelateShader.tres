@@ -1,0 +1,10 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://c4i3537m8x5em"]
+
+[ext_resource type="Shader" path="res://CasteletCore/shaders/TwoTexturePixelateShader.gdshader" id="1_alrle"]
+[ext_resource type="Texture2D" uid="uid://k2ei7okmb7d3" path="res://TestAssets/props/bg/carcocena_guild_detention.jpg" id="2_5ed0h"]
+
+[resource]
+shader = ExtResource("1_alrle")
+shader_parameter/pixelSize = 1.0
+shader_parameter/old_screen_alpha = 1.0
+shader_parameter/old_widget = ExtResource("2_5ed0h")

@@ -184,7 +184,7 @@ func _process_binary(expr : CasteletSyntaxTree.BinaryExpression):
 		return left_hand != right_hand
 
 
-func _update_stage_prop():
+func _update_stage_prop(transition = null):
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 	var cb = ""
 
@@ -195,24 +195,57 @@ func _update_stage_prop():
 	
 	var params = (command.value[0] as String).split(".")
 	var prop_func = Callable($StageNode, cb)
+
+	var args = command.args
+
+	if transition != null:
+		args["transition"] = transition
 	
 	if len(params) > 1:
-		prop_func.call(params[0], params[1], command.args)
+		prop_func.call(params[0], params[1], args)
 	else:
-		prop_func.call(params[0], 'default', command.args)
+		prop_func.call(params[0], 'default', args)
 
-func _hide_stage_prop():
+
+func _hide_stage_prop(transition = null):
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 	var params = (command.value[0] as String).split(".")
 	$StageNode.hide_prop(params[0])
 	
+
 func _update_transition():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 
-	# Check transition type
-	
+	var transition_name : String = command.value[0]
+	var transition_properties : Dictionary = command.args
 
-	# Check if a target exists in tree node.
+	if not CasteletGameManager.ffwd_active:
+
+		if CasteletTransitionManager.TransitionType.OBJECT not in CasteletTransitionManager.transition_types[transition_name]:
+			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionType.VIEWPORT, transition_properties)
+		elif CasteletTransitionManager.TransitionType.VIEWPORT not in CasteletTransitionManager.transition_types[transition_name]:
+			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionType.OBJECT, transition_properties)
+		else:
+			if command.args.has("object") and command.args["object"] == true:
+				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionType.OBJECT, transition_properties)
+			else:
+				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionType.VIEWPORT, transition_properties)
+
+		# Check transition type
+		# if command.value[0] == "crossfade":
+		# 	CasteletTransitionManager.transition(self.get_path(), CasteletTransitionManager.Transitions.CROSSFADE, command.args)
+
+		# Check if a target exists in tree node.
+		# var next = self._tree.peek()
+		# if next.type in [Tokenizer.KEYWORDS.SCENE, Tokenizer.KEYWORDS.SHOW]:
+		# 	_update_stage_prop(command)
+		# elif next.type == Tokenizer.KEYWORDS.HIDE:
+		# 	pass
+		# else:
+		# 	pass
+
+	CasteletGameManager.progress.emit()
+
 
 func _update_audio_channel():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
@@ -245,6 +278,13 @@ func _update_window():
 
 
 func _update_dialogue():
+
+	if CasteletTransitionManager.transitioning == true:
+		CasteletGameManager.set_block_signals(true)
+		await CasteletTransitionManager.transition_completed
+		CasteletGameManager.set_block_signals(false)
+		
+
 	var command : CasteletSyntaxTree.DialogueExpression = self._tree.next()
 	var dialogue = {
 		"speaker": command.speaker,

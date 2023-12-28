@@ -179,3 +179,20 @@ class FunctionCallExpression:
 	func _to_string():
 		return "FunctionCallExpression{func_name: %s, vars: %s, vals: %s}" % [self.func_name, self.vars, self.vals]
 	
+
+# class TransitionExpression:
+# 	extends BaseExpression
+
+# 	var transition = ""
+# 	var duration : float
+# 	var args = {}
+
+# 	func _init(trans_name : String, dur : float, trans_args = {}):
+# 		self.type = "Transition"
+# 		self.transition = trans_name
+# 		self.duration = dur
+# 		self.args = trans_args
+	
+# 	func _to_string():
+# 		return "TransitionExpression{transition: %s, duration: %f, args: %s}" % [self.transition, self.duration, self.args]
+

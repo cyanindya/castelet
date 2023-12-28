@@ -147,6 +147,10 @@ func _parse_commands():
 	else:
 		push_error()
 
+	if type == Tokenizer.KEYWORDS.TRANSITION:
+		if _tokens.peek().type == Tokenizer.TOKENS.NUMBER:
+			args["time"] = _tokens.next().value as float
+
 	# Check for arguments until newline is reached
 	while _tokens.peek().type != Tokenizer.TOKENS.NEWLINE:
 		var argument : CasteletSyntaxTree.CommandArgExpression = _parse_args()

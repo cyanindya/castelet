@@ -1,0 +1,17 @@
+[gd_resource type="ShaderMaterial" load_steps=4 format=3 uid="uid://2toei6cumids"]
+
+[ext_resource type="Shader" path="res://CasteletCore/shaders/Masked2DShader.gdshader" id="1_qs3gj"]
+[ext_resource type="Texture2D" uid="uid://cho73r0wrigkq" path="res://CasteletCore/transition_masks/square_blind.png" id="2_ttavs"]
+[ext_resource type="Texture2D" uid="uid://b4b8bwyqw54ts" path="res://CasteletCore/shaders/white_px.png" id="3_frfpo"]
+
+[resource]
+shader = ExtResource("1_qs3gj")
+shader_parameter/cutoff = 0.0
+shader_parameter/smoothSize = 0.5
+shader_parameter/tiled = true
+shader_parameter/centerUV = false
+shader_parameter/invert = false
+shader_parameter/tileAdjustFactor = 1.23
+shader_parameter/tex_a = ExtResource("3_frfpo")
+shader_parameter/tex_b = ExtResource("3_frfpo")
+shader_parameter/maskTexture = ExtResource("2_ttavs")
