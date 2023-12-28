@@ -117,8 +117,8 @@ func _dissolve_screen(old_widget : Texture2D = null, new_widget : Texture2D = nu
 	await _transition_tween.finished
 	
 	# color_rect.queue_free()
-	# sprite.queue_free()
-	# canvas.queue_free()
+	sprite.queue_free()
+	canvas.queue_free()
 
 	transition_completed.emit()
 
@@ -177,9 +177,9 @@ func _pixelate_screen(old_widget : Texture2D = null, new_widget : Texture2D = nu
 
 	await _transition_tween.finished
 
-	#color_rect.queue_free()
-	## sprite.queue_free()
-	#canvas.queue_free()
+	color_rect.queue_free()
+	# sprite.queue_free()
+	canvas.queue_free()
 
 	transition_completed.emit()
 	

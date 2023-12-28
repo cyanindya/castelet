@@ -210,6 +210,12 @@ func _update_stage_prop(transition = null):
 func _hide_stage_prop(transition = null):
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 	var params = (command.value[0] as String).split(".")
+
+	var args = command.args
+
+	if transition != null:
+		args["transition"] = transition
+	
 	$StageNode.hide_prop(params[0])
 	
 
@@ -220,6 +226,13 @@ func _update_transition():
 	var transition_properties : Dictionary = command.args
 
 	if not CasteletGameManager.ffwd_active:
+
+		
+		if CasteletTransitionManager.transitioning == true:
+			CasteletGameManager.set_block_signals(true)
+			await CasteletTransitionManager.transition_completed
+			CasteletGameManager.set_block_signals(false)
+			
 
 		if CasteletTransitionManager.TransitionType.OBJECT not in CasteletTransitionManager.transition_types[transition_name]:
 			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionType.VIEWPORT, transition_properties)
