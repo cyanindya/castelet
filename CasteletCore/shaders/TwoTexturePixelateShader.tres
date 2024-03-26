@@ -5,6 +5,6 @@
 
 [resource]
 shader = ExtResource("1_alrle")
-shader_parameter/pixelSize = 1.0
+shader_parameter/px_size = 26.0
 shader_parameter/old_screen_alpha = 1.0
 shader_parameter/old_widget = ExtResource("2_5ed0h")

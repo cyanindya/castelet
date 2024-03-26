@@ -234,15 +234,15 @@ func _update_transition():
 			CasteletGameManager.set_block_signals(false)
 			
 
-		if CasteletTransitionManager.TransitionType.OBJECT not in CasteletTransitionManager.transition_types[transition_name]:
-			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionType.VIEWPORT, transition_properties)
-		elif CasteletTransitionManager.TransitionType.VIEWPORT not in CasteletTransitionManager.transition_types[transition_name]:
-			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionType.OBJECT, transition_properties)
+		if CasteletTransitionManager.TransitionScope.OBJECT not in CasteletTransitionManager.transition_types[transition_name]:
+			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.VIEWPORT, transition_properties)
+		elif CasteletTransitionManager.TransitionScope.VIEWPORT not in CasteletTransitionManager.transition_types[transition_name]:
+			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.OBJECT, transition_properties)
 		else:
 			if command.args.has("object") and command.args["object"] == true:
-				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionType.OBJECT, transition_properties)
+				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.OBJECT, transition_properties)
 			else:
-				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionType.VIEWPORT, transition_properties)
+				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.VIEWPORT, transition_properties)
 
 		# Check transition type
 		# if command.value[0] == "crossfade":
