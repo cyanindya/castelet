@@ -49,7 +49,10 @@ var viewport_transition_functions = {
 	"crossfade" = _crossfade_screen,
 	"pixelate" = _pixelate_screen,
 	"dissolve" = _dissolve_screen,
-	#"wipe" = _wipe_screen,
+	"wipe" = _wipe_screen,
+	#"slide" = _slide_screen,
+	#"move" = _move_object,
+	
 }
 var transition_types = {
 	"fade" = [TransitionScope.VIEWPORT],
@@ -408,6 +411,89 @@ func _pixelate_screen(old_widget : Texture2D = null, new_widget : Texture2D = nu
 	canvas.queue_free()
 
 	transition_completed.emit()
+
+
+## The function to be called when wipe transition is requested.
+## This is a viewport-level transition that will replace the old scene
+## with a new one using linear wipe effect, which is controlled
+## using custom shader.
+##
+## Pixelation is controlled with the following parameters,
+## which are supplied through the args:
+## - time		:	The interval between the old screen to the new screen.
+##					Default is 0.5 seconds.
+## - direction	:	Direction of which the wipe effect will move to.
+##					Default is "right".
+## - smoothness	:	Determine whether the wipe effect will be sharp or smooth.
+##					Default is 0 (sharp-edged)
+func _wipe_screen(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}):
+	
+	# As noted, pixelation requires custom shader that can distort the texture
+	# into large chunks of pixels.
+	# We will use the pixel size to be changed gradually using tween.
+	var wipe_shader_param = func _set_shader_param(value : float, mat : Material):
+		mat.set_shader_parameter("cutoff", value)
+
+	# Set up the default values of the controlling parameters.
+	# If custom value defined through the arguments, use them.
+	var time : float = 0.5
+	var direction : String = "right"
+	var smoothness : float = 0
+	
+	if args.has("time"): time = args["time"]
+	if args.has("dir"): direction = args["dir"]
+	if args.has("direction"): direction = args["direction"]
+	if args.has("smooth"): smoothness = args["smooth"]
+	if args.has("smoothness"): smoothness = args["smoothness"]
+	
+	if _transition_tween:
+		_transition_tween.kill()
+
+	# Create a new CanvasLayer object and add it to the tree.
+	# The CanvasLayer object contains the screenshot of the old
+	# scene and will be displayed to block the viewport.
+	var canvas = CanvasLayer.new()
+	var sprite : Sprite2D = Sprite2D.new()
+	sprite.centered = false
+	sprite.texture = old_widget
+	canvas.add_child(sprite)
+	get_tree().root.add_child(canvas)
+
+	# Define a shader material and attach it to the screenshot texture.
+	# The shader values will be tweened through the shader material
+	# later.
+	var linearWipeMaterial : ShaderMaterial
+	linearWipeMaterial = load("res://CasteletCore/shaders/LinearWipeShader.tres")
+	sprite.material = linearWipeMaterial
+	sprite.material.set_shader_parameter("cutoff", -1.0)
+	sprite.material.set_shader_parameter("smoothness", smoothness)
+	if direction == "right":
+		sprite.material.set_shader_parameter("direction", 0)
+	elif direction == "left":
+		sprite.material.set_shader_parameter("direction", 1)
+	elif direction in ["up", "top"]:
+		sprite.material.set_shader_parameter("direction", 2)
+	elif direction in ["down", "bottom"]:
+		sprite.material.set_shader_parameter("direction", 3)
+	else:
+		print_debug("Unidentified direction for linear wipe. " +
+				"Reverting back to 'right' direction.")
+		sprite.material.set_shader_parameter("direction", 0)
+	
+	# Tween the shader material to gradually hide the old screenshot.
+	_transition_tween = create_tween()
+	_transition_tween.tween_method(wipe_shader_param.bind(sprite.material),
+			-1.0, 1.0, time)
+
+	# Once the tween is completed, destroy the CanvasLayer and the old
+	# screenshot.
+	await _transition_tween.finished
+
+	sprite.queue_free()
+	canvas.queue_free()
+
+	transition_completed.emit()
+
 
 
 ## This private function is to be called in the _ready() so it will
