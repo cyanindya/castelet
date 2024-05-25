@@ -51,7 +51,7 @@ var viewport_transition_functions = {
 	"pixelate" = _pixelate_screen,
 	"dissolve" = _dissolve_screen,
 	"wipe" = _wipe_screen,
-	#"slide" = _slide_screen,
+	"slide" = _slide_screen,
 	#"move" = _move_object,
 	
 }
@@ -61,6 +61,27 @@ var transition_types = {
 	"pixelate" =  [TransitionScope.VIEWPORT, TransitionScope.OBJECT],
 	"dissolve" =  [TransitionScope.VIEWPORT, TransitionScope.OBJECT],
 	"wipe" =  [TransitionScope.VIEWPORT, TransitionScope.OBJECT],
+	"slide" = [TransitionScope.VIEWPORT],
+}
+var _tween_transition_types = {
+	"linear" = Tween.TRANS_LINEAR,
+	"sine" = Tween.TRANS_SINE,
+	"quint" = Tween.TRANS_QUINT,
+	"quart" = Tween.TRANS_QUART,
+	"quad" = Tween.TRANS_QUAD,
+	"expo" = Tween.TRANS_EXPO,
+	"elastic" = Tween.TRANS_ELASTIC,
+	"cubic" = Tween.TRANS_CUBIC,
+	"circ" = Tween.TRANS_CIRC,
+	"bounce" = Tween.TRANS_BOUNCE,
+	"back" = Tween.TRANS_BACK,
+	"spring" = Tween.TRANS_SPRING,
+}
+var _tween_ease_types = {
+	"in" = Tween.EASE_IN,
+	"out" = Tween.EASE_OUT,
+	"in_out" = Tween.EASE_IN_OUT,
+	"out_in" = Tween.EASE_OUT_IN,
 }
 
 ## Variable to control current transition state. While transition still in
@@ -400,7 +421,7 @@ func _pixelate_screen(old_widget : Texture2D = null, _new_widget : Texture2D = n
 ## with a new one using linear wipe effect, which is controlled
 ## using custom shader.
 ##
-## Pixelation is controlled with the following parameters,
+## Wipe is controlled with the following parameters,
 ## which are supplied through the args:
 ## - time		:	The interval between the old screen to the new screen.
 ##					Default is 0.5 seconds.
@@ -410,9 +431,6 @@ func _pixelate_screen(old_widget : Texture2D = null, _new_widget : Texture2D = n
 ##					Default is 0 (sharp-edged)
 func _wipe_screen(_old_widget : Texture2D = null, _new_widget : Texture2D = null, args={}):
 	
-	# As noted, pixelation requires custom shader that can distort the texture
-	# into large chunks of pixels.
-	# We will use the pixel size to be changed gradually using tween.
 	var wipe_shader_param = func _set_shader_param(value : float, mat : Material):
 		mat.set_shader_parameter("cutoff", value)
 
@@ -458,8 +476,6 @@ func _wipe_screen(_old_widget : Texture2D = null, _new_widget : Texture2D = null
 	_transition_tween.tween_method(wipe_shader_param.bind(sprite.material),
 			-1.0, 1.0, time)
 
-	# Once the tween is completed, destroy the CanvasLayer and the old
-	# screenshot.
 	await _transition_tween.finished
 	transition_completed.emit()
 
@@ -474,16 +490,92 @@ func _wipe_screen(_old_widget : Texture2D = null, _new_widget : Texture2D = null
 ## - time		:	The interval between the old screen to the new screen.
 ##					Default is 0.5 seconds.
 ## - direction	:	Direction of which the wipe effect will move to:
-##					- in_from_top (default)
-##					  The new screen will slide in from above. 
-## - smoothness	:	The interpolation used to replace the new screen with
-##					new one. Default is linear # TODO
+##					- in_left (default)
+##					  The new screen will slide in from left.
+##					- in_right
+##					  The new screen will slide in from right.
+##					- in_top
+##					  The new screen will slide in from above.
+##					- in_bottom
+##					  The new screen will slide in from below.
+##					- out_left
+##					  The old screen will slide out to left.
+##					- out_right
+##					  The old screen will slide out to right.
+##					- out_top
+##					  The old screen will slide out to top.
+##					- out_bottom
+##					  The old screen will slide out to bottom.
+## - interpolation	:	The interpolation used to replace the new screen with
+##						new one. Default is linear. See Godot's documentation on
+##						TransitionType enum for details. # TODO
+## - easing			:	The easing function used to replace the new screen with
+##						new one. Default is in_out. See Godot's documentation on
+##						EaseType enum for details. # TODO
 func _slide_screen(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}):
 
+	# Using shader because I'm too lazy to simply add new sprite to the canvas layer (...)
+	var shader_param = func _set_shader_param(value : float, mat : Material):
+		mat.set_shader_parameter("cutoff", value)
+
+	# Set up the default values of the controlling parameters.
+	# If custom value defined through the arguments, use them.
+	var time : float = 0.5
+	var direction : String = "in_left"
+	var interpolation : String = "linear"
+	var easing : String = "in_out"
 	
+	if args.has("time"): time = args["time"]
+	if args.has("dir"): direction = args["dir"]
+	if args.has("direction"): direction = args["direction"]
+	
+	if _transition_tween:
+		_transition_tween.kill()
+
+
+	# Define a shader material and attach it to the screenshot texture.
+	# The shader values will be tweened through the shader material
+	# later.
+	var slideMaterial : ShaderMaterial
+	slideMaterial = load("res://CasteletCore/shaders/TwoTextureSlideShader.tres")
+	sprite.material = slideMaterial
+	sprite.material.set_shader_parameter("old_tex", old_widget)
+	sprite.material.set_shader_parameter("new_tex", new_widget)
+	sprite.material.set_shader_parameter("cutoff", 0.0)
+
+	if direction.begins_with("in_"):
+		sprite.material.set_shader_parameter("transition_in", true)
+	elif direction.begins_with("out_"):
+		sprite.material.set_shader_parameter("transition_in", false)
+	else:
+		print_debug("Unidentified direction for slide transition. " +
+				"Reverting back to 'in' direction.")
+		sprite.material.set_shader_parameter("transition_in", true)
+		
+	if direction in ["in_right", "out_right"]:
+		sprite.material.set_shader_parameter("direction", 0)
+	elif direction in ["in_left", "out_left"]:
+		sprite.material.set_shader_parameter("direction", 1)
+	elif direction in ["in_top", "in_up", "out_top", "out_up"]:
+		sprite.material.set_shader_parameter("direction", 2)
+	elif direction in ["in_bottom", "in_down", "out_bottom", "out_down"]:
+		sprite.material.set_shader_parameter("direction", 3)
+	else:
+		print_debug("Unidentified direction for slide transition. " +
+				"Reverting back to 'in_right' direction.")
+		sprite.material.set_shader_parameter("direction", 0)
+	
+	# Tween the shader material to gradually hide the old screenshot.
+	_transition_tween = create_tween()
+	_transition_tween.set_ease(_tween_ease_types[easing])
+	_transition_tween.set_trans(_tween_transition_types[interpolation])
+	_transition_tween.tween_method(shader_param.bind(sprite.material),
+			0.0, 1.0, time)
+
 	await _transition_tween.finished
 
 	transition_completed.emit()
+
 
 ## This private function is to be called in the _ready() so it will
 ## automatically search for resources where the image dissolve presets

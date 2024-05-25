@@ -10,6 +10,7 @@ script = ExtResource("1_74nj4")
 [node name="SubViewport" type="SubViewport" parent="."]
 handle_input_locally = false
 size = Vector2i(1366, 768)
+render_target_update_mode = 4
 
 [node name="StageNode" parent="SubViewport" instance=ExtResource("2_6jlgd")]
 

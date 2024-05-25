@@ -1,20 +1,11 @@
-[gd_scene load_steps=9 format=3 uid="uid://bgn8ihlwdig6q"]
+[gd_scene load_steps=7 format=3 uid="uid://bgn8ihlwdig6q"]
 
 [ext_resource type="Material" uid="uid://fwtjl3ek18s6" path="res://CasteletCore/shaders/TwoTextureHexagonPixelateShader.tres" id="1_yoi4b"]
 [ext_resource type="Texture2D" uid="uid://k2ei7okmb7d3" path="res://TestAssets/props/bg/carcocena_guild_detention.jpg" id="2_f7iye"]
 [ext_resource type="Texture2D" uid="uid://bm2kvy40fognb" path="res://TestAssets/props/alessa/alessa_annoyed.png" id="3_6xvh0"]
 [ext_resource type="Material" uid="uid://c8aoy5xbmd8y3" path="res://CasteletCore/shaders/LinearWipeShader.tres" id="3_qipl0"]
-[ext_resource type="Shader" path="res://CasteletCore/shaders/TwoTextureLinearWipeShader.gdshader" id="4_7bsf1"]
-[ext_resource type="Texture2D" uid="uid://b4b8bwyqw54ts" path="res://CasteletCore/shaders/white_px.png" id="6_2sokp"]
-[ext_resource type="Texture2D" uid="uid://daeda4o1o80v2" path="res://TestAssets/props/adrias/adrias_laugh.png" id="6_b6wi2"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_jlb1k"]
-shader = ExtResource("4_7bsf1")
-shader_parameter/cutoff = -0.596
-shader_parameter/direction = 0
-shader_parameter/smoothness = 0.517
-shader_parameter/tex_a = ExtResource("6_2sokp")
-shader_parameter/tex_b = ExtResource("6_b6wi2")
+[ext_resource type="Material" uid="uid://d2tbdkpcjvooe" path="res://CasteletCore/shaders/TwoTextureSlideShader.tres" id="5_mv2ch"]
+[ext_resource type="Texture2D" uid="uid://cevgovpe1o4jm" path="res://TestAssets/props/adrias/adrias_default.png" id="7_387uc"]
 
 [node name="Node2D" type="Node2D"]
 material = ExtResource("1_yoi4b")
@@ -24,13 +15,15 @@ position = Vector2(500, 363)
 texture = ExtResource("2_f7iye")
 
 [node name="AlessaAnnoyed" type="Sprite2D" parent="."]
+visible = false
 material = ExtResource("3_qipl0")
 position = Vector2(340, 342)
 texture = ExtResource("3_6xvh0")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-material = SubResource("ShaderMaterial_jlb1k")
+material = ExtResource("5_mv2ch")
 position = Vector2(418, 396)
+texture = ExtResource("7_387uc")
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
