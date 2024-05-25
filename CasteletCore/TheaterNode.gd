@@ -22,6 +22,7 @@ var _tree : CasteletSyntaxTree
 var _paused = false
 var DialogueTools = load("CasteletCore/DialogueTools.gd")
 var dialogue_tools
+var _timer : Timer
 
 signal end_of_script
 
@@ -32,6 +33,10 @@ func load_script(script_id : String):
 
 
 func _ready():
+	_timer = Timer.new()
+	_timer.wait_time = 0.1
+	add_child(_timer)
+
 	CasteletTransitionManager.vp = $SubViewport
 	dialogue_tools = DialogueTools.new()
 	# Connect the required signals to relevant callback functions
@@ -54,9 +59,9 @@ func _next():
 	# expressions.
 	if next is CasteletSyntaxTree.StageCommandExpression:
 		if next.type in [Tokenizer.KEYWORDS.SCENE, Tokenizer.KEYWORDS.SHOW]:
-			_update_stage_prop()
+			_update_stage_prop(CasteletTransitionManager.object_transition_data)
 		elif next.type == Tokenizer.KEYWORDS.HIDE:
-			_hide_stage_prop()
+			_hide_stage_prop(CasteletTransitionManager.object_transition_data)
 		elif next.type in [Tokenizer.KEYWORDS.BGM, Tokenizer.KEYWORDS.SFX]:
 			_update_audio_channel()
 		elif next.type == Tokenizer.KEYWORDS.VOICE:
@@ -122,6 +127,7 @@ func _next():
 	else:
 		self._tree.next()
 
+
 func _translate_expression(expr : CasteletSyntaxTree.BaseExpression):
 
 	var expr_result
@@ -185,7 +191,7 @@ func _process_binary(expr : CasteletSyntaxTree.BinaryExpression):
 		return left_hand != right_hand
 
 
-func _update_stage_prop(transition = null):
+func _update_stage_prop(transition : Dictionary = {}):
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 	var cb = ""
 
@@ -199,7 +205,7 @@ func _update_stage_prop(transition = null):
 
 	var args = command.args
 
-	if transition != null:
+	if not transition.is_empty():
 		args["transition"] = transition
 	
 	if len(params) > 1:
@@ -207,26 +213,17 @@ func _update_stage_prop(transition = null):
 	else:
 		prop_func.call(params[0], 'default', args)
 	
-	# await $SubViewport/StageNode.stage_updated
-	# await RenderingServer.frame_post_draw
-	# CasteletTransitionManager.viewport_redrawn.emit()
 
-
-func _hide_stage_prop(transition = null):
+func _hide_stage_prop(transition = {}):
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 	var params = (command.value[0] as String).split(".")
 
 	var args = command.args
 
-	if transition != null:
+	if not transition.is_empty():
 		args["transition"] = transition
 	
-	$SubViewport/StageNode.hide_prop(params[0])
-
-	# await $SubViewport/StageNode.stage_updated
-	# await RenderingServer.frame_post_draw
-	# CasteletTransitionManager.viewport_redrawn.emit()
-
+	$SubViewport/StageNode.hide_prop(params[0], args)
 	
 
 func _update_transition():
@@ -241,6 +238,10 @@ func _update_transition():
 		if CasteletTransitionManager.transitioning == true:
 			CasteletGameManager.set_block_signals(true)
 			await CasteletTransitionManager.transition_completed
+			
+			_timer.start()
+			await _timer.timeout
+
 			CasteletGameManager.set_block_signals(false)
 			
 
@@ -253,19 +254,6 @@ func _update_transition():
 				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.OBJECT, transition_properties)
 			else:
 				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.VIEWPORT, transition_properties)
-
-		# Check transition type
-		# if command.value[0] == "crossfade":
-		# 	CasteletTransitionManager.transition(self.get_path(), CasteletTransitionManager.Transitions.CROSSFADE, command.args)
-
-		# Check if a target exists in tree node.
-		# var next = self._tree.peek()
-		# if next.type in [Tokenizer.KEYWORDS.SCENE, Tokenizer.KEYWORDS.SHOW]:
-		# 	_update_stage_prop(command)
-		# elif next.type == Tokenizer.KEYWORDS.HIDE:
-		# 	pass
-		# else:
-		# 	pass
 
 	CasteletGameManager.progress.emit()
 
@@ -399,6 +387,8 @@ func end():
 	stop_scene()
 
 	CasteletTransitionManager.vp = null
+	remove_child(_timer)
+	_timer.queue_free()
 
 	# Ensures the signal handler is disconnected before this node is destroyed, just in case.
 	CasteletGameManager.progress.disconnect(_on_progress)

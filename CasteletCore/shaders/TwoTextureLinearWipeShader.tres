@@ -1,0 +1,13 @@
+[gd_resource type="ShaderMaterial" load_steps=4 format=3 uid="uid://qyexekh3y5wd"]
+
+[ext_resource type="Shader" path="res://CasteletCore/shaders/TwoTextureLinearWipeShader.gdshader" id="1_ero87"]
+[ext_resource type="Texture2D" uid="uid://cevgovpe1o4jm" path="res://TestAssets/props/adrias/adrias_default.png" id="2_7sie6"]
+[ext_resource type="Texture2D" uid="uid://daeda4o1o80v2" path="res://TestAssets/props/adrias/adrias_laugh.png" id="3_j0mii"]
+
+[resource]
+shader = ExtResource("1_ero87")
+shader_parameter/cutoff = 1.0
+shader_parameter/direction = 0
+shader_parameter/smoothness = 0.507
+shader_parameter/tex_a = ExtResource("2_7sie6")
+shader_parameter/tex_b = ExtResource("3_j0mii")

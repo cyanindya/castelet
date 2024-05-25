@@ -17,4 +17,5 @@ func _ready():
 
 	exit_timer.start()
 	await exit_timer.timeout
+	exit_timer.queue_free()
 	get_tree().quit()
