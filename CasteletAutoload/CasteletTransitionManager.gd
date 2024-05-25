@@ -28,6 +28,7 @@ extends CanvasLayer
 ## The signal to be emitted once a transition is completed.
 ## This is meant to control/block certain functions of Castelet so they won't
 ## be executed until this signal is emitted.
+signal viewport_redrawn
 signal transition_completed
 
 ## Defines the scope of the transition. Viewport transition redraws the entire
@@ -66,9 +67,16 @@ var transition_types = {
 ## progress, certain functions may be blocked or ignored.
 var transitioning : bool = false
 
+## 
+var vp : Viewport
+
 ## Tween object to animate the transition from old scene to new scene.
 var _transition_tween : Tween
 #var _theater_node : TheaterNode
+
+## Define shortcuts for the sprite and color-rect sub-nodes
+var sprite : Sprite2D
+var color_rect : ColorRect
 
 
 func _ready():
@@ -84,6 +92,10 @@ func _ready():
 	# Always make sure to clear existing transition tween before reusing it.
 	if _transition_tween:
 		_transition_tween.kill()
+	
+	# Connect the shorthands to sub-nodes
+	sprite = $Sprite2D
+	color_rect = $ColorRect
 
 
 ## The main transition function to be called from the TheaterNode. This
@@ -110,18 +122,36 @@ func transition(transition_name, transition_scope, args={}):
 ## Based on the detected transition name, it will call upon different
 ## transition functions as listed under viewport_transition_functions.
 func viewport_transition(transition_name, args={}):
-	
+
 	# Take screenshot of the viewport's appearance shortly before the
 	# transition, and convert it to 2D texture to be placed on CanvasLayer
 	# later.
 	var pre_transition_vp_texture: Texture2D
-	pre_transition_vp_texture = _take_viewport_texture()
-	
+	pre_transition_vp_texture = _take_viewport_texture(vp)
+	# pre_transition_vp_texture.get_image().save_jpg("pre.jpg")
+
+	# Preemptively set old widget as visible
+	sprite.texture = pre_transition_vp_texture
+
+	# Wait until sub-viewport draws the new frame, then take screenshot of new frame
+	await RenderingServer.frame_post_draw
+	var post_transition_vp_texture: Texture2D
+	post_transition_vp_texture = _take_viewport_texture(vp)
+	# post_transition_vp_texture.get_image().save_jpg("post.jpg")
+
 	# Retrieve specific function from the viewport_transition_functions dict,
 	# then call it by supplying the old transition screenshot and the arguments.
 	(viewport_transition_functions[transition_name] as Callable).bind(
-			pre_transition_vp_texture, null, args
+			pre_transition_vp_texture, post_transition_vp_texture, args
 			).call()
+	
+	await transition_completed
+	
+	# Reset all sprite and color rect materials when transition is finished.
+	sprite.texture = null
+	sprite.material = null
+	color_rect.material = null
+	color_rect.modulate.a = 0.0
 
 
 ## The main function to be called when object transition is requested.
@@ -150,7 +180,7 @@ func object_transition(transition_name, args={}):
 ##					Default is 0.5 seconds.
 ## - color		:	The color to be displayed between the old and new screens.
 ##					Default is black.
-func _fade(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}):
+func _fade(_old_widget : Texture2D = null, _new_widget : Texture2D = null, args={}):
 	
 	# Set up the default values of the controlling parameters.
 	# If custom value defined through the arguments, use them.
@@ -168,20 +198,8 @@ func _fade(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}
 	if _transition_tween:
 		_transition_tween.kill()
 
-	# Create a new CanvasLayer object and add it to the tree.
-	# The CanvasLayer object contains the screenshot of the old
-	# scene and a ColorRect and will be displayed to block the
-	# viewport.
-	var canvas = CanvasLayer.new()
-	var sprite : Sprite2D = Sprite2D.new()
-	sprite.centered = false
-	sprite.texture = old_widget
-	var color_rect : ColorRect = ColorRect.new()
-	color_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sprite.modulate.a = 1.0
 	color_rect.color.a = 0
-	canvas.add_child(sprite)
-	canvas.add_child(color_rect)
-	get_tree().root.add_child(canvas)
 	
 	# Use the tween to animate between the old scene, the solid color,
 	# then to the new scene.
@@ -200,10 +218,6 @@ func _fade(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}
 	# screenshot, and the color rect.
 	await _transition_tween.finished
 
-	color_rect.queue_free()
-	sprite.queue_free()
-	canvas.queue_free()
-
 	# Emit the signal to signify the transition is completed.
 	transition_completed.emit()
 	
@@ -216,7 +230,7 @@ func _fade(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}
 ## which are supplied through the args:
 ## - time	:	The interval between the old screen to the new screen.
 ##				Default is 0.5 seconds.
-func _crossfade_screen(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}):
+func _crossfade_screen(_old_widget : Texture2D = null, _new_widget : Texture2D = null, args={}):
 	
 	# Set up the default values of the controlling parameters.
 	# If custom value defined through the arguments, use them.
@@ -227,19 +241,7 @@ func _crossfade_screen(old_widget : Texture2D = null, new_widget : Texture2D = n
 	if _transition_tween:
 		_transition_tween.kill()
 
-	# Create a new CanvasLayer object and add it to the tree.
-	# The CanvasLayer object contains the screenshot of the old
-	# scene and will be displayed to block the viewport.
-	var canvas = CanvasLayer.new()
-	var sprite : Sprite2D = Sprite2D.new()
-	sprite.centered = false
-	sprite.texture = old_widget
-	canvas.add_child(sprite)
-	get_tree().root.add_child(canvas)
-	
-	sprite.texture = old_widget
 	sprite.modulate.a = 1.0
-	sprite.centered = false # the centered setting bonks the placement
 	
 	# Use the tween to animate between the old scene, the solid color,
 	# then to the new scene.
@@ -250,9 +252,6 @@ func _crossfade_screen(old_widget : Texture2D = null, new_widget : Texture2D = n
 	# screenshot.
 	await _transition_tween.finished
 	
-	sprite.queue_free()
-	canvas.queue_free()
-
 	transition_completed.emit()
 
 
@@ -273,7 +272,7 @@ func _crossfade_screen(old_widget : Texture2D = null, new_widget : Texture2D = n
 ## - smoothness	:	The smoothness of the transition between the old image to
 ##					the new image. 0 is hard-edged, 1 is very smooth.
 ##					Default is 0.5.
-func _dissolve_screen(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}):
+func _dissolve_screen(old_widget : Texture2D = null, _new_widget : Texture2D = null, args={}):
 
 	# As noted, image-controlled dissolve requires custom shader that can gradually
 	# control the alpha value of the texture based on the control image's brightness
@@ -295,13 +294,8 @@ func _dissolve_screen(old_widget : Texture2D = null, new_widget : Texture2D = nu
 	# Create a new CanvasLayer object and add it to the tree.
 	# The CanvasLayer object contains the screenshot of the old
 	# scene and will be displayed to block the viewport.
-	var canvas = CanvasLayer.new()
-	var sprite : Sprite2D = Sprite2D.new()
-	sprite.centered = false
-	sprite.texture = old_widget
-	canvas.add_child(sprite)
-	get_tree().root.add_child(canvas)
-
+	sprite.modulate.a = 1.0
+	
 	# Unlike previous basic transitions, we first need to
 	# define a shader material and attach it to the screenshot texture.
 	# The shader values will be tweened through the shader material
@@ -325,9 +319,6 @@ func _dissolve_screen(old_widget : Texture2D = null, new_widget : Texture2D = nu
 	# screenshot.
 	await _transition_tween.finished
 	
-	sprite.queue_free()
-	canvas.queue_free()
-
 	transition_completed.emit()
 
 
@@ -347,7 +338,7 @@ func _dissolve_screen(old_widget : Texture2D = null, new_widget : Texture2D = nu
 ## - px_size	:	The size of the simplified "pixel. Default is 100 px.
 ## - shape		:	The shape of the pixel chunks: either square or hex.
 ##					Default is "square".
-func _pixelate_screen(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}):
+func _pixelate_screen(old_widget : Texture2D = null, _new_widget : Texture2D = null, args={}):
 
 	# As noted, pixelation requires custom shader that can distort the texture
 	# into large chunks of pixels.
@@ -373,15 +364,8 @@ func _pixelate_screen(old_widget : Texture2D = null, new_widget : Texture2D = nu
 	if _transition_tween:
 		_transition_tween.kill()
 
-	# Create a new CanvasLayer object and add it to the tree.
-	# The CanvasLayer object contains the screenshot of the old
-	# scene and will be displayed to block the viewport.
-	var canvas = CanvasLayer.new()
-	var color_rect : ColorRect = ColorRect.new()
-	color_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-	canvas.add_child(color_rect)
-	get_tree().root.add_child(canvas)
-
+	sprite.modulate.a = 1.0
+	
 	# Define a shader material and attach it to the screenshot texture.
 	# The shader values will be tweened through the shader material
 	# later.
@@ -390,26 +374,24 @@ func _pixelate_screen(old_widget : Texture2D = null, new_widget : Texture2D = nu
 		pixellateMaterial = load("res://CasteletCore/shaders/TwoTextureHexagonPixelateShader.tres")
 	else:
 		pixellateMaterial = load("res://CasteletCore/shaders/TwoTexturePixelateShader.tres")
-	color_rect.material = pixellateMaterial
-	color_rect.material.set_shader_parameter("px_size", 1.0)
-	color_rect.material.set_shader_parameter("old_widget", old_widget)
+	
+	sprite.material = pixellateMaterial
+	sprite.material.set_shader_parameter("px_size", 1.0)
+	sprite.material.set_shader_parameter("old_widget", old_widget)
+	# sprite.material.set_shader_parameter("new_widget", new_widget)
 	
 	# Tween the shader material to gradually hide the old screenshot.
 	_transition_tween = create_tween()
-	_transition_tween.tween_method(pixelate_shader_param.bind(1.0, color_rect.material),
+	_transition_tween.tween_method(pixelate_shader_param.bind(1.0, sprite.material),
 			1.0, px_size, in_time)
 	#_transition_tween.tween_callback(callback)
 	_transition_tween.tween_interval(stay_time)
-	_transition_tween.tween_method(pixelate_shader_param.bind(0.0, color_rect.material),
+	_transition_tween.tween_method(pixelate_shader_param.bind(0.0, sprite.material),
 			px_size, 1.0, out_time)
 
 	# Once the tween is completed, destroy the CanvasLayer and the old
 	# screenshot.
 	await _transition_tween.finished
-
-	color_rect.queue_free()
-	canvas.queue_free()
-
 	transition_completed.emit()
 
 
@@ -426,7 +408,7 @@ func _pixelate_screen(old_widget : Texture2D = null, new_widget : Texture2D = nu
 ##					Default is "right".
 ## - smoothness	:	Determine whether the wipe effect will be sharp or smooth.
 ##					Default is 0 (sharp-edged)
-func _wipe_screen(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}):
+func _wipe_screen(_old_widget : Texture2D = null, _new_widget : Texture2D = null, args={}):
 	
 	# As noted, pixelation requires custom shader that can distort the texture
 	# into large chunks of pixels.
@@ -449,15 +431,6 @@ func _wipe_screen(old_widget : Texture2D = null, new_widget : Texture2D = null, 
 	if _transition_tween:
 		_transition_tween.kill()
 
-	# Create a new CanvasLayer object and add it to the tree.
-	# The CanvasLayer object contains the screenshot of the old
-	# scene and will be displayed to block the viewport.
-	var canvas = CanvasLayer.new()
-	var sprite : Sprite2D = Sprite2D.new()
-	sprite.centered = false
-	sprite.texture = old_widget
-	canvas.add_child(sprite)
-	get_tree().root.add_child(canvas)
 
 	# Define a shader material and attach it to the screenshot texture.
 	# The shader values will be tweened through the shader material
@@ -488,13 +461,29 @@ func _wipe_screen(old_widget : Texture2D = null, new_widget : Texture2D = null, 
 	# Once the tween is completed, destroy the CanvasLayer and the old
 	# screenshot.
 	await _transition_tween.finished
-
-	sprite.queue_free()
-	canvas.queue_free()
-
 	transition_completed.emit()
 
 
+## The function to be called when slideshow transition is requested.
+## This is a viewport-level transition that will replace the old scene
+## with a new one using linear slideshow, which is controlled
+## using custom shader.
+##
+## Slideshow effect is controlled with the following parameters,
+## which are supplied through the args:
+## - time		:	The interval between the old screen to the new screen.
+##					Default is 0.5 seconds.
+## - direction	:	Direction of which the wipe effect will move to:
+##					- in_from_top (default)
+##					  The new screen will slide in from above. 
+## - smoothness	:	The interpolation used to replace the new screen with
+##					new one. Default is linear # TODO
+func _slide_screen(old_widget : Texture2D = null, new_widget : Texture2D = null, args={}):
+
+	
+	await _transition_tween.finished
+
+	transition_completed.emit()
 
 ## This private function is to be called in the _ready() so it will
 ## automatically search for resources where the image dissolve presets

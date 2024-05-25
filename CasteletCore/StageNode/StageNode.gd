@@ -7,6 +7,7 @@ extends Node2D
 # - CasteletAssetsManager
 #
 
+signal stage_updated
 
 func scene(prop_name := "", prop_variant := "default", args := {}):
 	
@@ -68,6 +69,7 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	prop.position.y = CasteletViewportManager.base_viewport_height * ypos
 	prop.in_viewport_scale = CasteletViewportManager.base_scale_factor * scale_factor
 	
+	stage_updated.emit()
 	CasteletGameManager.progress.emit()
 
 
@@ -75,7 +77,8 @@ func hide_prop(prop_name : String):
 	var prop : PropNode = get_node_or_null(prop_name)
 	if prop != null:
 		remove_child(prop)
-	
+
+		stage_updated.emit()
 		CasteletGameManager.progress.emit()
 
 

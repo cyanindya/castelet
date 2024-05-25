@@ -28,6 +28,7 @@ void fragment() {
 	
 	vec4 old_text = texture(old_widget, vec2(grid_uv_x, grid_uv_y));
 	vec4 new_text = texture(screen_texture, vec2(grid_uv_x, grid_uv_y));
+	//vec4 new_text = texture(new_widget, vec2(grid_uv_x, grid_uv_y));
 	
 	COLOR = mix(new_text, old_text, old_screen_alpha);
 	

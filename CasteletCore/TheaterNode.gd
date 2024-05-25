@@ -14,7 +14,7 @@
 # - stop() - stops the scene playback and reset to the beginning
 # - end() - terminates this node.
 
-extends Node
+extends SubViewportContainer
 
 const Tokenizer = preload("parser/Tokenizer.gd")
 
@@ -32,6 +32,7 @@ func load_script(script_id : String):
 
 
 func _ready():
+	CasteletTransitionManager.vp = $SubViewport
 	dialogue_tools = DialogueTools.new()
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
@@ -194,7 +195,7 @@ func _update_stage_prop(transition = null):
 		cb = "show_prop"
 	
 	var params = (command.value[0] as String).split(".")
-	var prop_func = Callable($StageNode, cb)
+	var prop_func = Callable($SubViewport/StageNode, cb)
 
 	var args = command.args
 
@@ -205,6 +206,10 @@ func _update_stage_prop(transition = null):
 		prop_func.call(params[0], params[1], args)
 	else:
 		prop_func.call(params[0], 'default', args)
+	
+	# await $SubViewport/StageNode.stage_updated
+	# await RenderingServer.frame_post_draw
+	# CasteletTransitionManager.viewport_redrawn.emit()
 
 
 func _hide_stage_prop(transition = null):
@@ -216,7 +221,12 @@ func _hide_stage_prop(transition = null):
 	if transition != null:
 		args["transition"] = transition
 	
-	$StageNode.hide_prop(params[0])
+	$SubViewport/StageNode.hide_prop(params[0])
+
+	# await $SubViewport/StageNode.stage_updated
+	# await RenderingServer.frame_post_draw
+	# CasteletTransitionManager.viewport_redrawn.emit()
+
 	
 
 func _update_transition():
@@ -285,9 +295,9 @@ func _update_window():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 
 	if command.value[0] in ["show", "on"]:
-		$GUINode.show_window()
+		$SubViewport/GUINode.show_window()
 	elif command.value[0] in ["hide", "off"]:
-		$GUINode.hide_window()
+		$SubViewport/GUINode.hide_window()
 
 
 func _update_dialogue():
@@ -350,7 +360,7 @@ func _update_dialogue():
 			dialogue["speaker"] = CasteletAssetsManager.props[command.speaker
 									.trim_prefix("id_")].prop_name
 	
-	$GUINode.update_dialogue(dialogue)
+	$SubViewport/GUINode.update_dialogue(dialogue)
 
 	# Append current dialogue to the seen-dialogue cache
 	if command.speaker != "extend":
@@ -388,12 +398,14 @@ func end():
 	
 	stop_scene()
 
+	CasteletTransitionManager.vp = null
+
 	# Ensures the signal handler is disconnected before this node is destroyed, just in case.
 	CasteletGameManager.progress.disconnect(_on_progress)
 	end_of_script.disconnect(_on_end_of_script)
 
-	$StageNode.hide()
-	$GUINode.hide()
+	$SubViewport/StageNode.hide()
+	$SubViewport/GUINode.hide()
 	
 	queue_free()
 	

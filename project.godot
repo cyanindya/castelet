@@ -24,7 +24,7 @@ CasteletGameManager="*res://CasteletAutoload/CasteletGameManager.tscn"
 CasteletResourceLoader="*res://CasteletAutoload/CasteletResourceLoader.gd"
 CasteletViewportManager="*res://CasteletAutoload/CasteletViewportManager.tscn"
 CasteletInputManager="res://CasteletAutoload/CasteletInputManager.tscn"
-CasteletTransitionManager="*res://CasteletAutoload/CasteletTransitionManager.gd"
+CasteletTransitionManager="*res://CasteletAutoload/CasteletTransitionManager.tscn"
 
 [display]
 
