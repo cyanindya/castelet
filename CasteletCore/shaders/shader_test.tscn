@@ -1,0 +1,37 @@
+[gd_scene load_steps=7 format=3 uid="uid://bgn8ihlwdig6q"]
+
+[ext_resource type="Material" uid="uid://fwtjl3ek18s6" path="res://CasteletCore/shaders/TwoTextureHexagonPixelateShader.tres" id="1_yoi4b"]
+[ext_resource type="Texture2D" uid="uid://k2ei7okmb7d3" path="res://TestAssets/props/bg/carcocena_guild_detention.jpg" id="2_f7iye"]
+[ext_resource type="Texture2D" uid="uid://bm2kvy40fognb" path="res://TestAssets/props/alessa/alessa_annoyed.png" id="3_6xvh0"]
+[ext_resource type="Material" uid="uid://c8aoy5xbmd8y3" path="res://CasteletCore/shaders/LinearWipeShader.tres" id="3_qipl0"]
+[ext_resource type="Material" uid="uid://qyexekh3y5wd" path="res://CasteletCore/shaders/TwoTextureLinearWipeShader.tres" id="5_tj0un"]
+[ext_resource type="Texture2D" uid="uid://cevgovpe1o4jm" path="res://TestAssets/props/adrias/adrias_default.png" id="7_387uc"]
+
+[node name="Node2D" type="Node2D"]
+material = ExtResource("1_yoi4b")
+
+[node name="CarcocenaGuildDetention" type="Sprite2D" parent="."]
+position = Vector2(500, 363)
+texture = ExtResource("2_f7iye")
+
+[node name="AlessaAnnoyed" type="Sprite2D" parent="."]
+visible = false
+material = ExtResource("3_qipl0")
+position = Vector2(340, 342)
+texture = ExtResource("3_6xvh0")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+material = ExtResource("5_tj0un")
+position = Vector2(418, 396)
+texture = ExtResource("7_387uc")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="ColorRect" type="ColorRect" parent="CanvasLayer"]
+visible = false
+material = ExtResource("1_yoi4b")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

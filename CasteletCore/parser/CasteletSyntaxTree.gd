@@ -8,6 +8,14 @@ var checkpoints = {}
 var _current_index = -1
 var body_size = 0
 
+const BINARY_OPERATORS = {
+	"=" : "Assignment",
+	"+" : "Summation",
+	"-" : "Subtraction",
+	"*" : "Multiplication",
+	"/" : "Division",
+}
+
 func _init(tree_name : String):
 	self.name = tree_name
 
@@ -88,3 +96,103 @@ class DialogueExpression:
 	
 	func _to_string():
 		return "DialogueExpression{speaker: %s, dialogue: %s, args: %s}" % [self.speaker, self.dialogue, self.args]
+
+class VariableExpression:
+	extends BaseExpression
+	
+	func _init(val : String):
+		self.type = "Variable"
+		self.value = val
+
+	func _to_string():
+		return "VariableExpression{name: %s}" % [self.value]
+
+
+class BinaryExpression:
+	extends BaseExpression
+
+	var lhs : BaseExpression # Left-hand side
+	var rhs : BaseExpression # Right-hand side
+	var op : String # Operator
+
+	func _init(left_hand : BaseExpression, right_hand : BaseExpression, operator : String):
+
+		if operator not in BINARY_OPERATORS.keys():
+			push_error("Invalid binary operation. The operator is not part of valid operator.")
+
+		self.type = "Binary"
+		self.lhs = left_hand
+		self.rhs = right_hand
+		self.op = operator
+	
+	func _to_string():
+		return "BinaryExpression{left hand: %s, right hand: %s, op : %s}" % [self.lhs, self.rhs, self.op]
+
+class AssignmentExpression:
+	extends BinaryExpression
+
+	func _init(left_hand : VariableExpression, right_hand : BaseExpression):
+		self.type = BINARY_OPERATORS["="]
+		self.lhs = left_hand
+		self.rhs = right_hand
+
+	func _to_string():
+		return "AssignmentExpression{left hand: %s, right hand: %s}" % [self.lhs, self.rhs]
+
+
+class CompoundAssignmentExpression:
+	extends AssignmentExpression
+
+	var compound_operator = ""
+
+	func _init(left_hand : VariableExpression, right_hand : BaseExpression, operator : String):
+		super._init(left_hand, right_hand)
+		self.compound_operator = operator
+
+	func _to_string():
+		return "CompoundAssignmentExpression{left hand: %s, right hand: %s, operator: %s}" % [self.lhs, self.rhs, self.compound_operator]
+		
+
+class StatementExpression:
+	extends BaseExpression
+
+	func _init(statement : String):
+		self.type = "Statement"
+		self.value = statement
+	
+	func _to_string():
+		return "StatementExpression{statement: %s}" % [self.value]
+	
+class FunctionCallExpression:
+	extends BaseExpression
+
+	var func_name = ""
+	var vars = []
+	var vals = []
+
+	func _init(function_name : String, input_vars = [], input_vals = []):
+		self.type = "Function"
+		self.func_name = function_name
+		self.vars = input_vars
+		self.vals = input_vals
+	
+	func _to_string():
+		return "FunctionCallExpression{func_name: %s, vars: %s, vals: %s}" % [self.func_name, self.vars, self.vals]
+	
+
+# class TransitionExpression:
+# 	extends BaseExpression
+
+# 	var transition = ""
+# 	var duration : float
+# 	var args = {}
+
+# 	func _init(trans_name : String, dur : float, trans_args = {}):
+# 		self.type = "Transition"
+# 		self.transition = trans_name
+# 		self.duration = dur
+# 		self.args = trans_args
+	
+# 	func _to_string():
+# 		return "TransitionExpression{transition: %s, duration: %f, args: %s}" % [self.transition, self.duration, self.args]
+

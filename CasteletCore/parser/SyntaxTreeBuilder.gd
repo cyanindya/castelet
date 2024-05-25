@@ -23,6 +23,14 @@ extends RefCounted
 
 const Tokenizer = preload("Tokenizer.gd")
 const CasteletToken = Tokenizer.CasteletToken
+const OPERATOR_PRECEDENCE = {
+	"=": 1,
+	"||": 2,
+	"&&": 3,
+	"<": 7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
+	"+": 10, "-": 10,
+	"*": 20, "/": 20, "%": 20,
+}
 
 var _name = ""
 var _tokens : Tokenizer
@@ -57,6 +65,14 @@ func _parse_token():
 		# Stage commands (denoted by @ operator in beginning of line)
 		if next_token_preview.value == "@":
 			return self._parse_commands()
+		# GDScript-adjacent statements (denoted by $ operator in beginning of line)
+		# similar to in-script Python statements in Ren'Py
+		elif next_token_preview.value == "$":
+			
+			# Advance the tokenizer iteration (unless called by _parse_function or similar, should be at $)
+			self._tokens.next()
+			
+			return self._parse_statement()
 		else:
 			# TODO: handle variable assignment
 			self._tokens.next()
@@ -72,7 +88,7 @@ func _parse_token():
 		return self._parse_dialogue()
 	
 	# Skip newlines and comments
-	elif next_token_preview.type == Tokenizer.TOKENS.NEWLINE or next_token_preview.type == Tokenizer.TOKENS.COMMENT:
+	elif next_token_preview.type in [Tokenizer.TOKENS.NEWLINE, Tokenizer.TOKENS.COMMENT]:
 		self._tokens.next()
 	
 	elif next_token_preview.type == Tokenizer.TOKENS.EOF:
@@ -112,7 +128,7 @@ func _parse_commands():
 		self._tokens.next()
 		next_token_preview = _tokens.peek()
 
-		while next_token_preview.type == Tokenizer.TOKENS.SYMBOL or next_token_preview.value == ",":
+		while next_token_preview.type in [Tokenizer.TOKENS.SYMBOL, ","]:
 			var token = self._tokens.next()
 			if next_token_preview.type == Tokenizer.TOKENS.SYMBOL:
 				value.append(token.value)
@@ -131,12 +147,149 @@ func _parse_commands():
 	else:
 		push_error()
 
+	if type == Tokenizer.KEYWORDS.TRANSITION:
+		if _tokens.peek().type == Tokenizer.TOKENS.NUMBER:
+			args["time"] = _tokens.next().value as float
+
 	# Check for arguments until newline is reached
 	while _tokens.peek().type != Tokenizer.TOKENS.NEWLINE:
 		var argument : CasteletSyntaxTree.CommandArgExpression = _parse_args()
 		args[argument.param] = argument.value
 
 	return CasteletSyntaxTree.StageCommandExpression.new(type, value, args)
+
+func _parse_statement():
+	
+	# There are a few possibilities for the statements. As such, first,
+	# we need to make sure whether the current token is a symbol and
+	# check what awaits next
+	var current = self._tokens.next() # current position is whatever symbol/string/number it is
+	var next_token_preview = self._tokens.peek()
+	# print_debug(self._tokens.current(), self._tokens.peek())
+
+	# First priority is function call
+	if next_token_preview.value == "(":
+		# Check if current token is a symbol. If it is, proceed. If it isn't, error.
+		if current.type != Tokenizer.TOKENS.SYMBOL:
+			push_error("The next token indicates function call, but the current token is not a valid symbol token.")
+		return _parse_function()
+	# Second priority is assignment
+	elif next_token_preview.value in Tokenizer.ASSIGNMENT_OPERATORS:
+		if current.type != Tokenizer.TOKENS.SYMBOL:
+			push_error("The next token indicates assignment, but the current token is not a valid symbol token.")
+		return _parse_assignment()
+	# Third priority is either a standard binary or unary expression
+	else:
+		return _parse_binary()
+	
+
+func _parse_function():
+	var func_name = self._tokens.current().value
+	var vars = []
+	var vals = []
+
+	var current = self._tokens.next() # (
+	var next = self._tokens.peek()
+
+	while next.value != ")":
+		
+		current = self._tokens.next()
+		next = self._tokens.peek()
+
+		if current.value == ",":
+			continue
+
+		if next.type == Tokenizer.TOKENS.NEWLINE:
+			push_error("No closing parentheses detected to terminate the function")
+		if next.type == Tokenizer.TOKENS.OPERATOR and next.value == "=":
+			if current.type == Tokenizer.TOKENS.SYMBOL:
+				vars.append(current.value)
+			else:
+				push_error("Expected function parameter name.")
+		else:
+			self._tokens.prev()
+			var value_expression_type = _parse_statement()
+			vals.append(value_expression_type)
+
+	self._tokens.next() # )
+
+	return CasteletSyntaxTree.FunctionCallExpression.new(func_name, vars, vals)
+
+
+func _parse_assignment():
+	var lh
+	var rh
+	var operator = ""
+
+	# Next, check the token to see if it is (a) a symbol and (b) it has
+	# same value as any listed in the KEYWORDS.
+	var current = self._tokens.current()
+	var next_token_preview = self._tokens.peek()
+
+	# Do some checking before parsing the symbol as variable:
+	## Check if it is a symbol token
+	## Check if it is not part of reserved keyword already
+	## Put on temporary variable, then do some more checking.
+	## If the next token is not part of valid operator (either assignment
+	## operator or compound assignment), throw an error.
+	if current.type != Tokenizer.TOKENS.SYMBOL:
+		push_error()
+	if current.value in Tokenizer.KEYWORDS.values():
+		push_error("Invalid variable name. The name is already part of reserved keyword.")
+	
+	next_token_preview = self._tokens.peek()
+	
+	if next_token_preview.type != Tokenizer.TOKENS.OPERATOR:
+		push_error()
+	if next_token_preview.value not in Tokenizer.ASSIGNMENT_OPERATORS:
+		push_error()
+	
+	lh = CasteletSyntaxTree.VariableExpression.new(current.value)
+	operator = self._tokens.next().value
+
+	# Parse the right-hand side.
+	rh = _parse_statement()
+	
+	if operator in Tokenizer.ASSIGNMENT_OPERATORS and operator != "=":
+		return CasteletSyntaxTree.CompoundAssignmentExpression.new(lh, rh, operator)
+	else:
+		return CasteletSyntaxTree.AssignmentExpression.new(lh, rh)
+
+
+func _parse_binary():
+	var lh
+	# var rh
+	# var operator = ""
+
+	
+	var current = self._tokens.current() # left hand side
+	# var next_token_preview = self._tokens.peek() # operator
+
+	if current.type in [Tokenizer.TOKENS.BOOLEAN, Tokenizer.TOKENS.STRING_LITERAL, Tokenizer.TOKENS.NUMBER]:
+		lh = CasteletSyntaxTree.BaseExpression.new(current.type, current.value)
+	elif current.type == Tokenizer.TOKENS.SYMBOL:
+		lh = CasteletSyntaxTree.VariableExpression.new(current.value)
+	else:
+		self._tokens.prev()
+		lh =  _parse_statement()
+
+	return _check_precedence(lh)
+
+
+# Adapted from lisperator's parser (https://lisperator.net/pltut/parser/the-parser)
+func _check_precedence(lhs : CasteletSyntaxTree.BaseExpression, cur_precedence := 0):
+	
+	var op = self._tokens.peek().value # operator
+
+	if op in Tokenizer.MATH_OPERATORS + Tokenizer.COMPARISON_OPERATORS:
+		var next_precedence = OPERATOR_PRECEDENCE[op]
+		self._tokens.next()
+		if next_precedence > cur_precedence:
+			var rhs = _check_precedence(_parse_statement(), next_precedence)
+			var bin = CasteletSyntaxTree.BinaryExpression.new(lhs, rhs, op)
+			return _check_precedence(bin, cur_precedence)
+
+	return lhs
 
 
 func _parse_args():
@@ -176,6 +329,7 @@ func _parse_dialogue():
 	var speaker = ""
 	var dialogue = ""
 	var args = {}
+	var formatter = []
 
 	# Throw the immediate next token into token cache first.
 	_token_cache.append(self._tokens.next())
@@ -190,17 +344,50 @@ func _parse_dialogue():
 			_token_cache.append(self._tokens.next())
 		
 		# If a plus sign is available, expect another string literal to be joined later.
-		elif next_token_preview.type == Tokenizer.TOKENS.OPERATOR and next_token_preview.value == "+":
+		elif next_token_preview.type == Tokenizer.TOKENS.OPERATOR:
+			if next_token_preview.value == "+":
 			
-			while next_token_preview.type != Tokenizer.TOKENS.STRING_LITERAL:
+				while next_token_preview.type != Tokenizer.TOKENS.STRING_LITERAL:
+					self._tokens.next()
+					next_token_preview = _tokens.peek()
+
+					if next_token_preview.type in [Tokenizer.TOKENS.SYMBOL, Tokenizer.TOKENS.OPERATOR]:
+						push_error("Expected a string literal to be joined with previous string literal, but found %s token instead" % next_token_preview.type)
+				
+				# Discard this present token and join its contents with the last one available in token cache.
+				_token_cache[-1].value += self._tokens.next().value
+			
+			elif next_token_preview.value == "%":
 				self._tokens.next()
 				next_token_preview = _tokens.peek()
 
-				if next_token_preview.type in [Tokenizer.TOKENS.SYMBOL, Tokenizer.TOKENS.OPERATOR]:
-					push_error("Expected a string literal to be joined with previous string literal, but found %s token instead" % next_token_preview.type)
-			
-			# Discard this present token and join its contents with the last one available in token cache.
-			_token_cache[-1].value += self._tokens.next().value
+				if next_token_preview.type == Tokenizer.TOKENS.OPERATOR and next_token_preview.value == "[":
+					self._tokens.next()
+
+					while next_token_preview.value != "]":
+						next_token_preview = _tokens.peek()
+
+						if next_token_preview.type in [Tokenizer.TOKENS.SYMBOL,
+							Tokenizer.TOKENS.STRING_LITERAL, Tokenizer.TOKENS.NUMBER, Tokenizer.TOKENS.BOOLEAN]:
+							formatter.append(next_token_preview)
+						elif next_token_preview.type == Tokenizer.TOKENS.OPERATOR and next_token_preview.value in [",", "]"]:
+							pass
+						else:
+							push_error(next_token_preview)
+						
+						self._tokens.next()
+						
+					self._tokens.next()
+
+				elif next_token_preview.type == Tokenizer.TOKENS.SYMBOL:
+					formatter.append(next_token_preview)
+
+					self._tokens.next()
+				
+				else:
+					push_error()
+
+
 		
 		# Otherwise, throw an error
 		else:
@@ -240,91 +427,7 @@ func _parse_dialogue():
 	
 	_token_cache.clear()
 
-	# Lastly, extract custom tags such as wait [w] and auto-dismiss [nw].
-	# They're not meant to be custom BBCodes and can interfere with other
-	# functionalities those don't need them (e.g. dialogue history), so
-	# we extract them here and store it into the expression instead.
-	var dialogue_processed : Dictionary = _extract_custom_non_bbcode_tags(dialogue)
-	for arg in dialogue_processed["args"].keys():
-		args[arg] = dialogue_processed["args"][arg]
-
-	return CasteletSyntaxTree.DialogueExpression.new(speaker,
-			dialogue_processed["dialogue"], args)
-
-
-# The function to detect non-BBCode custom tags, mainly for dialogue pauses and auto-dismiss.
-# Returns the clean dialogue and the pause locations and their respective durations
-# if applicable.
-func _extract_custom_non_bbcode_tags(dialogue_string : String) -> Dictionary:
-
-	# Regex for auto-dismiss tag
-	var nowait_regex = RegEx.new()
-	nowait_regex.compile("(\\[nw\\])$")
-
-	var nowait_result = nowait_regex.search(dialogue_string)
-
-	var auto_dismiss = false
-	if nowait_result:
-		auto_dismiss = true
-		# print_debug("nowait tag detected")
-		dialogue_string = nowait_regex.sub(dialogue_string, "", true)
 	
-	# Regular expressions for detecting pauses
-	var pause_regex = RegEx.new()
-	pause_regex.compile("\\[(?:w)(?:=(\\d*\\.*\\d*))*\\]") # example format: [w=2.5], [w], [w=2]
-	
-	var temp_result = pause_regex.search_all(dialogue_string)
+	args["formatter"] = formatter
 
-	# Regular expressions for searching BBCodes (for correcting offsets)
-	var bbcode_start_regex = RegEx.new()
-	var bbcode_end_regex = RegEx.new()
-	bbcode_start_regex.compile("\\[(?!\\/|\\bw\\b)(.*?)\\]") # search for everything except for custom wait
-	bbcode_end_regex.compile("\\[\\/(.*?)\\]")
-	
-	if temp_result:
-		
-		var pause_locations = []
-		var pause_durations = []
-		
-		# For each result, find the location and the duration
-		for rs in temp_result:
-			
-			# If there are multiple pause tags, there will be offset from the removed
-			# tags in the clean text.
-			# Adjust the pause location based on availability of previous tags.
-			# (Credits to World Eater Games here: https://worldeater-dev.itch.io/
-			# bittersweet-birthday/devlog/224241/howto-a-simple-dialogue-system-in-godot)
-			var left := rs.get_start() as int
-			var initial_left = left
-			var previous_tags := pause_regex.search_all(dialogue_string.left(initial_left))
-			for prev in previous_tags:
-				left -= prev.get_string().length()
-			
-			# Calculate offset caused by BBCodes
-			var bbcode_tags_start := bbcode_start_regex.search_all(dialogue_string.left(initial_left))
-			for bbcode_tag_start in bbcode_tags_start:
-				left -= bbcode_tag_start.get_string().length()
-			var bbcode_tags_end := bbcode_end_regex.search_all(dialogue_string.left(initial_left))
-			for bbcode_tag_end in bbcode_tags_end:
-				left -= bbcode_tag_end.get_string().length()
-			
-			# Finally append the pause location
-			pause_locations.append(left)
-			
-			# Check the duration of the pause. If no duration is specified, set it
-			# to 0, where it will wait for player input instead to continue.
-			if rs.get_string(1) == "":
-				pause_durations.append(0.0)
-			else:
-				pause_durations.append(rs.get_string(1) as float)
-		
-		return {"dialogue" : pause_regex.sub(dialogue_string, "", true),
-				"args" : { "pause_locations": pause_locations,
-							"pause_durations" : pause_durations,
-							"auto_dismiss" : auto_dismiss,
-						}
-				}
-	
-	return {"dialogue" : dialogue_string, "args" : { "pause_locations": [],
-			"pause_durations" : [], "auto_dismiss" : auto_dismiss,}
-			}
+	return CasteletSyntaxTree.DialogueExpression.new(speaker,dialogue, args)

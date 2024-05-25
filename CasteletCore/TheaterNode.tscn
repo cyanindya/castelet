@@ -4,9 +4,14 @@
 [ext_resource type="PackedScene" uid="uid://07g01eb4b6nx" path="res://CasteletCore/StageNode/StageNode.tscn" id="2_6jlgd"]
 [ext_resource type="PackedScene" uid="uid://cf8ybpujcepfc" path="res://CasteletCore/GUINode/GUINode.tscn" id="3_6x5vo"]
 
-[node name="TheaterNode" type="Node"]
+[node name="TheaterNode" type="SubViewportContainer"]
 script = ExtResource("1_74nj4")
 
-[node name="StageNode" parent="." instance=ExtResource("2_6jlgd")]
+[node name="SubViewport" type="SubViewport" parent="."]
+handle_input_locally = false
+size = Vector2i(1366, 768)
+render_target_update_mode = 4
 
-[node name="GUINode" parent="." instance=ExtResource("3_6x5vo")]
+[node name="StageNode" parent="SubViewport" instance=ExtResource("2_6jlgd")]
+
+[node name="GUINode" parent="SubViewport" instance=ExtResource("3_6x5vo")]

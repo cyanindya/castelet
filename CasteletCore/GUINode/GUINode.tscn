@@ -4,18 +4,11 @@
 [ext_resource type="Script" path="res://CasteletCore/GUINode/GUINode.gd" id="1_lemi2"]
 [ext_resource type="PackedScene" uid="uid://ca1dssn5xvet0" path="res://CasteletCore/GUINode/BacklogNode.tscn" id="3_mumyu"]
 
-[node name="GUINode" type="Control"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 1
+[node name="GUINode" type="CanvasLayer"]
+layer = 10
 script = ExtResource("1_lemi2")
 
 [node name="DialogueNode" parent="." instance=ExtResource("1_h0g72")]
-layout_mode = 1
 anchors_preset = 7
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -23,31 +16,36 @@ offset_top = -38.0
 offset_bottom = -38.0
 grow_vertical = 0
 
-[node name="ButtonContainers" type="HBoxContainer" parent="."]
+[node name="QuickMenuControl" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+grow_horizontal = 0
+
+[node name="ButtonContainers" type="HBoxContainer" parent="QuickMenuControl"]
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
-offset_left = -69.0
-offset_bottom = 40.0
+offset_left = -118.0
+offset_bottom = 31.0
 grow_horizontal = 0
 alignment = 2
 
-[node name="BacklogButton" type="Button" parent="ButtonContainers"]
+[node name="BacklogButton" type="Button" parent="QuickMenuControl/ButtonContainers"]
 layout_mode = 2
 text = "Backlog"
 
-[node name="AutomodeButton" type="Button" parent="ButtonContainers"]
+[node name="AutomodeButton" type="Button" parent="QuickMenuControl/ButtonContainers"]
 layout_mode = 2
 toggle_mode = true
 text = "Auto"
 
 [node name="BacklogNode" parent="." instance=ExtResource("3_mumyu")]
 visible = false
-layout_mode = 1
 
-[connection signal="message_display_completed" from="DialogueNode" to="." method="_on_dialogue_node_message_display_completed"]
-[connection signal="message_display_paused" from="DialogueNode" to="." method="_on_dialogue_node_message_display_paused"]
-[connection signal="pressed" from="ButtonContainers/BacklogButton" to="." method="_on_backlog_button_pressed"]
-[connection signal="toggled" from="ButtonContainers/AutomodeButton" to="." method="_on_automode_button_toggled"]
+[connection signal="dialogue_window_status_changed" from="DialogueNode" to="." method="_on_dialogue_node_dialogue_window_status_changed"]
+[connection signal="pressed" from="QuickMenuControl/ButtonContainers/BacklogButton" to="." method="_on_backlog_button_pressed"]
+[connection signal="toggled" from="QuickMenuControl/ButtonContainers/AutomodeButton" to="." method="_on_automode_button_toggled"]
 [connection signal="visibility_changed" from="BacklogNode" to="." method="_on_backlog_window_visibility_changed"]

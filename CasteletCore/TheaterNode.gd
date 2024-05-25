@@ -14,21 +14,31 @@
 # - stop() - stops the scene playback and reset to the beginning
 # - end() - terminates this node.
 
-extends Node
+extends SubViewportContainer
 
 const Tokenizer = preload("parser/Tokenizer.gd")
 
 var _tree : CasteletSyntaxTree
 var _paused = false
+var DialogueTools = load("CasteletCore/DialogueTools.gd")
+var dialogue_tools
+var _timer : Timer
 
 signal end_of_script
 
 
-func load_ast(scene_tree : CasteletSyntaxTree):
-	self._tree = scene_tree
+func load_script(script_id : String):
+	print_debug(CasteletGameManager.script_trees)
+	self._tree = CasteletGameManager.script_trees[script_id]
 
 
 func _ready():
+	_timer = Timer.new()
+	_timer.wait_time = 0.1
+	add_child(_timer)
+
+	CasteletTransitionManager.vp = $SubViewport
+	dialogue_tools = DialogueTools.new()
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
 	CasteletGameManager.progress.connect(_on_progress)
@@ -49,23 +59,139 @@ func _next():
 	# expressions.
 	if next is CasteletSyntaxTree.StageCommandExpression:
 		if next.type in [Tokenizer.KEYWORDS.SCENE, Tokenizer.KEYWORDS.SHOW]:
-			_update_stage_prop()
+			_update_stage_prop(CasteletTransitionManager.object_transition_data)
 		elif next.type == Tokenizer.KEYWORDS.HIDE:
-			_hide_stage_prop()
+			_hide_stage_prop(CasteletTransitionManager.object_transition_data)
 		elif next.type in [Tokenizer.KEYWORDS.BGM, Tokenizer.KEYWORDS.SFX]:
 			_update_audio_channel()
 		elif next.type == Tokenizer.KEYWORDS.VOICE:
 			pass
+		elif next.type == Tokenizer.KEYWORDS.TRANSITION:
+			_update_transition()
 		elif next.type == Tokenizer.KEYWORDS.WINDOW:
 			_update_window()
 		else:
 			pass
+	elif next is CasteletSyntaxTree.FunctionCallExpression:
+		var caller_object = self
+		var func_name = ""
+		var args = []
+		
+		var fnc = self._tree.next()
+		var fnc_name = fnc.func_name.split(".")
+		if len(fnc_name) > 1:
+			caller_object = get_node("/root/" + fnc_name[0])
+			func_name = fnc_name[-1]
+		else:
+			func_name = fnc_name[-1]
+		
+		for arg_tree in fnc.vals:
+			args.append(_translate_expression(arg_tree))
+		
+		var func_callable = Callable(caller_object, func_name)
+		func_callable.callv(args)
+
+		CasteletGameManager.progress.emit()
+	
+	elif next is CasteletSyntaxTree.AssignmentExpression:
+		var assignment = self._tree.next()
+		var is_persistent = (assignment.lhs.value as String).begins_with("persistent.")
+		var varname = assignment.lhs.value
+		var var_storage = CasteletGameManager.vars
+		if is_persistent:
+			varname = (assignment.lhs.value as String).trim_prefix("persistent.")
+			var_storage = CasteletGameManager.persistent
+		
+		var result = _translate_expression(assignment.rhs)
+
+		if assignment is CasteletSyntaxTree.CompoundAssignmentExpression:
+			if assignment.compound_operator == "+=":
+				var_storage[varname] += result
+			elif assignment.compound_operator == "-=":
+				var_storage[varname] -= result
+			elif assignment.compound_operator == "/=":
+				var_storage[varname] /= result
+			elif assignment.compound_operator == "*=":
+				var_storage[varname] *= result
+			elif assignment.compound_operator == "^=":
+				var_storage[varname] ^= result
+			elif assignment.compound_operator == "%=":
+				var_storage[varname] %= result
+		else:
+			var_storage[varname] = result
+		
+		CasteletGameManager.progress.emit()
+		
 	elif next is CasteletSyntaxTree.DialogueExpression:
 		_update_dialogue()
 	else:
 		self._tree.next()
 
-func _update_stage_prop():
+
+func _translate_expression(expr : CasteletSyntaxTree.BaseExpression):
+
+	var expr_result
+
+	if expr is CasteletSyntaxTree.BinaryExpression:
+		expr_result = _process_binary(expr)
+	elif expr is CasteletSyntaxTree.VariableExpression:
+		var is_persistent = (expr.value as String).begins_with("persistent.")
+		var varname = expr.value
+		var var_storage = CasteletGameManager.vars
+		if is_persistent:
+			varname = (expr.value as String).trim_prefix("persistent.")
+			var_storage = CasteletGameManager.persistent
+
+		expr_result = var_storage[varname]
+	elif expr is CasteletSyntaxTree.FunctionCallExpression:
+		pass #TODO
+	else:
+		if expr.type == Tokenizer.TOKENS.BOOLEAN:
+			if expr.value == "true":
+				expr_result = true
+			else:
+				expr_result = false
+		elif expr.type == Tokenizer.TOKENS.NUMBER:
+			expr_result = expr.value as float
+		else:
+			expr_result = expr.value as String
+	
+	return expr_result
+
+func _process_binary(expr : CasteletSyntaxTree.BinaryExpression):
+
+	var left_hand
+	var right_hand
+	var op = expr.op
+
+	left_hand = _translate_expression(expr.lhs)
+	right_hand = _translate_expression(expr.rhs)
+
+	if (op == "+"):
+		return left_hand + right_hand
+	elif (op == "-"):
+		return left_hand - right_hand
+	elif (op == "/"):
+		return left_hand / right_hand
+	elif (op == "*"):
+		return left_hand * right_hand
+	elif (op == "%"):
+		return left_hand % right_hand
+	elif (op == ">"):
+		return left_hand > right_hand
+	elif (op == ">="):
+		return left_hand >= right_hand
+	elif (op == "=="):
+		return left_hand == right_hand
+	elif (op == "<"):
+		return left_hand < right_hand
+	elif (op == "<="):
+		return left_hand <= right_hand
+	elif (op == "!="):
+		return left_hand != right_hand
+
+
+func _update_stage_prop(transition : Dictionary = {}):
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 	var cb = ""
 
@@ -75,18 +201,62 @@ func _update_stage_prop():
 		cb = "show_prop"
 	
 	var params = (command.value[0] as String).split(".")
-	var prop_func = Callable($StageNode, cb)
+	var prop_func = Callable($SubViewport/StageNode, cb)
+
+	var args = command.args
+
+	if not transition.is_empty():
+		args["transition"] = transition
 	
 	if len(params) > 1:
-		prop_func.call(params[0], params[1], command.args)
+		prop_func.call(params[0], params[1], args)
 	else:
-		prop_func.call(params[0], 'default', command.args)
+		prop_func.call(params[0], 'default', args)
+	
 
-func _hide_stage_prop():
+func _hide_stage_prop(transition = {}):
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 	var params = (command.value[0] as String).split(".")
-	$StageNode.hide_prop(params[0])
+
+	var args = command.args
+
+	if not transition.is_empty():
+		args["transition"] = transition
 	
+	$SubViewport/StageNode.hide_prop(params[0], args)
+	
+
+func _update_transition():
+	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
+
+	var transition_name : String = command.value[0]
+	var transition_properties : Dictionary = command.args
+
+	if not CasteletGameManager.ffwd_active:
+
+		
+		if CasteletTransitionManager.transitioning == true:
+			CasteletGameManager.set_block_signals(true)
+			await CasteletTransitionManager.transition_completed
+			
+			_timer.start()
+			await _timer.timeout
+
+			CasteletGameManager.set_block_signals(false)
+			
+
+		if CasteletTransitionManager.TransitionScope.OBJECT not in CasteletTransitionManager.transition_types[transition_name]:
+			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.VIEWPORT, transition_properties)
+		elif CasteletTransitionManager.TransitionScope.VIEWPORT not in CasteletTransitionManager.transition_types[transition_name]:
+			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.OBJECT, transition_properties)
+		else:
+			if command.args.has("object") and command.args["object"] == true:
+				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.OBJECT, transition_properties)
+			else:
+				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.VIEWPORT, transition_properties)
+
+	CasteletGameManager.progress.emit()
+
 
 func _update_audio_channel():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
@@ -113,18 +283,59 @@ func _update_window():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 
 	if command.value[0] in ["show", "on"]:
-		$GUINode.show_window()
+		$SubViewport/GUINode.show_window()
 	elif command.value[0] in ["hide", "off"]:
-		$GUINode.hide_window()
+		$SubViewport/GUINode.hide_window()
 
 
 func _update_dialogue():
+
+	if CasteletTransitionManager.transitioning == true:
+		CasteletGameManager.set_block_signals(true)
+		await CasteletTransitionManager.transition_completed
+		CasteletGameManager.set_block_signals(false)
+		
+
 	var command : CasteletSyntaxTree.DialogueExpression = self._tree.next()
 	var dialogue = {
 		"speaker": command.speaker,
 		"dialogue" : command.dialogue,
 		"args" : command.args,
 	}
+
+	# Read if any variables/values to be interpolated exist
+	var formatter = []
+	for vr in dialogue["args"]["formatter"]:
+		var val;
+		print(vr)
+		if vr.type == Tokenizer.TOKENS.SYMBOL:
+			if vr.value.begins_with("persistent."):
+				val = CasteletGameManager.persistent[vr.value.trim_prefix("persistent.")]
+			else:
+				val = CasteletGameManager.vars[vr.value]
+		else:
+			val = vr.value
+		if vr.type == Tokenizer.TOKENS.NUMBER:
+			val = val as float
+		elif vr.type == Tokenizer.TOKENS.BOOLEAN:
+			if val == "true":
+				val = true
+			else:
+				val = false
+		else:
+			pass
+		formatter.append(val)
+	dialogue["dialogue"] = dialogue["dialogue"] % formatter
+
+	# Lastly, extract custom tags such as wait [w] and auto-dismiss [nw].
+	# They're not meant to be custom BBCodes and can interfere with other
+	# functionalities those don't need them (e.g. dialogue history), so
+	# we extract them here and store it into the expression instead.
+	var dialogue_processed : Dictionary = dialogue_tools.extract_custom_non_bbcode_tags(dialogue["dialogue"])
+	for arg in dialogue_processed["args"].keys():
+		dialogue["args"][arg] = dialogue_processed["args"][arg]
+	dialogue["dialogue"] = dialogue_processed["dialogue"]
+	print_debug(dialogue)
 
 	# If the speaker data starts with "id_", make sure to check the assets database
 	# for the proper speaker name.
@@ -137,7 +348,7 @@ func _update_dialogue():
 			dialogue["speaker"] = CasteletAssetsManager.props[command.speaker
 									.trim_prefix("id_")].prop_name
 	
-	$GUINode.update_dialogue(dialogue)
+	$SubViewport/GUINode.update_dialogue(dialogue)
 
 	# Append current dialogue to the seen-dialogue cache
 	if command.speaker != "extend":
@@ -175,12 +386,16 @@ func end():
 	
 	stop_scene()
 
+	CasteletTransitionManager.vp = null
+	remove_child(_timer)
+	_timer.queue_free()
+
 	# Ensures the signal handler is disconnected before this node is destroyed, just in case.
 	CasteletGameManager.progress.disconnect(_on_progress)
 	end_of_script.disconnect(_on_end_of_script)
 
-	$StageNode.hide()
-	$GUINode.hide()
+	$SubViewport/StageNode.hide()
+	$SubViewport/GUINode.hide()
 	
 	queue_free()
 	

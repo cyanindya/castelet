@@ -93,6 +93,7 @@ var _next_stop = 0
 signal window_transition_completed
 signal message_display_paused(duration : float)
 signal message_display_completed(auto : bool)
+signal dialogue_window_status_changed(completed: bool, completed_auto: bool, duration: float)
 # signal request_refresh
 
 
@@ -115,7 +116,9 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 
 	if args.has("auto_dismiss"):
 		auto_dismiss = args["auto_dismiss"]
-
+	else:
+		auto_dismiss = false
+	
 	var starting_length := 0
 	if speaker == "extend":
 		starting_length = len($Dialogue/DialogueLabel.get_parsed_text())
@@ -293,12 +296,14 @@ func _on_window_transition_completed():
 	pass
 
 
-func _on_message_display_completed(_auto = false):
+func _on_message_display_completed(auto = false):
 	$CTC_Indicator.show()
 	completed = true
+	dialogue_window_status_changed.emit(true, auto, 0.0)
 
 
-func _on_message_display_paused(_duration : float):
+func _on_message_display_paused(duration : float):
 	$CTC_Indicator.show()
 	completed = false
+	dialogue_window_status_changed.emit(false, false, duration)
 

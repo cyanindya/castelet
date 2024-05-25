@@ -13,7 +13,7 @@ func _ready():
 	# print_debug(file_contents)
 
 	# Testing loading the script file into input stream.
-	var input_stream = CasteletInputStream.new(file_contents)
+	# var input_stream = CasteletInputStream.new(file_contents)
 	# print_debug(input_stream)
 
 	# Testing the tokenizer

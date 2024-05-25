@@ -1,6 +1,10 @@
 extends Sprite2D
 class_name PropNode
 
+
+signal _viewport_scale_changed
+signal _flip_toggled
+
 var prop_name : String
 var in_viewport_scale := 0.1:
 	set(value):
@@ -17,9 +21,6 @@ var _is_flipped = false:
 	set(value):
 		_is_flipped = value
 		_flip_toggled.emit()
-
-signal _viewport_scale_changed
-signal _flip_toggled
 
 
 func _init(propResource : PropResource, default_variant := "default"):
@@ -46,7 +47,6 @@ func _init(propResource : PropResource, default_variant := "default"):
 	_xanchor = propResource.x_anchor
 	_yanchor = propResource.y_anchor
 	
-
 
 func _ready():
 	
@@ -75,10 +75,11 @@ func _on_texture_changed():
 	# We need to recalculate the rect bounds and the positioning of the offset
 	_recalculate_scale()
 
-# Function to be called when _flip_toggled() signal is emitted.
-# When _is_flipped is true, check if the same prop variant has different sprite
-# for flipped display first. (e.g. different sprite due to asymmetrical hair)
-# If not, simply flip the sprite.
+
+## Function to be called when _flip_toggled() signal is emitted.
+## When _is_flipped is true, check if the same prop variant has different sprite
+## for flipped display first. (e.g. different sprite due to asymmetrical hair)
+## If not, simply flip the sprite.
 func _on_flip_toggled():
 	print_debug("flip state toggled to " + ("true" if _is_flipped else "false"))
 	
@@ -92,6 +93,7 @@ func _on_flip_toggled():
 	else: # Don't forget to reset the sprite flipping state!
 		flip_h = false
 
+
 func set_variant(variant: String):
 	_active_variant = variant
 	
@@ -103,6 +105,15 @@ func set_variant(variant: String):
 	else:
 		texture = null
 		print_debug("The variant is not defined in the prop resource dictionary. Skipping.")
-		
+
+
+func get_active_variant():
+	return _active_variant
+
+
 func set_flip(flip_state := false):
 	_is_flipped = flip_state
+
+
+func get_flip():
+	return _is_flipped

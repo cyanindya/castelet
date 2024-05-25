@@ -12,17 +12,19 @@ config_version=5
 
 config/name="Castelet"
 run/main_scene="res://SampleProjects/SampleMain.tscn"
-config/features=PackedStringArray("4.0", "Forward Plus")
+config/features=PackedStringArray("4.2", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
 CasteletAssetsManager="*res://CasteletAutoload/CasteletAssetsManager.tscn"
+CasteletAudioManager="*res://CasteletAutoload/CasteletAudioManager.tscn"
 CasteletConfig="*res://CasteletAutoload/CasteletConfig.tscn"
 CasteletGameManager="*res://CasteletAutoload/CasteletGameManager.tscn"
-CasteletAudioManager="*res://CasteletAutoload/CasteletAudioManager.tscn"
+CasteletResourceLoader="*res://CasteletAutoload/CasteletResourceLoader.gd"
 CasteletViewportManager="*res://CasteletAutoload/CasteletViewportManager.tscn"
 CasteletInputManager="res://CasteletAutoload/CasteletInputManager.tscn"
+CasteletTransitionManager="*res://CasteletAutoload/CasteletTransitionManager.tscn"
 
 [display]
 
@@ -51,7 +53,7 @@ confirm={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":32,"physical_keycode":0,"key_label":0,"unicode":32,"echo":false,"script":null)
 , Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194309,"physical_keycode":0,"key_label":0,"unicode":0,"echo":false,"script":null)
-, Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":1,"position":Vector2(298, 15),"global_position":Vector2(302, 58),"factor":1.0,"button_index":1,"pressed":true,"double_click":false,"script":null)
+, Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":1,"position":Vector2(298, 15),"global_position":Vector2(302, 58),"factor":1.0,"button_index":1,"canceled":false,"pressed":true,"double_click":false,"script":null)
 ]
 }
 toggle_ffwd={

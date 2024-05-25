@@ -27,6 +27,11 @@
 
 extends Node
 
+var parser = preload("res://CasteletCore/parser/CasteletScriptParser.gd").new()
+var script_trees = {}
+var vars = {}
+var persistent = {}
+
 var backlog = []
 
 var ffwd_active := false
@@ -52,7 +57,18 @@ signal enter_standby
 signal progress
 
 
+func _script_loader_callback(file_name : String):
+
+	if file_name.ends_with(".tsc"):
+				
+		var tree = parser.execute_parser(file_name)
+		script_trees[file_name.get_file().trim_suffix(".tsc")] = tree
+
+
 func _ready():
+
+	# Go through the resource directory to check all script files
+	CasteletResourceLoader.load_all_resources_of_type("res://", self, "_script_loader_callback")
 
 	# Initialize some signal connections, whether from internal or other nodes
 	enter_standby.connect(_on_standby)
@@ -77,6 +93,7 @@ func _ready():
 	
 
 func append_dialogue(dialogue_data: Dictionary):
+	
 	backlog.append(dialogue_data)
 	backlog_update.emit(dialogue_data, false)
 
@@ -97,7 +114,6 @@ func toggle_pause(state : bool):
 	if auto_active:
 		_automode_timer.paused = _paused
 
-
 func _on_standby():
 	_standby = true
 	if auto_active:
@@ -106,11 +122,11 @@ func _on_standby():
 
 func _on_toggle_automode():
 	if auto_active:
-		print_debug("auto mode enabled")
+		# print_debug("auto mode enabled")
 		if _standby:
 			_automode_timer.start()
 	else:
-		print_debug("auto mode disabled")
+		# print_debug("auto mode disabled")
 		_automode_timer.stop()
 		
 
@@ -138,3 +154,5 @@ func _on_ffwd_hold(state: bool):
 func _on_ffwd_toggle():
 	ffwd_active = !ffwd_active
 
+func print(s1 : String, s2: String):
+	prints(s1, s2)
