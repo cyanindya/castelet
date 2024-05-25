@@ -52,7 +52,7 @@ var viewport_transition_functions = {
 	"dissolve" = _dissolve_screen,
 	"wipe" = _wipe_screen,
 	"slide" = _slide_screen,
-	#"move" = _move_object,
+	"move" = _move_object,
 	
 }
 var transition_types = {
@@ -62,6 +62,7 @@ var transition_types = {
 	"dissolve" =  [TransitionScope.VIEWPORT, TransitionScope.OBJECT],
 	"wipe" =  [TransitionScope.VIEWPORT, TransitionScope.OBJECT],
 	"slide" = [TransitionScope.VIEWPORT],
+	"move" = [TransitionScope.OBJECT],
 }
 var _tween_transition_types = {
 	"linear" = Tween.TRANS_LINEAR,
@@ -93,7 +94,6 @@ var vp : Viewport
 
 ## Tween object to animate the transition from old scene to new scene.
 var _transition_tween : Tween
-#var _theater_node : TheaterNode
 
 ## Define shortcuts for the sprite and color-rect sub-nodes
 var sprite : Sprite2D
@@ -528,6 +528,9 @@ func _slide_screen(old_widget : Texture2D = null, new_widget : Texture2D = null,
 	if args.has("time"): time = args["time"]
 	if args.has("dir"): direction = args["dir"]
 	if args.has("direction"): direction = args["direction"]
+	if args.has("interpolation"): interpolation = args["interpolation"]
+	if args.has("easing"): easing = args["easing"]
+	if args.has("ease"): easing = args["ease"]
 	
 	if _transition_tween:
 		_transition_tween.kill()
@@ -574,6 +577,28 @@ func _slide_screen(old_widget : Texture2D = null, new_widget : Texture2D = null,
 
 	await _transition_tween.finished
 
+	transition_completed.emit()
+
+
+func _move_object(prop : PropNode, from : float = 0.0, to : float = 1.0, args = {}):
+
+	# Set up the default values of the controlling parameters.
+	# If custom value defined through the arguments, use them.
+	var time : float = 0.5
+	var direction : String = "in_left"
+	var interpolation : String = "linear"
+	var easing : String = "in_out"
+	
+	if args.has("time"): time = args["time"]
+	if args.has("dir"): direction = args["dir"]
+	if args.has("direction"): direction = args["direction"]
+	
+
+	if _transition_tween:
+		_transition_tween.kill()
+
+
+	await _transition_tween.finished
 	transition_completed.emit()
 
 
