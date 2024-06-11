@@ -76,8 +76,7 @@ func _next():
 		self._tree.next()
 		CasteletGameManager.progress.emit()
 	elif next is CasteletSyntaxTree.JumptoExpression:
-		if next.value == CasteletGameManager.jump_checkpoints_list[next.value]["tree"]:
-			print_debug("foo")
+		if next.value in CasteletGameManager.script_trees.keys():
 			self.load_script(next.value)
 			self._tree.reset()
 		else:

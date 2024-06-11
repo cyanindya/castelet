@@ -399,7 +399,8 @@ func _parse_dialogue():
 				else:
 					push_error()
 
-
+		elif next_token_preview.type == Tokenizer.TOKENS.COMMENT:
+			self._tokens.next()
 		
 		# Otherwise, throw an error
 		else:
