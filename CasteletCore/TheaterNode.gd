@@ -72,6 +72,33 @@ func _next():
 			_update_window()
 		else:
 			pass
+	elif next is CasteletSyntaxTree.LabelExpression:
+		self._tree.next()
+		CasteletGameManager.progress.emit()
+	elif next is CasteletSyntaxTree.JumptoExpression:
+
+		# If it's call function, append the call source to the stack
+		if next is CasteletSyntaxTree.CallsubExpression:
+			CasteletGameManager.append_callsub_stack(self._tree.name, self._tree.get_index())
+
+		if next.value in CasteletGameManager.script_trees.keys():
+			self.load_script(next.value)
+			self._tree.reset()
+		else:
+			if CasteletGameManager.jump_checkpoints_list[next.value]["tree"] != self._tree.name:
+				self.load_script(CasteletGameManager.jump_checkpoints_list[next.value]["tree"])
+			self._tree.set_index(CasteletGameManager.jump_checkpoints_list[next.value]["index"])
+		CasteletGameManager.progress.emit()
+	elif next is CasteletSyntaxTree.ReturnExpression:
+		if CasteletGameManager.get_context_level() > 0:
+			var origin = CasteletGameManager.pop_callsub_stack()
+			self.load_script(origin["tree"])
+			self._tree.set_index(origin["index"] + 1)
+			CasteletGameManager.progress.emit()
+		# TODO: terminate the script
+		else:
+			end_of_script.emit()
+		
 	elif next is CasteletSyntaxTree.FunctionCallExpression:
 		var caller_object = self
 		var func_name = ""

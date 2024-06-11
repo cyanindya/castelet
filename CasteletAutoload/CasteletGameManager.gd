@@ -29,10 +29,14 @@ extends Node
 
 var parser = preload("res://CasteletCore/parser/CasteletScriptParser.gd").new()
 var script_trees = {}
+var jump_checkpoints_list = {}
 var vars = {}
 var persistent = {}
 
 var backlog = []
+
+var _callsub_stack = []
+var _context_level = 0
 
 var ffwd_active := false
 var auto_active := false :
@@ -62,8 +66,24 @@ func _script_loader_callback(file_name : String):
 	if file_name.ends_with(".tsc"):
 				
 		var tree = parser.execute_parser(file_name)
-		script_trees[file_name.get_file().trim_suffix(".tsc")] = tree
+		var syntax_tree_name : String = file_name.get_file().trim_suffix(".tsc")
+		script_trees[syntax_tree_name] = tree
 
+		# List all checkpoints in the script tree to be added to the global manager.
+		for checkpoint in tree.checkpoints:
+			jump_checkpoints_list[checkpoint.value] = {
+				"tree" : syntax_tree_name,
+				"index" : checkpoint.position,
+			}
+		
+		# Add special checkpoint for beginning of a syntax tree. Useful for jumping
+		# to the beginning of a scenario script without actually adding a label to the script's
+		# syntax tree.
+		jump_checkpoints_list[syntax_tree_name] = {
+			"tree" : syntax_tree_name,
+			"index" : -1,
+		}
+		
 
 func _ready():
 
@@ -113,6 +133,34 @@ func toggle_pause(state : bool):
 
 	if auto_active:
 		_automode_timer.paused = _paused
+
+
+func get_context_level():
+	return _context_level
+
+
+func _advance_context_level():
+	_context_level += 1
+
+
+func _reduce_context_level():
+	if _context_level > 0:
+		_context_level -= 1
+
+
+func append_callsub_stack(source : String, index : int):
+	_callsub_stack.append({
+		"tree" : source,
+		"index" : index,
+		"level" : _context_level,
+	})
+	_advance_context_level()
+
+
+func pop_callsub_stack():
+	_reduce_context_level()
+	return _callsub_stack.pop_back()
+
 
 func _on_standby():
 	_standby = true
