@@ -32,6 +32,9 @@ func reset():
 func set_index(idx : int):
 	self._current_index = idx
 
+func get_index():
+	return self._current_index
+
 func peek() -> BaseExpression:
 	if not self.is_at_end():
 		return self.body[self._current_index + 1]
@@ -204,7 +207,26 @@ class LabelExpression:
 
 	func _to_string():
 		return "LabelExpression{value: %s, position: %s}" % [self.value, self.position]
+
+class CallsubExpression:
+	extends JumptoExpression
+
+	func _init(target_name : String):
+		super(target_name)
+		self.type = "Callsub"
+		
+	func _to_string():
+		return "CallsubExpression{value: %s}"
+
+class ReturnExpression:
+	extends BaseExpression
+
+	func _init():
+		self.type = "Return"
 	
+	func _to_string():
+		return "ReturnExpression"
+
 
 # class TransitionExpression:
 # 	extends BaseExpression

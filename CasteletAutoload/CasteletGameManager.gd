@@ -35,6 +35,9 @@ var persistent = {}
 
 var backlog = []
 
+var _callsub_stack = []
+var _context_level = 0
+
 var ffwd_active := false
 var auto_active := false :
 	set(value):
@@ -130,6 +133,34 @@ func toggle_pause(state : bool):
 
 	if auto_active:
 		_automode_timer.paused = _paused
+
+
+func get_context_level():
+	return _context_level
+
+
+func _advance_context_level():
+	_context_level += 1
+
+
+func _reduce_context_level():
+	if _context_level > 0:
+		_context_level -= 1
+
+
+func append_callsub_stack(source : String, index : int):
+	_callsub_stack.append({
+		"tree" : source,
+		"index" : index,
+		"level" : _context_level,
+	})
+	_advance_context_level()
+
+
+func pop_callsub_stack():
+	_reduce_context_level()
+	return _callsub_stack.pop_back()
+
 
 func _on_standby():
 	_standby = true

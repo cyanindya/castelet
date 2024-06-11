@@ -45,7 +45,7 @@ func _init(tree_name : String, tokens_list : Tokenizer):
 
 func parse() -> CasteletSyntaxTree:
 	
-	var tree = CasteletSyntaxTree.new(self._name)
+	var tree = CasteletSyntaxTree.new(self._name.trim_suffix(".tsc"))
 
 	while not self._tokens.is_eof_token():
 		var expression = self._parse_token()
@@ -122,6 +122,9 @@ func _parse_commands():
 	
 	type = self._tokens.next().value
 
+	if type == Tokenizer.KEYWORDS.RETURN:
+		return CasteletSyntaxTree.ReturnExpression.new()
+
 	# The next will be adaptive. Some stage commands like BGM or SFX
 	# supports multiple inputs for queue-ing, while others only support
 	# one input and return error instead. 
@@ -152,9 +155,11 @@ func _parse_commands():
 	else:
 		push_error()
 
-	# 
 	if type == Tokenizer.KEYWORDS.LABEL:
 		return CasteletSyntaxTree.LabelExpression.new(value[0], _expression_id)
+	
+	if type == Tokenizer.KEYWORDS.CALLSUB:
+		return CasteletSyntaxTree.CallsubExpression.new(value[0])
 	
 	if type == Tokenizer.KEYWORDS.JUMPTO:
 		return CasteletSyntaxTree.JumptoExpression.new(value[0])

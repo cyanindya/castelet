@@ -48,6 +48,8 @@ const KEYWORDS := {
 	TRANSITION = "transition",
 	JUMPTO = "jumpto",
 	CHOICE = "choice",
+	CALLSUB = "callsub",
+	RETURN = "return",
 }
 
 var _source_string = ""
