@@ -3,7 +3,7 @@ extends RefCounted
 
 var name = ""
 var body = []
-var checkpoints = {}
+var checkpoints = []
 
 var _current_index = -1
 var body_size = 0
@@ -28,6 +28,9 @@ func append(expression : BaseExpression):
 
 func reset():
 	self._current_index = -1
+
+func set_index(idx : int):
+	self._current_index = idx
 
 func peek() -> BaseExpression:
 	if not self.is_at_end():
@@ -178,6 +181,29 @@ class FunctionCallExpression:
 	
 	func _to_string():
 		return "FunctionCallExpression{func_name: %s, vars: %s, vals: %s}" % [self.func_name, self.vars, self.vals]
+	
+class JumptoExpression:
+	extends BaseExpression
+
+	func _init(target_name : String):
+		self.type = "Jumpto"
+		self.value = target_name
+	
+	func _to_string():
+		return "JumptoExpression{value: %s}" % [self.value]
+
+class LabelExpression:
+	extends BaseExpression
+
+	var position = 0
+
+	func _init(label_name : String, label_position : int):
+		self.type = "Label"
+		self.value = label_name
+		self.position = label_position
+
+	func _to_string():
+		return "LabelExpression{value: %s, position: %s}" % [self.value, self.position]
 	
 
 # class TransitionExpression:

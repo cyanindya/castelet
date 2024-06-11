@@ -72,6 +72,17 @@ func _next():
 			_update_window()
 		else:
 			pass
+	elif next is CasteletSyntaxTree.LabelExpression:
+		self._tree.next()
+		CasteletGameManager.progress.emit()
+	elif next is CasteletSyntaxTree.JumptoExpression:
+		if next.value == CasteletGameManager.jump_checkpoints_list[next.value]["tree"]:
+			print_debug("foo")
+			self.load_script(next.value)
+			self._tree.reset()
+		else:
+			self._tree.set_index(CasteletGameManager.jump_checkpoints_list[next.value]["index"])
+		CasteletGameManager.progress.emit()
 	elif next is CasteletSyntaxTree.FunctionCallExpression:
 		var caller_object = self
 		var func_name = ""

@@ -21,10 +21,10 @@ CasteletAssetsManager="*res://CasteletAutoload/CasteletAssetsManager.tscn"
 CasteletAudioManager="*res://CasteletAutoload/CasteletAudioManager.tscn"
 CasteletConfig="*res://CasteletAutoload/CasteletConfig.tscn"
 CasteletGameManager="*res://CasteletAutoload/CasteletGameManager.tscn"
-CasteletResourceLoader="*res://CasteletAutoload/CasteletResourceLoader.gd"
-CasteletViewportManager="*res://CasteletAutoload/CasteletViewportManager.tscn"
 CasteletInputManager="res://CasteletAutoload/CasteletInputManager.tscn"
+CasteletResourceLoader="*res://CasteletAutoload/CasteletResourceLoader.gd"
 CasteletTransitionManager="*res://CasteletAutoload/CasteletTransitionManager.tscn"
+CasteletViewportManager="*res://CasteletAutoload/CasteletViewportManager.tscn"
 
 [display]
 

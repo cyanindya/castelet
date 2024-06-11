@@ -7,7 +7,7 @@ func _ready():
 	exit_timer.wait_time = 0.5
 	add_child(exit_timer)
 	var script = TheaterNode.instantiate()
-	script.load_script("test_scene_2")
+	script.load_script("test_scene_3")
 	
 	add_child(script)
 	script.play_scene()

@@ -7,7 +7,7 @@ const SyntaxTreeBuilder = preload("SyntaxTreeBuilder.gd")
 
 func _ready():
 	# Testing loading script file content.
-	var file = "res://TestAssets/script/test_scene_2.tsc"
+	var file = "res://TestAssets/script/test_scene_3.tsc"
 	var parser = CasteletScriptParser.new()
 	var file_contents = parser.load_script_file(file)
 	# print_debug(file_contents)
@@ -19,7 +19,7 @@ func _ready():
 	# Testing the tokenizer
 	var tokenizer = Tokenizer.new(file_contents)
 	tokenizer.tokenize()
-	# print_debug(tokenizer.tokens)
+	print_debug(tokenizer.tokens)
 
 	# Testing the syntax tree generator and the resulting tree
 	var tree_generator = SyntaxTreeBuilder.new(file, tokenizer)

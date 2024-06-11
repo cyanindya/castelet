@@ -46,7 +46,7 @@ const KEYWORDS := {
 	WINDOW = "window",
 	LABEL = "label",
 	TRANSITION = "transition",
-	JUMP = "jump",
+	JUMPTO = "jumpto",
 	CHOICE = "choice",
 }
 

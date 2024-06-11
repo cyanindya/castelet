@@ -33,6 +33,7 @@ const OPERATOR_PRECEDENCE = {
 }
 
 var _name = ""
+var _expression_id = 0
 var _tokens : Tokenizer
 var _token_cache = []
 
@@ -49,6 +50,10 @@ func parse() -> CasteletSyntaxTree:
 	while not self._tokens.is_eof_token():
 		var expression = self._parse_token()
 		if expression != null:
+			_expression_id += 1
+			if expression is CasteletSyntaxTree.LabelExpression:
+				tree.checkpoints.append(expression)
+
 			tree.append(expression)
 	
 	return tree
@@ -146,6 +151,13 @@ func _parse_commands():
 		value.append(token.value)
 	else:
 		push_error()
+
+	# 
+	if type == Tokenizer.KEYWORDS.LABEL:
+		return CasteletSyntaxTree.LabelExpression.new(value[0], _expression_id)
+	
+	if type == Tokenizer.KEYWORDS.JUMPTO:
+		return CasteletSyntaxTree.JumptoExpression.new(value[0])
 
 	if type == Tokenizer.KEYWORDS.TRANSITION:
 		if _tokens.peek().type == Tokenizer.TOKENS.NUMBER:
