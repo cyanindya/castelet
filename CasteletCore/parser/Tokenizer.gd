@@ -28,10 +28,10 @@ const OPERATORS := ["@", "[", "]", ":", ",", "$"]
 const MATH_OPERATORS := ["+", "-", "/", "*",  "%", "^", "="]
 const COMPARISON_OPERATORS := [">", ">=", "<", "<=", "==", "!="]
 const ASSIGNMENT_OPERATORS := ["=", "+=", "-=", "/=", "*=", "%="]
+const BOOLEAN_OPERATORS := ["&&", "||", "!", "and", "or", "not"]
 
 const VALID_SYMBOL_TERMINATORS := [" ", "\r", "\n", ":", ","]
 const BRACES_PAREN := ["[", "]", "(", ")", "{", "}"]
-const CONDITIONALS := ["and", "or", "not"]
 const BOOLEAN_VALUES = [ "true", "false" ]
 
 # Stage commands/keywords are preceded by @
@@ -50,6 +50,12 @@ const KEYWORDS := {
 	CHOICE = "choice",
 	CALLSUB = "callsub",
 	RETURN = "return",
+	IF = "if",
+	ELSEIF = "elseif",
+	ELSE = "else",
+	ENDIF = "endif",
+	WHILE = "while",
+	ENDWHILE = "endwhile",
 }
 
 var _source_string = ""
@@ -116,7 +122,7 @@ func _generate_next_token() -> CasteletToken:
 			return _tokenize_number()
 
 		# Operators
-		elif next_char in OPERATORS + MATH_OPERATORS + ASSIGNMENT_OPERATORS:
+		elif next_char in OPERATORS + MATH_OPERATORS + ASSIGNMENT_OPERATORS + COMPARISON_OPERATORS + ["&", "|", "!"]:
 			return _tokenize_operator()
 		
 		# Brackets and parentheses
@@ -218,7 +224,18 @@ func _tokenize_operator() -> CasteletToken:
 	if val in MATH_OPERATORS and self._input_stream.peek_next_char() == "=":
 		val += self._input_stream.get_next_char()
 
+	# On the other hand, also check if this is a boolean operator
+	if val in ["&", "|", "!"] and self._input_stream.peek_next_char() == val:
+		val += self._input_stream.get_next_char()
+
 	return CasteletToken.new(TOKENS.OPERATOR, val)
+
+func _tokenize_boolean() -> CasteletToken:
+	var val = ""
+	val += self._input_stream.get_next_char()
+
+	return CasteletToken.new(TOKENS.BOOLEAN, val)
+
 
 func _tokenize_braces() -> CasteletToken:
 	var val = ""
@@ -273,6 +290,8 @@ func _tokenize_symbol() -> CasteletToken:
 	
 	if val in BOOLEAN_VALUES:
 		return CasteletToken.new(TOKENS.BOOLEAN, val)
+	elif val in BOOLEAN_OPERATORS:
+		return CasteletToken.new(TOKENS.OPERATOR, val)
 	else:
 		return CasteletToken.new(TOKENS.SYMBOL, val)
 

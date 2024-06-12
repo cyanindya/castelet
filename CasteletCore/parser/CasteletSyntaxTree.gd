@@ -14,6 +14,18 @@ const BINARY_OPERATORS = {
 	"-" : "Subtraction",
 	"*" : "Multiplication",
 	"/" : "Division",
+	">" : "GreaterThan",
+	">=" : "GreaterEqual",
+	"<" : "LessThan",
+	"<=" : "LessEqual",
+	"==" : "Equal",
+	"!=" : "NotEqual",
+	"&&" : "And",
+	"||" : "Or",
+	"!" : "Not",
+	"and" : "And",
+	"or" : "Or",
+	"not" : "Not",
 }
 
 func _init(tree_name : String):
@@ -227,6 +239,34 @@ class ReturnExpression:
 	func _to_string():
 		return "ReturnExpression"
 
+class IfElseExpression:
+	extends BaseExpression
+
+	var conditions = []
+
+	func _init(conditions := []):
+		self.type = "IfElse"
+		self.conditions = conditions
+	
+	func add_condition(cond : CasteletSyntaxTree.ConditionalExpression):
+		self.conditions.append(cond)
+
+	func _to_string():
+		return "IfElseExpression{conditions: " + str(conditions) + "}"
+
+
+class ConditionalExpression:
+	extends BaseExpression
+
+	var evaluator : BaseExpression # can cover binary comparison or just one
+	var subroutine = []
+
+	func _init(eval : BaseExpression, sub := []):
+		self.evaluator = eval
+		self.subroutine = sub
+
+	func _to_string():
+		return "ConditionalExpression{eval: %s, subroutine: %s}" % [self.evaluator, self.subroutine]
 
 # class TransitionExpression:
 # 	extends BaseExpression
