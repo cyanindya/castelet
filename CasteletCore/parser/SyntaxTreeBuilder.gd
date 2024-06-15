@@ -34,6 +34,11 @@ const OPERATOR_PRECEDENCE = {
 
 var _name = ""
 var _expression_id = 0
+var _sub_tree_count = 0:
+	set(value):
+		_sub_tree_count = value
+		_sub_tree_name = _name.trim_suffix(".tsc") + "_sub_tree_" + str(value)
+var _sub_tree_name = _name.trim_suffix(".tsc") + "_sub_tree_" + str(_sub_tree_count)
 var _tokens : Tokenizer
 var _token_cache = []
 
@@ -41,6 +46,7 @@ var _token_cache = []
 func _init(tree_name : String, tokens_list : Tokenizer):
 	self._name = tree_name
 	self._tokens = tokens_list
+	self._sub_tree_count = 0
 
 
 func parse() -> CasteletSyntaxTree:
@@ -53,6 +59,8 @@ func parse() -> CasteletSyntaxTree:
 			_expression_id += 1
 			if expression is CasteletSyntaxTree.LabelExpression:
 				tree.checkpoints.append(expression)
+			if expression is CasteletSyntaxTree.IfElseExpression:
+				tree.checkpoints.append(CasteletSyntaxTree.LabelExpression.new("after_" + _name + "_" + str(_expression_id - 1), _expression_id - 1))
 
 			tree.append(expression)
 	
@@ -213,8 +221,10 @@ func _parse_statement():
 func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 	
 	var next = self._tokens.peek()
-	var condition = _parse_statement()
-	var sub_block = []
+	var condition = CasteletSyntaxTree.BaseExpression.new(Tokenizer.TOKENS.BOOLEAN, "true")
+	if self._tokens.current().value != Tokenizer.KEYWORDS.ELSE:
+		condition = _parse_statement()
+	var sub_block = CasteletSyntaxTree.new(_sub_tree_name)
 	
 	while next.type != Tokenizer.TOKENS.NEWLINE:
 		next = self._tokens.peek()
@@ -235,7 +245,10 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 		var expr = _parse_token()
 		if expr != null:
 			sub_block.append(expr)
-	
+
+	# Add jump expression at the end to transfer back control to main tree
+	sub_block.append(CasteletSyntaxTree.JumptoExpression.new("after_" + self._name + "_" + str(_expression_id)))
+
 	return CasteletSyntaxTree.ConditionalExpression.new(condition, sub_block)
 
 
@@ -245,35 +258,30 @@ func _parse_conditionals():
 
 	if condition_type.value == Tokenizer.KEYWORDS.IF:
 
-		print_debug("if statement detected")
-		
-		# Current token position is 'if' symbol
 		var expression = CasteletSyntaxTree.IfElseExpression.new()
 		var next = self._tokens.peek()
 
 		while not (next.type == Tokenizer.TOKENS.SYMBOL and next.value == Tokenizer.KEYWORDS.ENDIF):
 			
 			# advance the tokenizer to if/elseif/else/endif
-			print_debug(self._tokens.next())
+			self._tokens.next()
 			
 			var cond = _parse_conditional_block()
 			expression.add_condition(cond)
-			print(expression)
 
 			# Check whether the next is elseif/else/endif
 			next = self._tokens.peek()
 
 			if next.type == Tokenizer.TOKENS.EOF:
 				push_error("End of file reached, but no endif detected to terminate the conditional block.")
-			
+
+			_sub_tree_count += 1
 			
 		self._tokens.next()
 	
 		return expression
 
 	elif condition_type.value == Tokenizer.KEYWORDS.WHILE:
-		
-		print_debug("if statement detected")
 		
 		self._tokens.next()
 		pass

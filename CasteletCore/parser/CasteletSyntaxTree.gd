@@ -242,26 +242,24 @@ class ReturnExpression:
 class IfElseExpression:
 	extends BaseExpression
 
-	var conditions = []
-
 	func _init(conditions := []):
 		self.type = "IfElse"
-		self.conditions = conditions
+		self.value = conditions
 	
 	func add_condition(cond : CasteletSyntaxTree.ConditionalExpression):
-		self.conditions.append(cond)
+		self.value.append(cond)
 
 	func _to_string():
-		return "IfElseExpression{conditions: " + str(conditions) + "}"
+		return "IfElseExpression{value: " + str(value) + "}"
 
 
 class ConditionalExpression:
 	extends BaseExpression
 
 	var evaluator : BaseExpression # can cover binary comparison or just one
-	var subroutine = []
+	var subroutine : CasteletSyntaxTree
 
-	func _init(eval : BaseExpression, sub := []):
+	func _init(eval : BaseExpression, sub : CasteletSyntaxTree):
 		self.evaluator = eval
 		self.subroutine = sub
 
