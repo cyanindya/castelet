@@ -92,8 +92,11 @@ func prev() -> CasteletToken:
 		push_error("Currently at the beginning of token list. Cannot step back.")
 		return CasteletToken.new("", "")
 	
-func is_eof_token() -> bool:
+func is_at_end() -> bool:
 	return self._token_index == self._number_of_tokens - 1
+
+func is_eof_token() -> bool:
+	return self.tokens[_token_index + 1].type == TOKENS.EOF
 
 func tokenize() -> void:
 	while not _input_stream.is_eof():
