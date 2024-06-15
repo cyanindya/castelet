@@ -1,7 +1,3 @@
-# A tokenizer class to convert a script stream file into
-# a series of information tokens for building the parse tree
-# later.
-
 extends RefCounted
 
 const CasteletInputStream = preload("CasteletInputStream.gd")
@@ -58,7 +54,6 @@ const KEYWORDS := {
 	ENDWHILE = "endwhile",
 }
 
-var _source_string = ""
 var _input_stream : CasteletInputStream
 var tokens = []:
 	get:
@@ -66,12 +61,14 @@ var tokens = []:
 var _token_index = -1 # so we'll start from 0 proper
 var _number_of_tokens = 0
 
-func _init(source_string : String) -> void:
-	self._source_string = source_string
+
+func _init(source_string := "") -> void:
 	self._input_stream = CasteletInputStream.new(source_string)
+
 
 func peek() -> CasteletToken:
 	return self.tokens[_token_index + 1]
+
 
 func next() -> CasteletToken:
 	if not self.is_eof_token():
@@ -81,8 +78,10 @@ func next() -> CasteletToken:
 		push_error("End of token list reached.")
 		return CasteletToken.new("", "")
 
+
 func current() -> CasteletToken:
 	return self.tokens[_token_index]
+
 
 func prev() -> CasteletToken:
 	if not self._token_index == 0:
@@ -91,14 +90,17 @@ func prev() -> CasteletToken:
 	else:
 		push_error("Currently at the beginning of token list. Cannot step back.")
 		return CasteletToken.new("", "")
-	
+
+
 func is_at_end() -> bool:
 	return self._token_index == self._number_of_tokens - 1
+
 
 func is_eof_token() -> bool:
 	return self.tokens[_token_index + 1].type == TOKENS.EOF
 
-func tokenize() -> void:
+
+func tokenize_from_input_stream() -> void:
 	while not _input_stream.is_eof():
 		var token = self._generate_next_token()
 		if token != null:
@@ -107,6 +109,12 @@ func tokenize() -> void:
 	self.tokens.append(CasteletToken.new(TOKENS.EOF, ""))
 
 	self._number_of_tokens = len(self.tokens)
+
+
+func append_tokens(tokens_to_append : Array) -> void:
+	self.tokens = tokens_to_append
+	self._number_of_tokens = len(self.tokens)
+
 
 func _generate_next_token() -> CasteletToken:
 
@@ -153,7 +161,6 @@ func _generate_next_token() -> CasteletToken:
 	
 	else:
 		return CasteletToken.new(TOKENS.EOF, "")
-
 
 
 func _tokenize_comment() -> CasteletToken:
@@ -219,6 +226,7 @@ func _tokenize_lf() -> CasteletToken:
 	self._input_stream.get_next_char()
 	return CasteletToken.new(TOKENS.NEWLINE, "")
 
+
 func _tokenize_operator() -> CasteletToken:
 	var val = ""
 	val += self._input_stream.get_next_char()
@@ -233,6 +241,7 @@ func _tokenize_operator() -> CasteletToken:
 
 	return CasteletToken.new(TOKENS.OPERATOR, val)
 
+
 func _tokenize_boolean() -> CasteletToken:
 	var val = ""
 	val += self._input_stream.get_next_char()
@@ -244,6 +253,7 @@ func _tokenize_braces() -> CasteletToken:
 	var val = ""
 	val += self._input_stream.get_next_char()
 	return CasteletToken.new(TOKENS.BRACES, val)
+
 
 func _tokenize_string_literal() -> CasteletToken:
 	self._input_stream.get_next_char()
