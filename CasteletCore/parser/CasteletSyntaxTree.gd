@@ -1,12 +1,18 @@
 class_name CasteletSyntaxTree
 extends RefCounted
+## The class representing a Castelet script's syntax tree.
+## 
+## Castelet tree generally contains the following information:
+## - name:			Name of the syntax tree. Usually comes from the name of the file
+##					it was extracted from, but can also be custom names (such as to
+##					denote that the tree is a sub-tree of a script).
+## - body:			Contains a list of expressions generated from the script parsing.
+## - checkpoints:	List of specific checkpoints for the Jumpto or Callsub command to
+##					leap into. Generally generated from @label expression.
+##
+## Upon creating syntax tree from a bunch of tokens, it is advised to avoid directly
+## instantiating this class and instead use the SyntaxTreeBuilder class to handle it.
 
-var name = ""
-var body = []
-var checkpoints = []
-
-var _current_index = -1
-var body_size = 0
 
 const BINARY_OPERATORS = {
 	"=" : "Assignment",
@@ -28,29 +34,44 @@ const BINARY_OPERATORS = {
 	"not" : "Not",
 }
 
+var name = ""
+var body_size = 0
+var body = []
+var checkpoints = []
+
+var _current_index = -1
+
+
 func _init(tree_name : String):
 	self.name = tree_name
 
+
 func _to_string() -> String:
 	return "CasteletSyntaxTree { name : %s,body : %s, checkpoints : %s }" % [self.name, self.body, self.checkpoints]
+
 
 func append(expression : BaseExpression):
 	self.body.append(expression)
 	self.body_size += 1
 
+
 func reset():
 	self._current_index = -1
+
 
 func set_index(idx : int):
 	self._current_index = idx
 
+
 func get_index():
 	return self._current_index
+
 
 func peek() -> BaseExpression:
 	if not self.is_at_end():
 		return self.body[self._current_index + 1]
 	return null
+
 
 func next() -> BaseExpression:
 	if not self.is_at_end():
@@ -58,8 +79,10 @@ func next() -> BaseExpression:
 		return self.body[self._current_index]
 	return null
 
+
 func is_at_end() -> bool:
 	return self._current_index >= self.body_size - 1
+
 
 class BaseExpression:
 	var type = ""
@@ -71,6 +94,7 @@ class BaseExpression:
 
 	func _to_string():
 		return "BaseExpression {type: %s,\n value: %s}" % [self.type, self.value]
+
 
 class StageCommandExpression:
 	extends BaseExpression
@@ -85,6 +109,7 @@ class StageCommandExpression:
 	func _to_string():
 		return "StageCommandExpression{type: %s,\n value: %s,\n args:%s}" % [self.type, self.value, self.args]
 
+
 class CommandArgExpression:
 	extends BaseExpression
 
@@ -97,6 +122,7 @@ class CommandArgExpression:
 	
 	func _to_string():
 		return "CommandArgExpression{param: %s, value: %s}" % [self.param, self.value]
+
 
 class DialogueExpression:
 	extends BaseExpression
@@ -114,6 +140,7 @@ class DialogueExpression:
 	
 	func _to_string():
 		return "DialogueExpression{speaker: %s, dialogue: %s, args: %s}" % [self.speaker, self.dialogue, self.args]
+
 
 class VariableExpression:
 	extends BaseExpression
@@ -145,6 +172,7 @@ class BinaryExpression:
 	
 	func _to_string():
 		return "BinaryExpression{left hand: %s, right hand: %s, op : %s}" % [self.lhs, self.rhs, self.op]
+
 
 class AssignmentExpression:
 	extends BinaryExpression
@@ -180,7 +208,8 @@ class StatementExpression:
 	
 	func _to_string():
 		return "StatementExpression{statement: %s}" % [self.value]
-	
+
+
 class FunctionCallExpression:
 	extends BaseExpression
 
@@ -196,7 +225,8 @@ class FunctionCallExpression:
 	
 	func _to_string():
 		return "FunctionCallExpression{func_name: %s, vars: %s, vals: %s}" % [self.func_name, self.vars, self.vals]
-	
+
+
 class JumptoExpression:
 	extends BaseExpression
 
@@ -206,6 +236,7 @@ class JumptoExpression:
 	
 	func _to_string():
 		return "JumptoExpression{value: %s}" % [self.value]
+
 
 class LabelExpression:
 	extends BaseExpression
@@ -220,6 +251,7 @@ class LabelExpression:
 	func _to_string():
 		return "LabelExpression{value: %s, position: %s}" % [self.value, self.position]
 
+
 class CallsubExpression:
 	extends JumptoExpression
 
@@ -230,6 +262,7 @@ class CallsubExpression:
 	func _to_string():
 		return "CallsubExpression{value: %s}"
 
+
 class ReturnExpression:
 	extends BaseExpression
 
@@ -238,6 +271,7 @@ class ReturnExpression:
 	
 	func _to_string():
 		return "ReturnExpression"
+
 
 class IfElseExpression:
 	extends BaseExpression
@@ -277,6 +311,7 @@ class ConditionalExpression:
 	func _to_string():
 		return "ConditionalExpression{eval: %s, subroutine: %s}" % [self.evaluator, self.subroutine]
 
+
 class LoopBackExpression:
 	extends BaseExpression
 
@@ -286,20 +321,4 @@ class LoopBackExpression:
 
 	func _to_string():
 		return "LoopBackExpression"
-
-# class TransitionExpression:
-# 	extends BaseExpression
-
-# 	var transition = ""
-# 	var duration : float
-# 	var args = {}
-
-# 	func _init(trans_name : String, dur : float, trans_args = {}):
-# 		self.type = "Transition"
-# 		self.transition = trans_name
-# 		self.duration = dur
-# 		self.args = trans_args
-	
-# 	func _to_string():
-# 		return "TransitionExpression{transition: %s, duration: %f, args: %s}" % [self.transition, self.duration, self.args]
 

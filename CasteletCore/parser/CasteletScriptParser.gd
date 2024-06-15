@@ -5,7 +5,6 @@ extends RefCounted
 
 
 const Tokenizer = preload("Tokenizer.gd")
-const SyntaxTreeBuilder = preload("SyntaxTreeBuilder.gd")
 
 
 func load_script_file(script_file : String) -> String:
@@ -31,7 +30,7 @@ func execute_parser(input_file : String) -> CasteletSyntaxTree:
 	
 	var tree_builder = SyntaxTreeBuilder.new(input_file.get_file()
 				.trim_suffix(".tsc"), tokenizer)
-	var tree = tree_builder.parse()
+	var tree = tree_builder.parse(true)
 	#print_debug(tree.body)
 	
 	return tree

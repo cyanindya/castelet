@@ -1,3 +1,4 @@
+class_name SyntaxTreeBuilder
 extends RefCounted
 ## Generates the syntax tree from the script tokens. This is the main body of
 ## the script parser that does most of the heavy lifting until a script tree is
@@ -43,6 +44,7 @@ var _sub_tree_count = 0:
 	set(value):
 		_sub_tree_count = value
 		_sub_tree_name = _name + "_sub_tree_" + str(value)
+
 var _sub_tree_name = _name + "_sub_tree_" + str(_sub_tree_count)
 var _tokens : Tokenizer
 var _token_cache = []
@@ -54,20 +56,71 @@ func _init(tree_name : String, tokens_list : Tokenizer):
 	self._sub_tree_count = 0
 
 
-func parse() -> CasteletSyntaxTree:
+func parse(check_for_eof_token := false, args := {}) -> CasteletSyntaxTree:
 	
 	var tree = CasteletSyntaxTree.new(self._name)
 
-	while not self._tokens.is_eof_token():
+	# Iterate through the supplied tokenizer to convert them into
+	# expression and add them to syntax tree.
+	while not (
+			(check_for_eof_token and self._tokens.is_eof_token())
+			or self._tokens.is_at_end()
+	):
 		var expression = self._parse_token()
+
 		if expression != null:
 			_expression_id += 1
+
+			# Append checkpoints for jumpto or callsub commands to leap to.
 			if expression is CasteletSyntaxTree.LabelExpression:
 				tree.checkpoints.append(expression)
-			if expression is CasteletSyntaxTree.IfElseExpression or expression is CasteletSyntaxTree.WhileExpression:
-				tree.checkpoints.append(CasteletSyntaxTree.LabelExpression.new("after_" + _name + "_" + str(_expression_id - 1), _expression_id - 1))
+			if (
+					expression is CasteletSyntaxTree.IfElseExpression
+					or expression is CasteletSyntaxTree.WhileExpression
+			):
+				tree.checkpoints.append(CasteletSyntaxTree.LabelExpression.new(
+						"after_" + _name + "_" + str(_expression_id - 1),
+						_expression_id - 1))
 
 			tree.append(expression)
+	
+	# If you're creating a sub-tree, you must supply extra arguments for the tree
+	# generator to work on. The generator will check the type of sub-block it
+	# belongs to and add extra expressions to transfer the control back to
+	# the main tree.
+	if args:
+		if args.has("block") and args.has("parent_tree") and args.has("id"):
+			if args["block"] in [
+				Tokenizer.KEYWORDS.IF,
+				Tokenizer.KEYWORDS.ELSEIF,
+				Tokenizer.KEYWORDS.ELSE,
+			]:
+				tree.append(CasteletSyntaxTree.JumptoExpression.new(
+						"after_" + args["parent_tree"].name + "_" + str(args["id"])
+				))
+			
+			elif args["block"] == Tokenizer.KEYWORDS.WHILE:
+
+				var while_true_tree : CasteletSyntaxTree = CasteletSyntaxTree.new("")
+				while_true_tree.append(CasteletSyntaxTree.LoopBackExpression.new(tree))
+
+				var while_false_tree : CasteletSyntaxTree = CasteletSyntaxTree.new("")
+				while_false_tree.append(CasteletSyntaxTree.JumptoExpression.new(
+						"after_" + args["parent_tree"].name + "_" + str(args["id"])
+				))
+
+				tree.append(CasteletSyntaxTree.IfElseExpression.new(
+					[
+						CasteletSyntaxTree.ConditionalExpression.new(
+								args["condition"], while_true_tree
+						),
+						CasteletSyntaxTree.ConditionalExpression.new(
+								CasteletSyntaxTree.BaseExpression.new(
+										Tokenizer.TOKENS.BOOLEAN, "true"
+								), while_false_tree
+						),
+					]
+				))
 	
 	return tree
 
@@ -83,14 +136,17 @@ func _parse_token():
 		# Stage commands (denoted by @ operator in beginning of line)
 		if next_token_preview.value == "@":
 			return self._parse_commands()
+		
 		# GDScript-adjacent statements (denoted by $ operator in beginning of line)
 		# similar to in-script Python statements in Ren'Py
 		elif next_token_preview.value == "$":
 			
-			# Advance the tokenizer iteration (unless called by _parse_function or similar, should be at $)
+			# Advance the tokenizer iteration (unless called by _parse_function or
+			# similar, should be at $)
 			self._tokens.next()
 			
 			return self._parse_statement()
+		
 		else:
 			# TODO: handle variable assignment
 			self._tokens.next()
@@ -129,7 +185,9 @@ func _parse_commands():
 	var next_token_preview = _tokens.peek()
 
 	if next_token_preview.type != Tokenizer.TOKENS.SYMBOL:
-		push_error("Expected token type symbol, but found \"%s\" instead." % next_token_preview.type)
+		push_error("Expected token type symbol, but found \"%s\" instead."
+				% next_token_preview.type)
+	
 	if next_token_preview.value not in Tokenizer.KEYWORDS.values():
 		push_error("Unrecognized token value \"%s\"" % next_token_preview.value)
 	
@@ -148,12 +206,18 @@ func _parse_commands():
 	next_token_preview = _tokens.peek()
 
 	if next_token_preview.value == "[":
-		if type not in [Tokenizer.KEYWORDS.SFX, Tokenizer.KEYWORDS.BGM, Tokenizer.KEYWORDS.VOICE]:
+		if type not in [
+			Tokenizer.KEYWORDS.SFX,
+			Tokenizer.KEYWORDS.BGM,
+			Tokenizer.KEYWORDS.VOICE,
+		]:
 			push_error("The parsed stage command does not support queued inputs.")
+		
 		self._tokens.next()
 		next_token_preview = _tokens.peek()
 
 		while next_token_preview.type in [Tokenizer.TOKENS.SYMBOL, ","]:
+			
 			var token = self._tokens.next()
 			if next_token_preview.type == Tokenizer.TOKENS.SYMBOL:
 				value.append(token.value)
@@ -169,10 +233,12 @@ func _parse_commands():
 	elif next_token_preview.type == Tokenizer.TOKENS.SYMBOL:
 		var token = self._tokens.next()
 		value.append(token.value)
+	
 	else:
 		push_error()
 
 	if type == Tokenizer.KEYWORDS.LABEL:
+		# TODO: make sure it is a valid name format
 		return CasteletSyntaxTree.LabelExpression.new(value[0], _expression_id)
 	
 	if type == Tokenizer.KEYWORDS.CALLSUB:
@@ -198,26 +264,35 @@ func _parse_statement():
 	# There are a few possibilities for the statements. As such, first,
 	# we need to make sure whether the current token is a symbol and
 	# check what awaits next
-	var current = self._tokens.next() # current position is whatever symbol/string/number it is
+	var current = self._tokens.next() # current position is symbol/string/number it is
 	var next_token_preview = self._tokens.peek()
 
 	# First priority is function call
 	if next_token_preview.value == "(":
 		# Check if current token is a symbol. If it is, proceed. If it isn't, error.
 		if current.type != Tokenizer.TOKENS.SYMBOL:
-			push_error("The next token indicates function call, but the current token is not a valid symbol token.")
+			push_error("The next token indicates function call, but the current" +
+					"token is not a valid symbol token.")
 		
 		return _parse_function()
+	
 	# Second priority is comparison
-	elif next_token_preview.value in Tokenizer.COMPARISON_OPERATORS + Tokenizer.BOOLEAN_OPERATORS:
+	elif next_token_preview.value in Tokenizer.COMPARISON_OPERATORS + \
+			Tokenizer.BOOLEAN_OPERATORS:
 		if current.type != Tokenizer.TOKENS.SYMBOL:
-			push_error("The next token indicates comparison, but the current token is not a valid symbol token.")
+			push_error("The next token indicates comparison, but the current" +
+					"token is not a valid symbol token.")
+		
 		return _parse_boolean()
+	
 	# Third priority is assignment
 	elif next_token_preview.value in Tokenizer.ASSIGNMENT_OPERATORS:
 		if current.type != Tokenizer.TOKENS.SYMBOL:
-			push_error("The next token indicates assignment, but the current token is not a valid symbol token.")
+			push_error("The next token indicates assignment, but the current" +
+					"token is not a valid symbol token.")
+		
 		return _parse_assignment()
+	
 	# Third priority is either a standard binary or unary expression
 	else:
 		return _parse_binary()
@@ -232,7 +307,10 @@ func _parse_conditionals():
 		var expression = CasteletSyntaxTree.IfElseExpression.new()
 		var next = self._tokens.peek()
 
-		while not (next.type == Tokenizer.TOKENS.SYMBOL and next.value == Tokenizer.KEYWORDS.ENDIF):
+		while not (
+				next.type == Tokenizer.TOKENS.SYMBOL
+				and next.value == Tokenizer.KEYWORDS.ENDIF
+		):
 			
 			# advance the tokenizer to if/elseif/else/endif
 			self._tokens.next()
@@ -244,12 +322,13 @@ func _parse_conditionals():
 			next = self._tokens.peek()
 
 			if next.type == Tokenizer.TOKENS.EOF:
-				push_error("End of file reached, but no endif detected to terminate the conditional block.")
+				push_error("End of file reached, but no endif detected " +
+						"to terminate the conditional block.")
 
 			_sub_tree_count += 1
 			
 		self._tokens.next()
-	
+
 		return expression
 
 	elif condition_type.value == Tokenizer.KEYWORDS.WHILE:
@@ -265,18 +344,19 @@ func _parse_conditionals():
 		next = self._tokens.peek()
 
 		if next.type == Tokenizer.TOKENS.EOF:
-			push_error("End of file reached, but no endif detected to terminate the conditional block.")
+			push_error("End of file reached, but no endwhile detected to" +
+					" terminate the conditional block.")
 
-		_sub_tree_count += 1
-			
+		_sub_tree_count += 1			
 		self._tokens.next()
 
 		var expr = CasteletSyntaxTree.WhileExpression.new(cond)
-	
 		return expr
 
 	else:
-		push_error("Expected the beginning of conditional block keyword such as 'if' or 'while', but found %s instead." % condition_type.value)
+		push_error("Expected the beginning of conditional block keyword such" +
+				" as 'if' or 'while', but found %s instead." % condition_type.value
+		)
 	
 	return null
 
@@ -284,7 +364,10 @@ func _parse_conditionals():
 func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 	
 	var next = self._tokens.peek()
-	var condition = CasteletSyntaxTree.BaseExpression.new(Tokenizer.TOKENS.BOOLEAN, "true")
+	var condition = CasteletSyntaxTree.BaseExpression.new(
+			Tokenizer.TOKENS.BOOLEAN, "true"
+	)
+
 	if self._tokens.current().value != Tokenizer.KEYWORDS.ELSE:
 		condition = _parse_statement()
 	var sub_block = CasteletSyntaxTree.new(_sub_tree_name)
@@ -296,27 +379,47 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 	# Next, check for all subroutines to be executed in if block until elseif/else/endif
 	# is hit
 	
-	while not (next.type == Tokenizer.TOKENS.SYMBOL and (next.value in [Tokenizer.KEYWORDS.ENDIF, Tokenizer.KEYWORDS.ELSEIF, Tokenizer.KEYWORDS.ELSE, Tokenizer.KEYWORDS.ENDWHILE])):
+	while not (
+			next.type == Tokenizer.TOKENS.SYMBOL
+			and (next.value in [
+				Tokenizer.KEYWORDS.ENDIF, Tokenizer.KEYWORDS.ELSEIF,
+				Tokenizer.KEYWORDS.ELSE, Tokenizer.KEYWORDS.ENDWHILE,
+			])
+	):
 		next = self._tokens.peek()
 
 		if (next.type == Tokenizer.TOKENS.OPERATOR and next.value == "@"):
 			self._tokens.next()
-			if self._tokens.peek().value in [Tokenizer.KEYWORDS.ENDIF, Tokenizer.KEYWORDS.ELSEIF, Tokenizer.KEYWORDS.ELSE]:
+			if self._tokens.peek().value in [
+				Tokenizer.KEYWORDS.ENDIF,
+				Tokenizer.KEYWORDS.ELSEIF,
+				Tokenizer.KEYWORDS.ELSE
+			]:
 				# Add jump expression at the end to transfer back control to main tree
-				sub_block.append(CasteletSyntaxTree.JumptoExpression.new("after_" + self._name + "_" + str(_expression_id)))
+				sub_block.append(CasteletSyntaxTree.JumptoExpression.new("after_" +
+						self._name + "_" + str(_expression_id))
+				)
 				break
+			
 			elif self._tokens.peek().value == Tokenizer.KEYWORDS.ENDWHILE:
 				# Add if-else that checks for the condition before deciding to loop or repeating
 				var while_true_tree : CasteletSyntaxTree = CasteletSyntaxTree.new("")
 				while_true_tree.append(CasteletSyntaxTree.LoopBackExpression.new(sub_block))
 
 				var while_false_tree : CasteletSyntaxTree = CasteletSyntaxTree.new("")
-				while_false_tree.append(CasteletSyntaxTree.JumptoExpression.new("after_" + self._name + "_" + str(_expression_id)))
+				while_false_tree.append(CasteletSyntaxTree.JumptoExpression.new("after_" +
+						self._name + "_" + str(_expression_id))
+				)
 
 				sub_block.append(CasteletSyntaxTree.IfElseExpression.new(
 					[
 						CasteletSyntaxTree.ConditionalExpression.new(condition, while_true_tree),
-						CasteletSyntaxTree.ConditionalExpression.new(CasteletSyntaxTree.BaseExpression.new(Tokenizer.TOKENS.BOOLEAN, "true"), while_false_tree)
+						CasteletSyntaxTree.ConditionalExpression.new(
+								CasteletSyntaxTree.BaseExpression.new(
+										Tokenizer.TOKENS.BOOLEAN, "true"
+								),
+								while_false_tree
+						)
 					]
 				))
 				break
@@ -361,6 +464,7 @@ func _parse_function():
 
 	return CasteletSyntaxTree.FunctionCallExpression.new(func_name, vars, vals)
 
+
 func _parse_boolean():
 	var lh
 	var rh
@@ -380,14 +484,19 @@ func _parse_boolean():
 	if current.type != Tokenizer.TOKENS.SYMBOL:
 		push_error()
 	if current.value in Tokenizer.KEYWORDS.values():
-		push_error("Invalid variable name. The name is already part of reserved keyword.")
+		push_error("Invalid variable name. The name is already part" +
+				" of reserved keyword."
+		)
 	
 	next_token_preview = self._tokens.peek()
 	
 	if next_token_preview.type != Tokenizer.TOKENS.OPERATOR:
 		push_error()
-	if next_token_preview.value not in Tokenizer.BOOLEAN_OPERATORS + Tokenizer.COMPARISON_OPERATORS:
-		push_error("%s is not a valid boolean or relational operator." % next_token_preview.value)
+	if next_token_preview.value not in Tokenizer.BOOLEAN_OPERATORS + \
+			Tokenizer.COMPARISON_OPERATORS:
+		push_error("%s is not a valid boolean or relational operator."
+				% next_token_preview.value
+		)
 	
 	lh = CasteletSyntaxTree.VariableExpression.new(current.value)
 	operator = self._tokens.next().value
@@ -417,7 +526,9 @@ func _parse_assignment():
 	if current.type != Tokenizer.TOKENS.SYMBOL:
 		push_error()
 	if current.value in Tokenizer.KEYWORDS.values():
-		push_error("Invalid variable name. The name is already part of reserved keyword.")
+		push_error("Invalid variable name. The name is already part of" +
+				" reserved keyword."
+		)
 	
 	next_token_preview = self._tokens.peek()
 	
@@ -446,19 +557,27 @@ func _parse_binary():
 	var current = self._tokens.current() # left hand side
 	# var next_token_preview = self._tokens.peek() # operator
 
-	if current.type in [Tokenizer.TOKENS.BOOLEAN, Tokenizer.TOKENS.STRING_LITERAL, Tokenizer.TOKENS.NUMBER]:
+	if current.type in [
+		Tokenizer.TOKENS.BOOLEAN,
+		Tokenizer.TOKENS.STRING_LITERAL,
+		Tokenizer.TOKENS.NUMBER
+	]:
 		lh = CasteletSyntaxTree.BaseExpression.new(current.type, current.value)
+	
 	elif current.type == Tokenizer.TOKENS.SYMBOL:
 		lh = CasteletSyntaxTree.VariableExpression.new(current.value)
+	
 	elif current.type == Tokenizer.TOKENS.BRACES:
 		current = self._tokens.next()
 		lh = _parse_binary()
 		if self._tokens.peek().type == Tokenizer.TOKENS.BRACES:
 			self._tokens.next()
+	
 	elif current.type == Tokenizer.TOKENS.OPERATOR and current.value == "not":
 		# Added dummy expression for evaluation on left-hand side (won't actually be used)
 		lh = CasteletSyntaxTree.BaseExpression.new(Tokenizer.TOKENS.BOOLEAN, "true")
 		self._tokens.prev()
+	
 	else:
 		self._tokens.prev()
 		lh =  _parse_statement()
@@ -471,12 +590,15 @@ func _check_precedence(lhs : CasteletSyntaxTree.BaseExpression, cur_precedence :
 	
 	var op = self._tokens.peek().value # operator
 
-	if op in Tokenizer.MATH_OPERATORS + Tokenizer.COMPARISON_OPERATORS + Tokenizer.BOOLEAN_OPERATORS:
+	if op in Tokenizer.MATH_OPERATORS + Tokenizer.COMPARISON_OPERATORS + \
+			Tokenizer.BOOLEAN_OPERATORS:
 		var next_precedence = OPERATOR_PRECEDENCE[op]
 		self._tokens.next()
+		
 		if next_precedence > cur_precedence:
 			var rhs = _check_precedence(_parse_statement(), next_precedence)
 			var bin = CasteletSyntaxTree.BinaryExpression.new(lhs, rhs, op)
+		
 			return _check_precedence(bin, cur_precedence)
 	
 	return lhs
@@ -489,13 +611,20 @@ func _parse_args():
 	var next_token_preview = _tokens.peek()
 
 	if (next_token_preview.type != Tokenizer.TOKENS.SYMBOL):
-		push_error("Expected a Symbol type token, but found %s instead." % next_token_preview.type)
+		push_error("Expected a Symbol type token, but found " +
+				"%s instead." % next_token_preview.type
+		)
 	
 	param = self._tokens.next().value
 	next_token_preview = _tokens.peek()
 
-	if (next_token_preview.type != Tokenizer.TOKENS.OPERATOR and next_token_preview.value != ":"):
-		push_error("Expected argument assignment using :, but found %s type token instead." % next_token_preview.type)
+	if (
+			next_token_preview.type != Tokenizer.TOKENS.OPERATOR
+			and next_token_preview.value != ":"
+	):
+		push_error("Expected argument assignment using :, but found" +
+				" %s type token instead." % next_token_preview.type
+		)
 	
 	self._tokens.next()
 
@@ -511,9 +640,13 @@ func _parse_args():
 	elif next_token_preview.type == Tokenizer.TOKENS.SYMBOL:
 		value = self._tokens.next().value
 	else:
-		push_error("Expected a Symbol, Boolean, or Number type token for argument value, but found %s type token instead." % next_token_preview.type)
+		push_error("Expected a Symbol, Boolean, or Number type token for" +
+				" argument value, but found %s type token instead."
+				% next_token_preview.type
+		)
 
 	return CasteletSyntaxTree.CommandArgExpression.new(param, value)
+
 
 func _parse_dialogue():
 	var speaker = ""
@@ -541,8 +674,12 @@ func _parse_dialogue():
 					self._tokens.next()
 					next_token_preview = _tokens.peek()
 
-					if next_token_preview.type in [Tokenizer.TOKENS.SYMBOL, Tokenizer.TOKENS.OPERATOR]:
-						push_error("Expected a string literal to be joined with previous string literal, but found %s token instead" % next_token_preview.type)
+					if next_token_preview.type in [
+						Tokenizer.TOKENS.SYMBOL,
+						Tokenizer.TOKENS.OPERATOR,
+					]:
+						push_error("Expected a string literal to be joined with previous string" +
+								" literal, but found %s token instead" % next_token_preview.type)
 				
 				# Discard this present token and join its contents with the last one available in token cache.
 				_token_cache[-1].value += self._tokens.next().value
@@ -551,17 +688,29 @@ func _parse_dialogue():
 				self._tokens.next()
 				next_token_preview = _tokens.peek()
 
-				if next_token_preview.type == Tokenizer.TOKENS.OPERATOR and next_token_preview.value == "[":
+				if (
+						next_token_preview.type == Tokenizer.TOKENS.OPERATOR
+						and next_token_preview.value == "["
+				):
 					self._tokens.next()
 
 					while next_token_preview.value != "]":
 						next_token_preview = _tokens.peek()
 
-						if next_token_preview.type in [Tokenizer.TOKENS.SYMBOL,
-							Tokenizer.TOKENS.STRING_LITERAL, Tokenizer.TOKENS.NUMBER, Tokenizer.TOKENS.BOOLEAN]:
+						if next_token_preview.type in [
+							Tokenizer.TOKENS.SYMBOL,
+							Tokenizer.TOKENS.STRING_LITERAL,
+							Tokenizer.TOKENS.NUMBER,
+							Tokenizer.TOKENS.BOOLEAN,
+						]:
 							formatter.append(next_token_preview)
-						elif next_token_preview.type == Tokenizer.TOKENS.OPERATOR and next_token_preview.value in [",", "]"]:
+						
+						elif (
+								next_token_preview.type == Tokenizer.TOKENS.OPERATOR
+								and next_token_preview.value in [",", "]"]
+						):
 							pass
+						
 						else:
 							push_error(next_token_preview)
 						
@@ -590,6 +739,7 @@ func _parse_dialogue():
 	# If only one string literal, assume the token cache content is a narrative dialogue
 	if len(_token_cache) == 1 and _token_cache[0].type == Tokenizer.TOKENS.STRING_LITERAL:
 		dialogue = _token_cache[0].value
+	
 	elif len(_token_cache) > 1:
 		# Speaker assignment
 		if _token_cache[0].type == Tokenizer.TOKENS.SYMBOL:
@@ -600,7 +750,9 @@ func _parse_dialogue():
 		elif _token_cache[0].type == Tokenizer.TOKENS.STRING_LITERAL:
 			speaker = _token_cache[0].value
 		else:
-			push_error("Expected a Symbol or string literal token for the dialogue speaker data, but found %s type token instead" % _token_cache[0].type)
+			push_error("Expected a Symbol or string literal token for the dialogue" +
+					" speaker data, but found %s type token instead" % _token_cache[0].type
+			)
 		
 		var dialogue_cache = ""
 
@@ -609,16 +761,17 @@ func _parse_dialogue():
 			if _token_cache[i].type == Tokenizer.TOKENS.STRING_LITERAL:
 				dialogue_cache += _token_cache[i].value
 			else:
-				push_error("Expected a string literal, but found %s token type instead." % _token_cache[i].type)
+				push_error("Expected a string literal, but found %s token type instead."
+						% _token_cache[i].type
+				)
 		
 		dialogue = dialogue_cache
 
 	else:
 		push_error("Invalid dialogue format.")
 	
-	_token_cache.clear()
-
-	
+	_token_cache.clear()	
 	args["formatter"] = formatter
 
 	return CasteletSyntaxTree.DialogueExpression.new(speaker,dialogue, args)
+
