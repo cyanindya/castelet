@@ -59,7 +59,7 @@ func parse() -> CasteletSyntaxTree:
 			_expression_id += 1
 			if expression is CasteletSyntaxTree.LabelExpression:
 				tree.checkpoints.append(expression)
-			if expression is CasteletSyntaxTree.IfElseExpression:
+			if expression is CasteletSyntaxTree.IfElseExpression or expression is CasteletSyntaxTree.WhileExpression:
 				tree.checkpoints.append(CasteletSyntaxTree.LabelExpression.new("after_" + _name + "_" + str(_expression_id - 1), _expression_id - 1))
 
 			tree.append(expression)
@@ -233,12 +233,29 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 	# Next, check for all subroutines to be executed in if block until elseif/else/endif
 	# is hit
 	
-	while not (next.type == Tokenizer.TOKENS.SYMBOL and (next.value in [Tokenizer.KEYWORDS.ENDIF, Tokenizer.KEYWORDS.ELSEIF, Tokenizer.KEYWORDS.ELSE])):
+	while not (next.type == Tokenizer.TOKENS.SYMBOL and (next.value in [Tokenizer.KEYWORDS.ENDIF, Tokenizer.KEYWORDS.ELSEIF, Tokenizer.KEYWORDS.ELSE, Tokenizer.KEYWORDS.ENDWHILE])):
 		next = self._tokens.peek()
 
 		if (next.type == Tokenizer.TOKENS.OPERATOR and next.value == "@"):
 			self._tokens.next()
 			if self._tokens.peek().value in [Tokenizer.KEYWORDS.ENDIF, Tokenizer.KEYWORDS.ELSEIF, Tokenizer.KEYWORDS.ELSE]:
+				# Add jump expression at the end to transfer back control to main tree
+				sub_block.append(CasteletSyntaxTree.JumptoExpression.new("after_" + self._name + "_" + str(_expression_id)))
+				break
+			elif self._tokens.peek().value == Tokenizer.KEYWORDS.ENDWHILE:
+				# Add if-else that checks for the condition before deciding to loop or repeating
+				var while_true_tree : CasteletSyntaxTree = CasteletSyntaxTree.new("")
+				while_true_tree.append(CasteletSyntaxTree.LoopBackExpression.new(sub_block))
+
+				var while_false_tree : CasteletSyntaxTree = CasteletSyntaxTree.new("")
+				while_false_tree.append(CasteletSyntaxTree.JumptoExpression.new("after_" + self._name + "_" + str(_expression_id)))
+
+				sub_block.append(CasteletSyntaxTree.IfElseExpression.new(
+					[
+						CasteletSyntaxTree.ConditionalExpression.new(condition, while_true_tree),
+						CasteletSyntaxTree.ConditionalExpression.new(CasteletSyntaxTree.BaseExpression.new(Tokenizer.TOKENS.BOOLEAN, "true"), while_false_tree)
+					]
+				))
 				break
 			self._tokens.prev()
 		
@@ -246,8 +263,7 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 		if expr != null:
 			sub_block.append(expr)
 
-	# Add jump expression at the end to transfer back control to main tree
-	sub_block.append(CasteletSyntaxTree.JumptoExpression.new("after_" + self._name + "_" + str(_expression_id)))
+	
 
 	return CasteletSyntaxTree.ConditionalExpression.new(condition, sub_block)
 
@@ -283,8 +299,27 @@ func _parse_conditionals():
 
 	elif condition_type.value == Tokenizer.KEYWORDS.WHILE:
 		
+		var next = self._tokens.peek()
+
+		# advance the tokenizer to if/elseif/else/endif
 		self._tokens.next()
-		pass
+		
+		var cond = _parse_conditional_block()
+
+		# Check whether the next is elseif/else/endif
+		next = self._tokens.peek()
+
+		if next.type == Tokenizer.TOKENS.EOF:
+			push_error("End of file reached, but no endif detected to terminate the conditional block.")
+
+		_sub_tree_count += 1
+			
+		self._tokens.next()
+
+		var expr = CasteletSyntaxTree.WhileExpression.new(cond)
+	
+		return expr
+
 	else:
 		push_error("Expected the beginning of conditional block keyword such as 'if' or 'while', but found %s instead." % condition_type.value)
 	

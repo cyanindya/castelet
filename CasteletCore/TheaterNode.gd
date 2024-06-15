@@ -102,6 +102,11 @@ func _next():
 		# TODO: terminate the script
 		else:
 			end_of_script.emit()
+
+	elif next is CasteletSyntaxTree.LoopBackExpression:
+		self._tree = next.value
+		self._tree.reset()
+		CasteletGameManager.progress.emit()
 		
 	elif next is CasteletSyntaxTree.FunctionCallExpression:
 		var caller_object = self
@@ -131,11 +136,22 @@ func _next():
 		# condition's associated subroutines
 		for condition in if_else_block.value:
 			var eval = _translate_expression(condition.evaluator)
-			print_debug(eval)
 			if eval == true:
 				self._tree = condition.subroutine
 				self._tree.reset()
 				break
+		
+		CasteletGameManager.progress.emit()
+
+	elif next is CasteletSyntaxTree.WhileExpression:
+		var while_block = self._tree.next()
+
+		# Evaluate each condition, then transfer the execution to each
+		# condition's associated subroutines
+		var eval = _translate_expression(while_block.value.evaluator)
+		if eval == true:
+			self._tree = while_block.value.subroutine
+			self._tree.reset()
 		
 		CasteletGameManager.progress.emit()
 

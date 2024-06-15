@@ -253,6 +253,17 @@ class IfElseExpression:
 		return "IfElseExpression{value: " + str(value) + "}"
 
 
+class WhileExpression:
+	extends BaseExpression
+
+	func _init(condition : ConditionalExpression):
+		self.type = "While"
+		self.value = condition
+	
+	func _to_string():
+		return "WhileExpression{value: " + str(value) + "}"
+
+
 class ConditionalExpression:
 	extends BaseExpression
 
@@ -265,6 +276,16 @@ class ConditionalExpression:
 
 	func _to_string():
 		return "ConditionalExpression{eval: %s, subroutine: %s}" % [self.evaluator, self.subroutine]
+
+class LoopBackExpression:
+	extends BaseExpression
+
+	func _init(tree : CasteletSyntaxTree):
+		self.type = "LoopBack"
+		self.value = tree
+
+	func _to_string():
+		return "LoopBackExpression"
 
 # class TransitionExpression:
 # 	extends BaseExpression
