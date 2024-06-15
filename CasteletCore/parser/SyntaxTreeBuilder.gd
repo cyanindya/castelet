@@ -1,28 +1,33 @@
-# Generates the syntax tree from the extracted script tokens.
-# Castelet syntax tree generally contains the following information:
-# - name: Name of the file the syntax tree originates from.
-# - body: Contains a list of expressions generated from the analysis.
-# - checkpoints:
-# 
-# A rough example of the generated syntax tree:
-# 	"name" :"test_script.tsc",
-#	"body" : [
-#		{type : "command", keyword : "scene", data : {prop : "bg", variant : "carcocena"}, args : { xpos : 0.5, ypos : 0.5 } }
-# 		{type : "command", keyword : "choice", ...}
-# 		{type : "dialogue", speaker : "id_dietrich", dialogue : "....You [i]never[/i] change, do you?", pause_locations : [], pause_durations = []},
-# 	],
-#	"checkpoints" : {}
-# 
-# This parser works according to these behaviors:
-# - If the current token is an @ operator, expect keyword in a symbol-type token.
-#	Returns KeywordError when the defined keyword doesn't exist.
-# - every time a series of tokens is terminated by newline, check again whether
-#	the new line it is started by an @ (keyword), $ (variable), or other symbols (expects dialogue)
-
 extends RefCounted
+## Generates the syntax tree from the script tokens. This is the main body of
+## the script parser that does most of the heavy lifting until a script tree is
+## generated.
+##
+## This tree builder works according to these behaviors:
+## - Checks for the next token in the tokens' list.
+## - If the current token is an @ operator, expect keyword in a symbol-type token.
+##	 Returns KeywordError when the defined keyword doesn't exist.
+## - If the current token is an $ operator, expect the rest of the line to be a
+##   statement such as variable assignment or function call.
+## - Every time a series of tokens is terminated by newline, check again whether
+##	 the new line it is started by an @ (keyword), $ (statement), or other symbols
+##   (expects dialogue)
+## - Upon encountering certain sub-block keywords (i.e. if, elseif, else, endif,
+##   while, endwhile, menu, choice, endmenu), create another instance of this class
+##   to generate a smaller syntax tree containing that sub-block.
+##   At the end of the generated tree, add a JumptoExpression instance to transfer
+##   back control to the main tree, or for while-endwhile, add an IfElseExpression
+##   that checks for the truth condition before either restarting the routine or
+##   jumping back to the main tree.
+##
+## Do note that for standardization and consistency purposes, you should avoid
+## directly creating new CasteletSyntaxTree instance and instead use this class
+## to build new syntax tree, whether the main tree of a script of its sub-trees.
+
 
 const Tokenizer = preload("Tokenizer.gd")
 const CasteletToken = Tokenizer.CasteletToken
+
 const OPERATOR_PRECEDENCE = {
 	"=": 1,
 	"or": 2, "||": 2,
@@ -37,8 +42,8 @@ var _expression_id = 0
 var _sub_tree_count = 0:
 	set(value):
 		_sub_tree_count = value
-		_sub_tree_name = _name.trim_suffix(".tsc") + "_sub_tree_" + str(value)
-var _sub_tree_name = _name.trim_suffix(".tsc") + "_sub_tree_" + str(_sub_tree_count)
+		_sub_tree_name = _name + "_sub_tree_" + str(value)
+var _sub_tree_name = _name + "_sub_tree_" + str(_sub_tree_count)
 var _tokens : Tokenizer
 var _token_cache = []
 
@@ -51,7 +56,7 @@ func _init(tree_name : String, tokens_list : Tokenizer):
 
 func parse() -> CasteletSyntaxTree:
 	
-	var tree = CasteletSyntaxTree.new(self._name.trim_suffix(".tsc"))
+	var tree = CasteletSyntaxTree.new(self._name)
 
 	while not self._tokens.is_eof_token():
 		var expression = self._parse_token()

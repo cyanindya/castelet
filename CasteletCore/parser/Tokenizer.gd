@@ -1,4 +1,6 @@
 extends RefCounted
+## A class that holds all of the tokens to be parsed and converted into syntax
+## tree later.
 
 const CasteletInputStream = preload("CasteletInputStream.gd")
 
@@ -54,10 +56,11 @@ const KEYWORDS := {
 	ENDWHILE = "endwhile",
 }
 
-var _input_stream : CasteletInputStream
 var tokens = []:
 	get:
 		return tokens
+
+var _input_stream : CasteletInputStream
 var _token_index = -1 # so we'll start from 0 proper
 var _number_of_tokens = 0
 
