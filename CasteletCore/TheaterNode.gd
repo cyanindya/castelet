@@ -257,7 +257,7 @@ func _process_binary(expr : CasteletSyntaxTree.BinaryExpression):
 	elif (op in ["||", "or"]):
 		return left_hand or right_hand
 	elif (op in ["!", "not"]):
-		return not left_hand
+		return not right_hand
 
 
 func _update_stage_prop(transition : Dictionary = {}):

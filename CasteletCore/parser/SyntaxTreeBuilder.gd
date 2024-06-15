@@ -452,6 +452,10 @@ func _parse_binary():
 		lh = _parse_binary()
 		if self._tokens.peek().type == Tokenizer.TOKENS.BRACES:
 			self._tokens.next()
+	elif current.type == Tokenizer.TOKENS.OPERATOR and current.value == "not":
+		# Added dummy expression for evaluation on left-hand side (won't actually be used)
+		lh = CasteletSyntaxTree.BaseExpression.new(Tokenizer.TOKENS.BOOLEAN, "true")
+		self._tokens.prev()
 	else:
 		self._tokens.prev()
 		lh =  _parse_statement()
