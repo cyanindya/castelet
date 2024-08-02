@@ -114,6 +114,15 @@ func tokenize_from_input_stream() -> void:
 	self._number_of_tokens = len(self.tokens)
 
 
+func set_from_tokens_list(tk := [], add_eof := false):
+	self.tokens = tk
+
+	if add_eof:
+		self.tokens.append(CasteletToken.new(TOKENS.EOF, ""))
+
+	self._number_of_tokens = len(self.tokens)
+
+
 func append_tokens(tokens_to_append : Array) -> void:
 	self.tokens = tokens_to_append
 	self._number_of_tokens = len(self.tokens)
