@@ -44,6 +44,7 @@ var _sub_tree_count = 0:
 	set(value):
 		_sub_tree_count = value
 		_sub_tree_name = _name + "_sub_tree_" + str(value)
+var _sublevel = 0
 
 var _sub_tree_name = _name + "_sub_tree_" + str(_sub_tree_count)
 var _tokens : Tokenizer
@@ -101,27 +102,50 @@ func parse(check_for_eof_token := false, args := {}) -> CasteletSyntaxTree:
 			
 			elif args["block"] == Tokenizer.KEYWORDS.WHILE:
 
-				var while_true_tree : CasteletSyntaxTree = CasteletSyntaxTree.new("")
+				var while_true_name = args["parent_tree"] + "_" + str(args["id"]) + "_while_true"
+				var while_true_tree : CasteletSyntaxTree = CasteletSyntaxTree.new(while_true_name)
 				while_true_tree.append(CasteletSyntaxTree.LoopBackExpression.new(tree))
+				CasteletGameManager.script_trees[while_true_name] = while_true_tree
 
-				var while_false_tree : CasteletSyntaxTree = CasteletSyntaxTree.new("")
+				var while_false_name = args["parent_tree"] + "_" + str(args["id"]) + "_while_false"
+				var while_false_tree : CasteletSyntaxTree = CasteletSyntaxTree.new(while_false_name)
 				while_false_tree.append(CasteletSyntaxTree.JumptoExpression.new(
 						"after_" + args["parent_tree"] + "_" + str(args["id"])
 				))
+				CasteletGameManager.script_trees[while_false_name] = while_false_tree
 
 				tree.append(CasteletSyntaxTree.IfElseExpression.new(
 					[
 						CasteletSyntaxTree.ConditionalExpression.new(
-								args["condition"], while_true_tree
+								args["condition"], while_true_name
 						),
 						CasteletSyntaxTree.ConditionalExpression.new(
 								CasteletSyntaxTree.BaseExpression.new(
 										Tokenizer.TOKENS.BOOLEAN, "true"
-								), while_false_tree
+								), while_false_name
 						),
 					]
 				))
 	
+	# Since it is possible for the tree to be generated from sub-tokens, add
+	# the resulting tree to the game manager from here.
+	CasteletGameManager.script_trees[tree.name] = tree
+
+	# List all checkpoints in the script tree to be added to the global manager.
+	for checkpoint in tree.checkpoints:
+		CasteletGameManager.jump_checkpoints_list[checkpoint.value] = {
+			"tree" : tree.name,
+			"index" : checkpoint.position,
+		}
+	
+	# Add special checkpoint for beginning of a syntax tree. Useful for jumping
+	# to the beginning of a scenario script without actually adding a label to the script's
+	# syntax tree.
+	CasteletGameManager.jump_checkpoints_list[tree.name] = {
+		"tree" : tree.name,
+		"index" : -1,
+	}
+
 	return tree
 
 
@@ -299,6 +323,7 @@ func _parse_statement():
 
 
 func _parse_conditionals():
+	_sublevel += 1
 
 	var condition_type = self._tokens.peek()
 
@@ -329,6 +354,8 @@ func _parse_conditionals():
 			
 		self._tokens.next()
 
+		_sublevel -=1
+
 		return expression
 
 	elif condition_type.value == Tokenizer.KEYWORDS.WHILE:
@@ -350,6 +377,8 @@ func _parse_conditionals():
 		_sub_tree_count += 1			
 		self._tokens.next()
 
+		_sublevel -=1
+
 		var expr = CasteletSyntaxTree.WhileExpression.new(cond)
 		return expr
 
@@ -364,6 +393,7 @@ func _parse_conditionals():
 func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 	
 	var next = self._tokens.peek()
+	var current_sublevel = _sublevel
 	var condition = CasteletSyntaxTree.BaseExpression.new(
 			Tokenizer.TOKENS.BOOLEAN, "true"
 	)
@@ -389,18 +419,39 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 				Tokenizer.KEYWORDS.ENDIF, Tokenizer.KEYWORDS.ELSEIF,
 				Tokenizer.KEYWORDS.ELSE, Tokenizer.KEYWORDS.ENDWHILE,
 			])
+			and current_sublevel == _sublevel
 	):
+		
+		# If the endif/endwhile terminator is supposed to belong to a
+		# sub-block, reduce the sublevel count to note we're returning to
+		# its possessing block
+		if next.value in [
+			Tokenizer.KEYWORDS.ENDIF,
+			Tokenizer.KEYWORDS.ENDWHILE,
+		]:
+			_sublevel -= 1
+		
 		next = self._tokens.peek()
 
 		if (next.type == Tokenizer.TOKENS.OPERATOR and next.value == "@"):
 			self._tokens.next()
+
 			if self._tokens.peek().value in [
+				Tokenizer.KEYWORDS.IF,
+				Tokenizer.KEYWORDS.WHILE,
+			]:
+				_sublevel +=1
+
+			elif self._tokens.peek().value in [
 				Tokenizer.KEYWORDS.ENDIF,
 				Tokenizer.KEYWORDS.ELSEIF,
 				Tokenizer.KEYWORDS.ELSE,
 				Tokenizer.KEYWORDS.ENDWHILE,
 			]:
-				break
+				# Only terminate this loop when the terminating keywords
+				# belong to the same sub-level
+				if current_sublevel == _sublevel:
+					break
 			
 			# Backtrack to the @ token since this is not a terminating keyword
 			self._tokens.prev()
@@ -417,7 +468,7 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 							"condition": condition,
 							})
 
-	return CasteletSyntaxTree.ConditionalExpression.new(condition, sub_block)
+	return CasteletSyntaxTree.ConditionalExpression.new(condition, sub_block.name)
 
 
 func _parse_function():

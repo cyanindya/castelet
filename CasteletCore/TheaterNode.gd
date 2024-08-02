@@ -137,7 +137,7 @@ func _next():
 		for condition in if_else_block.value:
 			var eval = _translate_expression(condition.evaluator)
 			if eval == true:
-				self._tree = condition.subroutine
+				self._tree = CasteletGameManager.script_trees[condition.subroutine]
 				self._tree.reset()
 				break
 		
@@ -150,7 +150,7 @@ func _next():
 		# condition's associated subroutines
 		var eval = _translate_expression(while_block.value.evaluator)
 		if eval == true:
-			self._tree = while_block.value.subroutine
+			self._tree = CasteletGameManager.script_trees[while_block.value.subroutine]
 			self._tree.reset()
 		
 		CasteletGameManager.progress.emit()

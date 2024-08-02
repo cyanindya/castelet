@@ -302,9 +302,9 @@ class ConditionalExpression:
 	extends BaseExpression
 
 	var evaluator : BaseExpression # can cover binary comparison or just one
-	var subroutine : CasteletSyntaxTree
+	var subroutine : String
 
-	func _init(eval : BaseExpression, sub : CasteletSyntaxTree):
+	func _init(eval : BaseExpression, sub : String):
 		self.evaluator = eval
 		self.subroutine = sub
 
