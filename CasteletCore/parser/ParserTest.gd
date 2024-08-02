@@ -18,7 +18,7 @@ func _ready():
 
 	# Testing the tokenizer
 	var tokenizer = Tokenizer.new(file_contents)
-	tokenizer.tokenize()
+	tokenizer.tokenize_from_input_stream()
 	print_debug(tokenizer.tokens)
 
 	# Testing the syntax tree generator and the resulting tree

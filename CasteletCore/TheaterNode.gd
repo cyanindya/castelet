@@ -72,9 +72,11 @@ func _next():
 			_update_window()
 		else:
 			pass
+	
 	elif next is CasteletSyntaxTree.LabelExpression:
 		self._tree.next()
 		CasteletGameManager.progress.emit()
+	
 	elif next is CasteletSyntaxTree.JumptoExpression:
 
 		# If it's call function, append the call source to the stack
@@ -88,7 +90,9 @@ func _next():
 			if CasteletGameManager.jump_checkpoints_list[next.value]["tree"] != self._tree.name:
 				self.load_script(CasteletGameManager.jump_checkpoints_list[next.value]["tree"])
 			self._tree.set_index(CasteletGameManager.jump_checkpoints_list[next.value]["index"])
+	
 		CasteletGameManager.progress.emit()
+	
 	elif next is CasteletSyntaxTree.ReturnExpression:
 		if CasteletGameManager.get_context_level() > 0:
 			var origin = CasteletGameManager.pop_callsub_stack()
@@ -98,6 +102,11 @@ func _next():
 		# TODO: terminate the script
 		else:
 			end_of_script.emit()
+
+	elif next is CasteletSyntaxTree.LoopBackExpression:
+		self._tree = next.value
+		self._tree.reset()
+		CasteletGameManager.progress.emit()
 		
 	elif next is CasteletSyntaxTree.FunctionCallExpression:
 		var caller_object = self
@@ -120,6 +129,32 @@ func _next():
 
 		CasteletGameManager.progress.emit()
 	
+	elif next is CasteletSyntaxTree.IfElseExpression:
+		var if_else_block = self._tree.next()
+
+		# Evaluate each condition, then transfer the execution to each
+		# condition's associated subroutines
+		for condition in if_else_block.value:
+			var eval = _translate_expression(condition.evaluator)
+			if eval == true:
+				self._tree = CasteletGameManager.script_trees[condition.subroutine]
+				self._tree.reset()
+				break
+		
+		CasteletGameManager.progress.emit()
+
+	elif next is CasteletSyntaxTree.WhileExpression:
+		var while_block = self._tree.next()
+
+		# Evaluate each condition, then transfer the execution to each
+		# condition's associated subroutines
+		var eval = _translate_expression(while_block.value.evaluator)
+		if eval == true:
+			self._tree = CasteletGameManager.script_trees[while_block.value.subroutine]
+			self._tree.reset()
+		
+		CasteletGameManager.progress.emit()
+
 	elif next is CasteletSyntaxTree.AssignmentExpression:
 		var assignment = self._tree.next()
 		var is_persistent = (assignment.lhs.value as String).begins_with("persistent.")
@@ -151,6 +186,7 @@ func _next():
 		
 	elif next is CasteletSyntaxTree.DialogueExpression:
 		_update_dialogue()
+	
 	else:
 		self._tree.next()
 
@@ -216,6 +252,12 @@ func _process_binary(expr : CasteletSyntaxTree.BinaryExpression):
 		return left_hand <= right_hand
 	elif (op == "!="):
 		return left_hand != right_hand
+	elif (op in ["&&", "and"]):
+		return left_hand and right_hand
+	elif (op in ["||", "or"]):
+		return left_hand or right_hand
+	elif (op in ["!", "not"]):
+		return not right_hand
 
 
 func _update_stage_prop(transition : Dictionary = {}):

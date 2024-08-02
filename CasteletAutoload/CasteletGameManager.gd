@@ -63,26 +63,8 @@ signal progress
 
 func _script_loader_callback(file_name : String):
 
-	if file_name.ends_with(".tsc"):
-				
-		var tree = parser.execute_parser(file_name)
-		var syntax_tree_name : String = file_name.get_file().trim_suffix(".tsc")
-		script_trees[syntax_tree_name] = tree
-
-		# List all checkpoints in the script tree to be added to the global manager.
-		for checkpoint in tree.checkpoints:
-			jump_checkpoints_list[checkpoint.value] = {
-				"tree" : syntax_tree_name,
-				"index" : checkpoint.position,
-			}
-		
-		# Add special checkpoint for beginning of a syntax tree. Useful for jumping
-		# to the beginning of a scenario script without actually adding a label to the script's
-		# syntax tree.
-		jump_checkpoints_list[syntax_tree_name] = {
-			"tree" : syntax_tree_name,
-			"index" : -1,
-		}
+	if file_name.ends_with(".tsc"):		
+		parser.execute_parser(file_name)
 		
 
 func _ready():
