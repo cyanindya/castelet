@@ -6,10 +6,16 @@
 
 extends CanvasLayer
 
+var ChoiceNode = load("res://castelet_core/gui_node/choice_node.tscn")
+
+signal choice_made(sub)
+
 func _ready():
 
 	CasteletGameManager.confirm.connect(_dialogue_node_interrupt)
 	CasteletGameManager.backlog_update.connect(_on_backlog_updated)
+	
+	choice_made.connect(_on_choice_made)
 
 	if CasteletConfig.base_text_speed != null:
 		$DialogueNode.cps = CasteletConfig.base_text_speed
@@ -48,7 +54,6 @@ func _dialogue_node_interrupt(instant : bool = false):
 		$DialogueNode.process_interrupt(instant)
 
 
-
 func _on_automode_button_toggled(button_pressed: bool):
 	$QuickMenuControl.accept_event()
 	CasteletGameManager.auto_active = button_pressed
@@ -56,6 +61,7 @@ func _on_automode_button_toggled(button_pressed: bool):
 
 # func _on_dialogue_node_request_refresh():
 # 	CasteletGameManager.progress.emit()
+
 
 # To avoid execution order conflict, we use the signal from DialogueNode that will only
 # be emitted when all of the status changes had been completed.
@@ -74,10 +80,41 @@ func _on_backlog_button_pressed():
 	$QuickMenuControl.accept_event()
 	$BacklogNode.show()
 
+
 func _on_backlog_updated(backlog_entry : Dictionary, replace = false):
 	$BacklogNode.update_backlog(backlog_entry, replace)
+
 
 func _on_backlog_window_visibility_changed():
 	CasteletGameManager.toggle_pause($BacklogNode.visible)
 	CasteletGameManager.set_block_signals($BacklogNode.visible)
 
+
+func show_choices(choices := []):
+	for choice in choices:
+		var choice_node = ChoiceNode.instantiate()
+
+		choice_node.get_node("Button").text = choice.value
+		choice_node.subevent_id = choice.subroutine
+		# TODO: on click - return the subroutine to be executed
+		
+		choice_node.subroutine.connect(_process_choice)
+
+		$MenuNode.add_child(choice_node)
+
+	$MenuNode.show()
+
+
+func _process_choice(sub : String):
+	choice_made.emit(sub)
+
+
+func _on_choice_made(_sub : String):
+	var buttons = $MenuNode.get_children()
+	
+	for button in buttons:
+		button.subroutine.disconnect(_process_choice)
+		$MenuNode.remove_child(button)
+		button.queue_free()
+	
+	$MenuNode.hide()

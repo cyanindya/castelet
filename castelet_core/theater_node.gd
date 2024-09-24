@@ -23,6 +23,7 @@ var _paused = false
 var DialogueTools = load("res://castelet_core/dialogue_processing_tools.gd")
 var dialogue_tools
 var _timer : Timer
+var _is_menu := false
 
 signal end_of_script
 
@@ -183,9 +184,14 @@ func _next():
 			var_storage[varname] = result
 		
 		CasteletGameManager.progress.emit()
-		
+	
+	elif next is CasteletSyntaxTree.MenuExpression:
+		var menu = self._tree.next()
+		_show_menu(menu)
+
 	elif next is CasteletSyntaxTree.DialogueExpression:
-		_update_dialogue()
+		var command : CasteletSyntaxTree.DialogueExpression = self._tree.next()
+		_update_dialogue(command)
 	
 	else:
 		self._tree.next()
@@ -220,6 +226,7 @@ func _translate_expression(expr : CasteletSyntaxTree.BaseExpression):
 			expr_result = expr.value as String
 	
 	return expr_result
+
 
 func _process_binary(expr : CasteletSyntaxTree.BinaryExpression):
 
@@ -357,15 +364,13 @@ func _update_window():
 		$SubViewport/GUINode.hide_window()
 
 
-func _update_dialogue():
+func _update_dialogue(command : CasteletSyntaxTree.DialogueExpression):
 
 	if CasteletTransitionManager.transitioning == true:
 		CasteletGameManager.set_block_signals(true)
 		await CasteletTransitionManager.transition_completed
 		CasteletGameManager.set_block_signals(false)
-		
-
-	var command : CasteletSyntaxTree.DialogueExpression = self._tree.next()
+	
 	var dialogue = {
 		"speaker": command.speaker,
 		"dialogue" : command.dialogue,
@@ -404,8 +409,7 @@ func _update_dialogue():
 	for arg in dialogue_processed["args"].keys():
 		dialogue["args"][arg] = dialogue_processed["args"][arg]
 	dialogue["dialogue"] = dialogue_processed["dialogue"]
-	print_debug(dialogue)
-
+	
 	# If the speaker data starts with "id_", make sure to check the assets database
 	# for the proper speaker name.
 	if command.speaker.begins_with("id_"):
@@ -425,8 +429,10 @@ func _update_dialogue():
 	else:
 		CasteletGameManager.append_dialogue_extend(dialogue)
 
+
 func _on_end_of_script():
 	print_debug("End of script reached")
+
 
 # Only progress when not paused.
 # (Requires more testing with multiple scenes active)
@@ -444,11 +450,37 @@ func play_scene(from_beginning = true):
 	_paused = false
 	_next()
 
+
 func pause_scene():
 	_paused = true	
 
+
 func stop_scene():
 	_tree.reset()
+
+
+func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
+	# _is_menu = true
+
+	CasteletGameManager.set_block_signals(true)
+
+	if menu.value != null:
+		_update_dialogue(menu.value)
+		pass # TODO: display caption (may need to modify show dialogue)
+
+	$SubViewport/GUINode.show_choices(menu.choices)
+
+	var next_tree = await $SubViewport/GUINode.choice_made
+
+	self.load_script(next_tree)
+	self._tree.reset()
+
+	CasteletGameManager.set_block_signals(false)
+	CasteletGameManager.progress.emit()
+
+
+	
+
 
 # Terminates this node. Intended to be called
 func end():

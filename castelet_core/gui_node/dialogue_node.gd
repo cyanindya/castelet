@@ -306,4 +306,3 @@ func _on_message_display_paused(duration : float):
 	$CTC_Indicator.show()
 	completed = false
 	dialogue_window_status_changed.emit(false, false, duration)
-

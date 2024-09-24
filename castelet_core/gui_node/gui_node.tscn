@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://cf8ybpujcepfc"]
+[gd_scene load_steps=5 format=3 uid="uid://cf8ybpujcepfc"]
 
 [ext_resource type="PackedScene" uid="uid://cb1ysu6lfx171" path="res://castelet_core/gui_node/dialogue_node.tscn" id="1_h0g72"]
 [ext_resource type="Script" path="res://castelet_core/gui_node/gui_node.gd" id="1_lemi2"]
+[ext_resource type="PackedScene" uid="uid://mj6e2n3prqpq" path="res://castelet_core/gui_node/menu_node.tscn" id="3_178xq"]
 [ext_resource type="PackedScene" uid="uid://ca1dssn5xvet0" path="res://castelet_core/gui_node/backlog_node.tscn" id="3_mumyu"]
 
 [node name="GUINode" type="CanvasLayer"]
@@ -15,6 +16,11 @@ anchor_bottom = 1.0
 offset_top = -38.0
 offset_bottom = -38.0
 grow_vertical = 0
+
+[node name="MenuNode" parent="." instance=ExtResource("3_178xq")]
+visible = false
+offset_top = -84.0
+offset_bottom = -24.0
 
 [node name="QuickMenuControl" type="Control" parent="."]
 layout_mode = 3

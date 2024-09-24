@@ -508,7 +508,7 @@ func _parse_menu() -> CasteletSyntaxTree.MenuExpression:
 		expression.set_prompt(prompt)
 		
 		self._tokens.next()
-		self._tokens.next()
+	self._tokens.next()
 
 	next = self._tokens.peek()
 	
@@ -768,7 +768,7 @@ func _parse_dialogue():
 	# Throw an error if it doesn't follow the designated dialogue format.
 	var next_token_preview = _tokens.peek()
 
-	while next_token_preview.type != Tokenizer.TOKENS.NEWLINE:
+	while next_token_preview.type not in [Tokenizer.TOKENS.NEWLINE, Tokenizer.TOKENS.EOF]:
 		# Add whatever first string literal available next
 		if next_token_preview.type == Tokenizer.TOKENS.STRING_LITERAL:
 			_token_cache.append(self._tokens.next())
