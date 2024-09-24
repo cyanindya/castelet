@@ -78,6 +78,7 @@ func parse(check_for_eof_token := false, args := {}) -> CasteletSyntaxTree:
 			if (
 					expression is CasteletSyntaxTree.IfElseExpression
 					or expression is CasteletSyntaxTree.WhileExpression
+					or expression is CasteletSyntaxTree.MenuExpression
 			):
 				tree.checkpoints.append(CasteletSyntaxTree.LabelExpression.new(
 						"after_" + _name + "_" + str(_expression_id - 1),
@@ -95,6 +96,7 @@ func parse(check_for_eof_token := false, args := {}) -> CasteletSyntaxTree:
 				Tokenizer.KEYWORDS.IF,
 				Tokenizer.KEYWORDS.ELSEIF,
 				Tokenizer.KEYWORDS.ELSE,
+				Tokenizer.KEYWORDS.CHOICE,
 			]:
 				tree.append(CasteletSyntaxTree.JumptoExpression.new(
 						"after_" + args["parent_tree"] + "_" + str(args["id"])
@@ -196,6 +198,7 @@ func _parse_token():
 		push_error("Unidentified token with type %s. Skipping." % next_token_preview.type)
 		self._tokens.next()
 
+
 func _parse_commands():
 	var type = ""
 	var value = []
@@ -216,8 +219,10 @@ func _parse_commands():
 		push_error("Unrecognized token value \"%s\"" % next_token_preview.value)
 	
 	if next_token_preview.value in [Tokenizer.KEYWORDS.IF, Tokenizer.KEYWORDS.WHILE]:
-		print_debug("conditional detected")
 		return _parse_conditionals()
+
+	if next_token_preview.value == Tokenizer.KEYWORDS.MENU:
+		return _parse_menu()
 	
 	type = self._tokens.next().value
 
@@ -259,7 +264,7 @@ func _parse_commands():
 		value.append(token.value)
 	
 	else:
-		push_error()
+		push_error("This keyword must be followed by symbol.")
 
 	if type == Tokenizer.KEYWORDS.LABEL:
 		# TODO: make sure it is a valid name format
@@ -340,7 +345,7 @@ func _parse_conditionals():
 			# advance the tokenizer to if/elseif/else/endif
 			self._tokens.next()
 			
-			var cond = _parse_conditional_block()
+			var cond = _parse_sub_block()
 			expression.add_condition(cond)
 
 			# Check whether the next is elseif/else/endif
@@ -365,7 +370,7 @@ func _parse_conditionals():
 		# advance the tokenizer to if/elseif/else/endif
 		self._tokens.next()
 		
-		var cond = _parse_conditional_block()
+		var cond = _parse_sub_block()
 
 		# Check whether the next is elseif/else/endif
 		next = self._tokens.peek()
@@ -374,7 +379,7 @@ func _parse_conditionals():
 			push_error("End of file reached, but no endwhile detected to" +
 					" terminate the conditional block.")
 
-		_sub_tree_count += 1			
+		_sub_tree_count += 1
 		self._tokens.next()
 
 		_sublevel -=1
@@ -390,19 +395,21 @@ func _parse_conditionals():
 	return null
 
 
-func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
+func _parse_sub_block():
 	
 	var next = self._tokens.peek()
 	var current_sublevel = _sublevel
-	var condition = CasteletSyntaxTree.BaseExpression.new(
+	
+	var block_header = self._tokens.current().value
+	
+	var statement = CasteletSyntaxTree.BaseExpression.new(
 			Tokenizer.TOKENS.BOOLEAN, "true"
 	)
 
-	var block_header = self._tokens.current().value
-
-	if self._tokens.current().value != Tokenizer.KEYWORDS.ELSE:
-		condition = _parse_statement()
-	
+	if block_header == Tokenizer.KEYWORDS.CHOICE:
+		statement = _parse_dialogue()
+	elif block_header != Tokenizer.KEYWORDS.ELSE:
+		statement = _parse_statement()
 
 	var subtokens_list = []
 	
@@ -418,6 +425,7 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 			and (next.value in [
 				Tokenizer.KEYWORDS.ENDIF, Tokenizer.KEYWORDS.ELSEIF,
 				Tokenizer.KEYWORDS.ELSE, Tokenizer.KEYWORDS.ENDWHILE,
+				Tokenizer.KEYWORDS.ENDMENU,
 			])
 			and current_sublevel == _sublevel
 	):
@@ -428,6 +436,7 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 		if next.value in [
 			Tokenizer.KEYWORDS.ENDIF,
 			Tokenizer.KEYWORDS.ENDWHILE,
+			Tokenizer.KEYWORDS.ENDMENU,
 		]:
 			_sublevel -= 1
 		
@@ -439,6 +448,7 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 			if self._tokens.peek().value in [
 				Tokenizer.KEYWORDS.IF,
 				Tokenizer.KEYWORDS.WHILE,
+				Tokenizer.KEYWORDS.MENU,
 			]:
 				_sublevel +=1
 
@@ -447,6 +457,8 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 				Tokenizer.KEYWORDS.ELSEIF,
 				Tokenizer.KEYWORDS.ELSE,
 				Tokenizer.KEYWORDS.ENDWHILE,
+				Tokenizer.KEYWORDS.CHOICE,
+				Tokenizer.KEYWORDS.ENDMENU,
 			]:
 				# Only terminate this loop when the terminating keywords
 				# belong to the same sub-level
@@ -465,10 +477,66 @@ func _parse_conditional_block() -> CasteletSyntaxTree.ConditionalExpression:
 	var sub_block = subtree_builder.parse(false, {"block": block_header,
 							"parent_tree": self._name,
 							"id": str(_expression_id),
-							"condition": condition,
+							"condition": statement,
 							})
 
-	return CasteletSyntaxTree.ConditionalExpression.new(condition, sub_block.name)
+	if block_header == Tokenizer.KEYWORDS.CHOICE:
+		return CasteletSyntaxTree.ChoiceExpression.new(statement.dialogue, sub_block.name)
+	else:
+		return CasteletSyntaxTree.ConditionalExpression.new(statement, sub_block.name)
+
+
+func _parse_menu() -> CasteletSyntaxTree.MenuExpression:
+
+	_sublevel += 1
+	self._tokens.next() # should be at "menu" token right now
+
+	var expression = CasteletSyntaxTree.MenuExpression.new()
+
+	# Ensure the next token is newline first
+	var next = self._tokens.peek()
+	if next.type != Tokenizer.TOKENS.NEWLINE:
+		push_error("Expected a newline directly after @menu command.")
+	self._tokens.next()
+
+	# Next, check if a dialogue exists before choices. This will be the prompt
+	# that is shown alongside the menu choices.
+	next = self._tokens.peek()
+	if next.type in [Tokenizer.TOKENS.SYMBOL, Tokenizer.TOKENS.STRING_LITERAL]:
+		var prompt : CasteletSyntaxTree.DialogueExpression = self._parse_dialogue()
+		print_debug(prompt)
+		expression.set_prompt(prompt)
+		
+		self._tokens.next()
+		self._tokens.next()
+
+	next = self._tokens.peek()
+	
+	# Then, loop through until endmenu is hit
+	while not (
+			next.type == Tokenizer.TOKENS.SYMBOL
+			and next.value == Tokenizer.KEYWORDS.ENDMENU
+	):
+		# advance the tokenizer to choice
+		self._tokens.next()
+		
+		var choice = _parse_sub_block()
+		expression.add_choice(choice)
+
+		# Check whether the next is choice
+		next = self._tokens.peek()
+
+		if next.type == Tokenizer.TOKENS.EOF:
+			push_error("End of file reached, but no endmenu detected " +
+					"to terminate the choice block.")
+		
+		_sub_tree_count += 1
+			
+	self._tokens.next()
+
+	_sublevel -=1
+
+	return expression
 
 
 func _parse_function():

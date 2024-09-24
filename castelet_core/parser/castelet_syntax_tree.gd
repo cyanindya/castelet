@@ -47,7 +47,9 @@ func _init(tree_name : String):
 
 
 func _to_string() -> String:
-	return "CasteletSyntaxTree { name : %s,body : %s, checkpoints : %s }" % [self.name, self.body, self.checkpoints]
+	return "CasteletSyntaxTree { name : %s,body : %s, checkpoints : %s }" % [
+			self.name, self.body, self.checkpoints
+	]
 
 
 func append(expression : BaseExpression):
@@ -280,7 +282,7 @@ class IfElseExpression:
 		self.type = "IfElse"
 		self.value = conditions
 	
-	func add_condition(cond : CasteletSyntaxTree.ConditionalExpression):
+	func add_condition(cond : ConditionalExpression):
 		self.value.append(cond)
 
 	func _to_string():
@@ -321,3 +323,37 @@ class LoopBackExpression:
 
 	func _to_string():
 		return "LoopBackExpression"
+
+
+class MenuExpression:
+	extends BaseExpression
+
+	var choices = []
+
+	func _init(prompt : DialogueExpression = null, ch := []):
+		self.type = "Menu"
+		self.value = prompt
+		self.choices = ch
+
+	func set_prompt(prompt : DialogueExpression):
+		self.value = prompt
+	
+	func add_choice(choice : ChoiceExpression):
+		self.choices.append(choice)
+
+	func _to_string():
+		return "MenuExpression{value: " + str(self.value) + ", choices: [" + str(self.choices) + "]}"
+
+
+class ChoiceExpression:
+	extends BaseExpression
+
+	var subroutine : String
+
+	func _init(val : String, sub : String):
+		self.type = "Choice"
+		self.value = val
+		self.subroutine = sub
+
+	func _to_string():
+		return "ChoiceExpression{choice: %s, subroutine: %s}" % [self.value, self.subroutine]	

@@ -2,7 +2,7 @@ extends RefCounted
 ## A class that holds all of the tokens to be parsed and converted into syntax
 ## tree later.
 
-const CasteletInputStream = preload("res://castelet_core/parser/castelet_input_stream.gd")
+const CasteletInputStream = preload("castelet_input_stream.gd")
 
 # Define the list of tokens to be recognized.
 const TOKENS := {
@@ -45,7 +45,6 @@ const KEYWORDS := {
 	LABEL = "label",
 	TRANSITION = "transition",
 	JUMPTO = "jumpto",
-	CHOICE = "choice",
 	CALLSUB = "callsub",
 	RETURN = "return",
 	IF = "if",
@@ -54,6 +53,9 @@ const KEYWORDS := {
 	ENDIF = "endif",
 	WHILE = "while",
 	ENDWHILE = "endwhile",
+	MENU = "menu",
+	CHOICE = "choice",
+	ENDMENU = "endmenu",
 }
 
 var tokens = []:
