@@ -8,10 +8,10 @@ uniform float cutoff : hint_range(0.0, 1.0) = 0.0;
 uniform int direction : hint_range(0, 3, 1) = 1;
 
 void fragment() {
-	
+
 	vec2 old_tex_uv = UV;
 	vec2 new_tex_uv = UV;
-	
+
 	switch (direction) {
 		case 0: // Right
 			if (transition_in) new_tex_uv.x = UV.x + 1.0 - cutoff;
@@ -32,12 +32,12 @@ void fragment() {
 		default:
 			break;
 	}
-	
+
 	vec4 old_tex_color = texture(old_tex, old_tex_uv);
 	vec4 new_tex_color = texture(new_tex, new_tex_uv);
-	
+
 	COLOR = old_tex_color;
-	
+
 	if (new_tex_color.a >= old_tex_color.a) {
 		switch (direction) {
 			case 0:

@@ -658,4 +658,3 @@ func _take_viewport_texture(viewport : Viewport = get_viewport()) -> Texture2D:
 func _on_transition_completed():
 	transitioning = false
 	object_transition_data = {}
-

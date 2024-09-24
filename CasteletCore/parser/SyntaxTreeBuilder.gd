@@ -813,4 +813,3 @@ func _parse_dialogue():
 	args["formatter"] = formatter
 
 	return CasteletSyntaxTree.DialogueExpression.new(speaker,dialogue, args)
-
