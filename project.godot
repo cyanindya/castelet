@@ -11,20 +11,20 @@ config_version=5
 [application]
 
 config/name="Castelet"
-run/main_scene="res://SampleProjects/SampleMain.tscn"
+run/main_scene="res://sample_projects/sample_main.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
 
-CasteletAssetsManager="*res://CasteletAutoload/CasteletAssetsManager.tscn"
-CasteletAudioManager="*res://CasteletAutoload/CasteletAudioManager.tscn"
-CasteletConfig="*res://CasteletAutoload/CasteletConfig.tscn"
-CasteletGameManager="*res://CasteletAutoload/CasteletGameManager.tscn"
-CasteletInputManager="res://CasteletAutoload/CasteletInputManager.tscn"
-CasteletTransitionManager="*res://CasteletAutoload/CasteletTransitionManager.tscn"
-CasteletViewportManager="*res://CasteletAutoload/CasteletViewportManager.tscn"
-CasteletResourceLoader="*res://CasteletAutoload/CasteletResourceLoader.gd"
+CasteletAssetsManager="*res://castelet_autoload/castelet_assets_manager.tscn"
+CasteletAudioManager="*res://castelet_autoload/castelet_audio_manager.tscn"
+CasteletConfig="*res://castelet_autoload/castelet_config.tscn"
+CasteletGameManager="*res://castelet_autoload/castelet_game_manager.tscn"
+CasteletInputManager="res://castelet_autoload/castelet_input_manager.tscn"
+CasteletTransitionManager="*res://castelet_autoload/castelet_transition_manager.tscn"
+CasteletViewportManager="*res://castelet_autoload/castelet_viewport_manager.tscn"
+CasteletResourceLoader="*res://castelet_autoload/castelet_resource_loader.gd"
 
 [display]
 
