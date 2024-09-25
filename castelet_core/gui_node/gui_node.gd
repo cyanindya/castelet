@@ -23,7 +23,12 @@ func _ready():
 
 func _process(_delta):
 
-	if CasteletGameManager.ffwd_active:
+	var stop_ffwd_on_menu_show =  (
+			CasteletGameManager.menu_showing == true
+			and CasteletConfig.forcibly_stop_ffwd_on_choices == true
+	)
+
+	if CasteletGameManager.ffwd_active and not stop_ffwd_on_menu_show:
 		_dialogue_node_interrupt(true)
 
 
@@ -96,8 +101,6 @@ func show_choices(choices := []):
 
 		choice_node.get_node("Button").text = choice.value
 		choice_node.subevent_id = choice.subroutine
-		# TODO: on click - return the subroutine to be executed
-		
 		choice_node.subroutine.connect(_process_choice)
 
 		$MenuNode.add_child(choice_node)

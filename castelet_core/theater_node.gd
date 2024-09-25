@@ -365,7 +365,7 @@ func _update_window():
 
 
 func _update_dialogue(command : CasteletSyntaxTree.DialogueExpression):
-
+	
 	if CasteletTransitionManager.transitioning == true:
 		CasteletGameManager.set_block_signals(true)
 		await CasteletTransitionManager.transition_completed
@@ -460,13 +460,18 @@ func stop_scene():
 
 
 func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
-	# _is_menu = true
+	
+	CasteletGameManager.menu_showing = true
 
-	CasteletGameManager.set_block_signals(true)
+	if not CasteletConfig.continue_ffwd_after_choices:
+		CasteletGameManager.ffwd_active = false
+	
+	# CasteletGameManager.auto_active = false
+
+	# CasteletGameManager.set_block_signals(true)
 
 	if menu.value != null:
 		_update_dialogue(menu.value)
-		pass # TODO: display caption (may need to modify show dialogue)
 
 	$SubViewport/GUINode.show_choices(menu.choices)
 
@@ -475,7 +480,9 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	self.load_script(next_tree)
 	self._tree.reset()
 
-	CasteletGameManager.set_block_signals(false)
+	# CasteletGameManager.set_block_signals(false)
+
+	CasteletGameManager.menu_showing = false
 	CasteletGameManager.progress.emit()
 
 

@@ -50,6 +50,8 @@ var _standby := false :
 	set(value):
 		_standby = value
 
+var menu_showing = false
+
 
 signal confirm
 signal ffwd_hold(state : bool)
