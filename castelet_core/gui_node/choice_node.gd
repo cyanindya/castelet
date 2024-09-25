@@ -4,7 +4,7 @@ extends Control
 	set(val):
 		subevent_id = val
 
-signal subroutine(sub_name)
+signal subroutine(choice, sub_name)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -12,4 +12,5 @@ func _ready() -> void:
 
 
 func _on_button_pressed() -> void:
-	subroutine.emit(subevent_id)
+	var text = $Button.text
+	subroutine.emit(text, subevent_id)

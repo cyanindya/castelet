@@ -34,6 +34,7 @@ var vars = {}
 var persistent = {}
 
 var backlog = []
+var backlog_max_limit = 200
 
 var _callsub_stack = []
 var _context_level = 0
@@ -97,12 +98,18 @@ func _ready():
 	
 
 func append_dialogue(dialogue_data: Dictionary):
+
+	if len(backlog) >= backlog_max_limit:
+		var _old = backlog.pop_front()
 	
 	backlog.append(dialogue_data)
 	backlog_update.emit(dialogue_data, false)
 
 
 func append_dialogue_extend(dialogue_data: Dictionary):
+	if len(backlog) >= backlog_max_limit:
+		var _old = backlog.pop_front()
+	
 	var current_dialogue = backlog.pop_back()
 	current_dialogue['dialogue'] += dialogue_data['dialogue']
 	if current_dialogue["args"].has("auto_dismiss"):

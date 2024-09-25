@@ -405,8 +405,15 @@ func _parse_sub_block():
 	var statement = CasteletSyntaxTree.BaseExpression.new(
 			Tokenizer.TOKENS.BOOLEAN, "true"
 	)
+	# An additional variable to store specific condition for
+	# displaying menu choices only.
+	var cond = CasteletSyntaxTree.BaseExpression.new(Tokenizer.TOKENS.BOOLEAN, "true")
 
 	if block_header == Tokenizer.KEYWORDS.CHOICE:
+		
+		if next.type != Tokenizer.TOKENS.STRING_LITERAL:
+			cond = _parse_statement() # A binary statement, not conditional!
+			
 		statement = _parse_dialogue()
 	elif block_header != Tokenizer.KEYWORDS.ELSE:
 		statement = _parse_statement()
@@ -481,7 +488,7 @@ func _parse_sub_block():
 							})
 
 	if block_header == Tokenizer.KEYWORDS.CHOICE:
-		return CasteletSyntaxTree.ChoiceExpression.new(statement.dialogue, sub_block.name)
+		return CasteletSyntaxTree.ChoiceExpression.new(statement.dialogue, sub_block.name, cond)
 	else:
 		return CasteletSyntaxTree.ConditionalExpression.new(statement, sub_block.name)
 
@@ -507,8 +514,8 @@ func _parse_menu() -> CasteletSyntaxTree.MenuExpression:
 		print_debug(prompt)
 		expression.set_prompt(prompt)
 		
-		self._tokens.next()
-	self._tokens.next()
+		self._tokens.next() # to newline
+	self._tokens.next() # to @
 
 	next = self._tokens.peek()
 	

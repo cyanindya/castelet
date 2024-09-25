@@ -349,11 +349,13 @@ class ChoiceExpression:
 	extends BaseExpression
 
 	var subroutine : String
+	var condition : BaseExpression
 
-	func _init(val : String, sub : String):
+	func _init(val : String, sub : String, cond : BaseExpression):
 		self.type = "Choice"
 		self.value = val
 		self.subroutine = sub
+		self.condition = cond
 
 	func _to_string():
-		return "ChoiceExpression{choice: %s, subroutine: %s}" % [self.value, self.subroutine]	
+		return "ChoiceExpression{choice: %s, subroutine: %s, condition: %s}" % [self.value, self.subroutine, self.condition]

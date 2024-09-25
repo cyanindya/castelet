@@ -473,7 +473,15 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	if menu.value != null:
 		_update_dialogue(menu.value)
 
-	$SubViewport/GUINode.show_choices(menu.choices)
+	var choices = []
+	for choice in menu.choices:
+		choices.append({
+				"choice" : choice.value,
+				"sub" : choice.subroutine,
+				"condition" : _translate_expression(choice.condition),
+		})
+
+	$SubViewport/GUINode.show_choices(choices)
 
 	var next_tree = await $SubViewport/GUINode.choice_made
 

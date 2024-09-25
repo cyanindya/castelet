@@ -97,18 +97,28 @@ func _on_backlog_window_visibility_changed():
 
 func show_choices(choices := []):
 	for choice in choices:
-		var choice_node = ChoiceNode.instantiate()
+		# modify this if you want to make the choice still visible
+		# but still disabled when the conditions aren't fulfilled.
+		if choice["condition"] == true:
+			var choice_node = ChoiceNode.instantiate()
 
-		choice_node.get_node("Button").text = choice.value
-		choice_node.subevent_id = choice.subroutine
-		choice_node.subroutine.connect(_process_choice)
+			choice_node.get_node("Button").text = choice["choice"]
+			choice_node.subevent_id = choice["sub"]
+			choice_node.subroutine.connect(_process_choice)
 
-		$MenuNode.add_child(choice_node)
+			$MenuNode.add_child(choice_node)
 
 	$MenuNode.show()
 
 
-func _process_choice(sub : String):
+func _process_choice(choice : String, sub : String):
+	var choice_dialogue = {
+		"speaker": "(Choice)",
+		"dialogue" : choice,
+		"args" : [],
+	}
+
+	CasteletGameManager.append_dialogue(choice_dialogue)
 	choice_made.emit(sub)
 
 
