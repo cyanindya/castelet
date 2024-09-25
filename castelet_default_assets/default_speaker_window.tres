@@ -1,0 +1,14 @@
+[gd_resource type="StyleBoxTexture" load_steps=2 format=3 uid="uid://c2c1o4ao7016i"]
+
+[ext_resource type="Texture2D" uid="uid://bdaj0mcn74hkc" path="res://castelet_default_assets/default_text_window.png" id="1_2vyyh"]
+
+[resource]
+texture = ExtResource("1_2vyyh")
+texture_margin_left = 30.0
+texture_margin_top = 15.0
+texture_margin_right = 30.0
+texture_margin_bottom = 15.0
+expand_margin_left = 7.0
+expand_margin_top = 7.0
+expand_margin_right = 7.0
+expand_margin_bottom = 7.0

@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://moxgg1hn1uc7"]
+
+[ext_resource type="Script" path="res://castelet_autoload/castelet_transition_manager..gd" id="1_i01oj"]
+[ext_resource type="Texture2D" uid="uid://b4b8bwyqw54ts" path="res://castelet_core/shaders/white_px.png" id="1_r0wxr"]
+
+[node name="CasteletTransitionManager" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_i01oj")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_r0wxr")
+centered = false
+
+[node name="ColorRect" type="ColorRect" parent="."]
+modulate = Color(1, 1, 1, 0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

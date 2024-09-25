@@ -18,7 +18,7 @@ mono_crash.*.json
 .vscode/
 
 # Project-specific ignores
-TestAssets/
+test_assets/
 
 # Other ignores
 *.bak
