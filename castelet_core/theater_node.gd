@@ -38,6 +38,8 @@ func _ready():
 	_timer.wait_time = 0.1
 	add_child(_timer)
 
+	$SubViewport.size = Vector2i(CasteletViewportManager.base_viewport_width as int,
+			CasteletViewportManager.base_viewport_height as int)
 	CasteletTransitionManager.vp = $SubViewport
 	dialogue_tools = DialogueTools.new()
 	# Connect the required signals to relevant callback functions
@@ -160,28 +162,29 @@ func _next():
 		var assignment = self._tree.next()
 		var is_persistent = (assignment.lhs.value as String).begins_with("persistent.")
 		var varname = assignment.lhs.value
-		var var_storage = CasteletGameManager.vars
 		if is_persistent:
 			varname = (assignment.lhs.value as String).trim_prefix("persistent.")
-			var_storage = CasteletGameManager.persistent
 		
 		var result = _translate_expression(assignment.rhs)
+		var current_var_value = CasteletGameManager.get_variable(varname, is_persistent)
 
 		if assignment is CasteletSyntaxTree.CompoundAssignmentExpression:
 			if assignment.compound_operator == "+=":
-				var_storage[varname] += result
+				current_var_value += result
 			elif assignment.compound_operator == "-=":
-				var_storage[varname] -= result
+				current_var_value -= result
 			elif assignment.compound_operator == "/=":
-				var_storage[varname] /= result
+				current_var_value /= result
 			elif assignment.compound_operator == "*=":
-				var_storage[varname] *= result
+				current_var_value *= result
 			elif assignment.compound_operator == "^=":
-				var_storage[varname] ^= result
+				current_var_value ^= result
 			elif assignment.compound_operator == "%=":
-				var_storage[varname] %= result
+				current_var_value %= result
+			CasteletGameManager.set_variable(varname, current_var_value, is_persistent)
+
 		else:
-			var_storage[varname] = result
+			CasteletGameManager.set_variable(varname, result, is_persistent)
 		
 		CasteletGameManager.progress.emit()
 	
@@ -206,12 +209,10 @@ func _translate_expression(expr : CasteletSyntaxTree.BaseExpression):
 	elif expr is CasteletSyntaxTree.VariableExpression:
 		var is_persistent = (expr.value as String).begins_with("persistent.")
 		var varname = expr.value
-		var var_storage = CasteletGameManager.vars
 		if is_persistent:
 			varname = (expr.value as String).trim_prefix("persistent.")
-			var_storage = CasteletGameManager.persistent
 
-		expr_result = var_storage[varname]
+		expr_result = CasteletGameManager.get_variable(varname, is_persistent)
 	elif expr is CasteletSyntaxTree.FunctionCallExpression:
 		pass #TODO
 	else:
@@ -384,9 +385,9 @@ func _update_dialogue(command : CasteletSyntaxTree.DialogueExpression):
 		print(vr)
 		if vr.type == Tokenizer.TOKENS.SYMBOL:
 			if vr.value.begins_with("persistent."):
-				val = CasteletGameManager.persistent[vr.value.trim_prefix("persistent.")]
+				val = CasteletGameManager.get_variable(vr.value.trim_prefix("persistent."), true)
 			else:
-				val = CasteletGameManager.vars[vr.value]
+				val = CasteletGameManager.get_variable(vr.value)
 		else:
 			val = vr.value
 		if vr.type == Tokenizer.TOKENS.NUMBER:
@@ -463,7 +464,7 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	
 	CasteletGameManager.menu_showing = true
 
-	if not CasteletConfig.continue_ffwd_after_choices:
+	if not CasteletConfig.get_config(CasteletConfig.CONTINUE_FFWD_ON_CHOICE):
 		CasteletGameManager.ffwd_active = false
 	
 	# CasteletGameManager.auto_active = false
@@ -492,9 +493,6 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 
 	CasteletGameManager.menu_showing = false
 	CasteletGameManager.progress.emit()
-
-
-	
 
 
 # Terminates this node. Intended to be called

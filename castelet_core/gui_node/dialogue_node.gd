@@ -77,6 +77,8 @@
 #
 extends Control
 
+const _CPS_MAX_VALUE = 100
+
 @export var cps : float = 20
 @export var window_transition_speed : float = 0.5
 var completed = false
@@ -99,11 +101,14 @@ signal dialogue_window_status_changed(completed: bool, completed_auto: bool, dur
 
 func _ready():
 
+	cps = CasteletConfig.get_config(CasteletConfig.TEXT_SPEED)
+
 	# Connect to internal signals
 	window_transition_completed.connect(_on_window_transition_completed)
 	message_display_completed.connect(_on_message_display_completed)
 	message_display_paused.connect(_on_message_display_paused)
-
+	CasteletConfig.config_updated.connect(_on_config_updated)
+	
 	# In the beginning, hide this node and all of the sub-nodes
 	_hide_subcomponents()
 	hide()
@@ -160,7 +165,7 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 		$Speaker.show()
 	
 	# Actually display the dialogue.
-	if not instant:
+	if not instant and cps < _CPS_MAX_VALUE:
 		_animate_dialogue(starting_length)
 	else:
 		_text.visible_characters = _text_length
@@ -198,6 +203,8 @@ func _animate_dialogue(initial_visible_characters := 0):
 
 	# First, calculate the time required to display all texts based on the set speed
 	var duration := (_text_length / cps) as float
+	if cps >= _CPS_MAX_VALUE:
+		duration = 0
 	
 	# Before executing the tween, reset any previous instances of tween
 	if _tween:
@@ -306,3 +313,7 @@ func _on_message_display_paused(duration : float):
 	$CTC_Indicator.show()
 	completed = false
 	dialogue_window_status_changed.emit(false, false, duration)
+
+func _on_config_updated(conf, val):
+	if conf == CasteletConfig.TEXT_SPEED:
+		cps = CasteletConfig.get_config(CasteletConfig.TEXT_SPEED)

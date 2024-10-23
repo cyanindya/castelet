@@ -17,15 +17,15 @@ func _ready():
 	
 	choice_made.connect(_on_choice_made)
 
-	if CasteletConfig.base_text_speed != null:
-		$DialogueNode.cps = CasteletConfig.base_text_speed
+	if CasteletConfig.get_config(CasteletConfig.TEXT_SPEED) != null:
+		$DialogueNode.cps = CasteletConfig.get_config(CasteletConfig.TEXT_SPEED)
 
 
 func _process(_delta):
 
 	var stop_ffwd_on_menu_show =  (
 			CasteletGameManager.menu_showing == true
-			and CasteletConfig.forcibly_stop_ffwd_on_choices == true
+			and CasteletConfig.get_config(CasteletConfig.FORCE_STOP_FFWD_ON_CHOICE) == true
 	)
 
 	if CasteletGameManager.ffwd_active and not stop_ffwd_on_menu_show:
@@ -131,3 +131,8 @@ func _on_choice_made(_sub : String):
 		button.queue_free()
 	
 	$MenuNode.hide()
+
+
+func _on_config_button_pressed() -> void:
+	$QuickMenuControl.accept_event()
+	$SettingsNode.show()

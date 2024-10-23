@@ -30,8 +30,8 @@ extends Node
 var parser = preload("res://castelet_core/parser/castelet_script_parser.gd").new()
 var script_trees = {}
 var jump_checkpoints_list = {}
-var vars = {}
-var persistent = {}
+var _vars = {}
+var _persistent = {}
 
 var backlog = []
 var backlog_max_limit = 200
@@ -63,6 +63,12 @@ signal toggle_automode
 signal enter_standby
 signal progress
 
+signal persistent_updated(name, value)
+signal request_save_game
+signal request_load_game
+signal request_save_persistent
+signal request_load_persistent
+
 
 func _script_loader_callback(file_name : String):
 
@@ -87,8 +93,8 @@ func _ready():
 	# Initialize automode timer
 	_automode_timer = Timer.new()
 	add_child(_automode_timer)
-	if CasteletConfig.base_automode_timeout != null:
-		_automode_timer.wait_time = CasteletConfig.base_automode_timeout
+	if CasteletConfig.get_config(CasteletConfig.AUTOMODE_TIMEOUT) != null:
+		_automode_timer.wait_time = CasteletConfig.get_config(CasteletConfig.AUTOMODE_TIMEOUT)
 	else:
 		_automode_timer.wait_time = 3
 	_automode_timer.timeout.connect(_on_automode_timer_timeout)
@@ -195,3 +201,26 @@ func _on_ffwd_toggle():
 
 func print(s1 : String, s2: String):
 	prints(s1, s2)
+
+
+func set_variable(var_name : String, var_value, persistent := false):
+	if persistent == true:
+		_persistent[var_name] = var_value
+		persistent_updated.emit(var_name, var_value)
+	else:
+		_vars[var_name] = var_value
+	
+
+func get_variable(var_name : String, persistent := false) -> Variant:
+
+	if persistent == true:
+
+		if not _persistent.keys().has(var_name): # find_key() bonked for some reasons
+			push_warning("No persistent variable with the name %s is found." % var_name)
+			return
+		return _persistent[var_name]
+	
+	if not _vars.keys().has(var_name):
+		push_warning("No variable with the name %s is found." % var_name)
+		return
+	return _vars[var_name]
