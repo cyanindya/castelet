@@ -9,7 +9,7 @@
 
 extends Node
 
-enum {
+enum ConfigList {
 	# Display Settings
 	WINDOW_MODE,
 	WINDOW_RESOLUTION,
@@ -64,69 +64,77 @@ var _voice_mute := false
 
 
 const _config_name_map = {
-	WINDOW_MODE : {
+	ConfigList.WINDOW_MODE : {
 		"field_name" : "_window_mode",
 		"type" : WindowMode,
 	},
-	TEXT_SPEED : {
+	ConfigList.TEXT_SPEED : {
 		"field_name" : "_base_text_speed",
 		"type" : TYPE_FLOAT,
 	},
-	AUTOMODE_TIMEOUT : {
+	ConfigList.AUTOMODE_TIMEOUT : {
 		"field_name" : "_base_automode_timeout",
 		"type" : TYPE_FLOAT,
 	},
-	FORCE_STOP_FFWD_ON_CHOICE : {
+	ConfigList.FORCE_STOP_FFWD_ON_CHOICE : {
 		"field_name" : "_forcibly_stop_ffwd_on_choices",
 		"type" : TYPE_BOOL,
 	},
-	CONTINUE_FFWD_ON_CHOICE : {
+	ConfigList.CONTINUE_FFWD_ON_CHOICE : {
 		"field_name" : "_continue_ffwd_after_choices",
 		"type" : TYPE_BOOL,
 	},
-	MASTER_VOLUME : {
+	ConfigList.MASTER_VOLUME : {
 		"field_name" : "_base_master_volume",
 		"type" : TYPE_FLOAT,
 	},
-	MASTER_MUTE : {
+	ConfigList.MASTER_MUTE : {
 		"field_name" : "_master_mute",
 		"type" : TYPE_BOOL,
 	},
-	BGM_VOLUME : {
+	ConfigList.BGM_VOLUME : {
 		"field_name" : "_base_bgm_volume",
 		"type" : TYPE_FLOAT,
 	},
-	BGM_MUTE : {
+	ConfigList.BGM_MUTE : {
 		"field_name" : "_bgm_mute",
 		"type" : TYPE_BOOL,
 	},
-	SFX_VOLUME : {
+	ConfigList.SFX_VOLUME : {
 		"field_name" : "_base_sfx_volume",
 		"type" : TYPE_FLOAT,
 	},
-	SFX_MUTE : {
+	ConfigList.SFX_MUTE : {
 		"field_name" : "_sfx_mute",
 		"type" : TYPE_BOOL,
 	},
-	VOICE_VOLUME : {
+	ConfigList.VOICE_VOLUME : {
 		"field_name" : "_base_voice_volume",
 		"type" : TYPE_FLOAT,
 	},
-	VOICE_MUTE : {
+	ConfigList.VOICE_MUTE : {
 		"field_name" : "_voice_mute",
 		"type" : TYPE_BOOL,
 	},
 }
 
 signal config_updated(config_name, value)
+signal config_finalized()
+
+func _ready() -> void:
+	# print_debug(_config_name_map.keys())
+	pass
 
 
-func set_config(conf, value : Variant):
+func set_config(conf : int, value : Variant) -> void:
 	set(_config_name_map[conf]["field_name"], value)
 	config_updated.emit(conf, value)
 
 
-func get_config(conf):
+func get_config(conf : int):
+	if not _config_name_map.has(conf):
+		return null
+	
 	var result = get(_config_name_map[conf]["field_name"])
 	
 	if result != null:
@@ -134,3 +142,6 @@ func get_config(conf):
 	
 	return null
 	
+
+func finalize_config():
+	config_finalized.emit()

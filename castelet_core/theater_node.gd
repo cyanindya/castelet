@@ -466,7 +466,7 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	
 	CasteletGameManager.menu_showing = true
 
-	if not CasteletConfig.get_config(CasteletConfig.CONTINUE_FFWD_ON_CHOICE):
+	if not CasteletConfig.get_config(CasteletConfig.ConfigList.CONTINUE_FFWD_ON_CHOICE):
 		CasteletGameManager.ffwd_active = false
 	
 	# CasteletGameManager.auto_active = false

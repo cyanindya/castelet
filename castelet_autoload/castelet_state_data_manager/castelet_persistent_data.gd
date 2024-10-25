@@ -12,10 +12,10 @@ func save_castelet_persistent():
 	file.close()
 
 
-func load_castelet_persistent():
-	var file = FileAccess.open(persistent_data_path, FileAccess.READ)
-
-	# TODO
-	
-	file.close()
+#func load_castelet_persistent():
+	#var file = FileAccess.open(persistent_data_path, FileAccess.READ)
+#
+	## TODO
+	#
+	#file.close()
 	

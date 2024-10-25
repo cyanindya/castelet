@@ -6,14 +6,14 @@ extends Node
 #
 
 @onready var _config_bus_map = {
-	CasteletConfig.MASTER_VOLUME : 0,
-	CasteletConfig.MASTER_MUTE : 0,
-	CasteletConfig.BGM_VOLUME : 1,
-	CasteletConfig.BGM_MUTE : 1,
-	CasteletConfig.SFX_VOLUME : 2,
-	CasteletConfig.SFX_MUTE : 2,
-	CasteletConfig.VOICE_VOLUME : 3,
-	CasteletConfig.VOICE_MUTE : 3,
+	CasteletConfig.ConfigList.MASTER_VOLUME : 0,
+	CasteletConfig.ConfigList.MASTER_MUTE : 0,
+	CasteletConfig.ConfigList.BGM_VOLUME : 1,
+	CasteletConfig.ConfigList.BGM_MUTE : 1,
+	CasteletConfig.ConfigList.SFX_VOLUME : 2,
+	CasteletConfig.ConfigList.SFX_MUTE : 2,
+	CasteletConfig.ConfigList.VOICE_VOLUME : 3,
+	CasteletConfig.ConfigList.VOICE_MUTE : 3,
 }
 
 func _ready() -> void:
@@ -85,14 +85,18 @@ func resume_audio(channel:="BGM"):
 
 func _on_config_updated(conf, val):
 	if conf in [
-			CasteletConfig.MASTER_VOLUME, CasteletConfig.BGM_VOLUME,
-			CasteletConfig.SFX_VOLUME, CasteletConfig.VOICE_VOLUME,
+			CasteletConfig.ConfigList.MASTER_VOLUME,
+			CasteletConfig.ConfigList.BGM_VOLUME,
+			CasteletConfig.ConfigList.SFX_VOLUME,
+			CasteletConfig.ConfigList.VOICE_VOLUME,
 	]:
 		var vol_db = linear_to_db(val / 100)
 		AudioServer.set_bus_volume_db(_config_bus_map[conf], vol_db as float)
 	
 	if conf in [
-			CasteletConfig.MASTER_MUTE, CasteletConfig.BGM_MUTE,
-			CasteletConfig.SFX_MUTE, CasteletConfig.VOICE_MUTE,
+			CasteletConfig.ConfigList.MASTER_MUTE,
+			CasteletConfig.ConfigList.BGM_MUTE,
+			CasteletConfig.ConfigList.SFX_MUTE,
+			CasteletConfig.ConfigList.VOICE_MUTE,
 	]:
 		AudioServer.set_bus_mute(_config_bus_map[conf], val as bool)

@@ -101,7 +101,7 @@ signal dialogue_window_status_changed(completed: bool, completed_auto: bool, dur
 
 func _ready():
 
-	cps = CasteletConfig.get_config(CasteletConfig.TEXT_SPEED)
+	cps = CasteletConfig.get_config(CasteletConfig.ConfigList.TEXT_SPEED)
 
 	# Connect to internal signals
 	window_transition_completed.connect(_on_window_transition_completed)
@@ -315,5 +315,5 @@ func _on_message_display_paused(duration : float):
 	dialogue_window_status_changed.emit(false, false, duration)
 
 func _on_config_updated(conf, val):
-	if conf == CasteletConfig.TEXT_SPEED:
-		cps = CasteletConfig.get_config(CasteletConfig.TEXT_SPEED)
+	if conf == CasteletConfig.ConfigList.TEXT_SPEED:
+		cps = CasteletConfig.get_config(CasteletConfig.ConfigList.TEXT_SPEED)

@@ -25,6 +25,7 @@ CasteletInputManager="res://castelet_autoload/castelet_input_manager.tscn"
 CasteletTransitionManager="*res://castelet_autoload/castelet_transition_manager.tscn"
 CasteletViewportManager="*res://castelet_autoload/castelet_viewport_manager.tscn"
 CasteletResourceLoader="*res://castelet_autoload/castelet_resource_loader.gd"
+CasteletStateDataManager="res://castelet_autoload/castelet_state_data_manager/castelet_state_data_manager.tscn"
 
 [display]
 

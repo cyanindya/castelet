@@ -9,7 +9,7 @@ var base_scale_factor = 1.0
 
 func _ready():
 	CasteletConfig.config_updated.connect(_on_config_updated)
-	_set_viewport(CasteletConfig.get_config(CasteletConfig.WINDOW_MODE))
+	_set_viewport(CasteletConfig.get_config(CasteletConfig.ConfigList.WINDOW_MODE))
 	
 
 func _set_viewport(win : CasteletConfig.WindowMode):
@@ -40,5 +40,5 @@ func _calculate_base_scale_factor():
 
 func _on_config_updated(config, value):
 	# print(config, value)
-	if config == CasteletConfig.WINDOW_MODE:
+	if config == CasteletConfig.ConfigList.WINDOW_MODE:
 		_set_window_mode(value)

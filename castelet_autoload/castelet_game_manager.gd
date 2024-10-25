@@ -93,11 +93,11 @@ func _ready():
 	# Initialize automode timer
 	_automode_timer = Timer.new()
 	add_child(_automode_timer)
-	if CasteletConfig.get_config(CasteletConfig.AUTOMODE_TIMEOUT) != null:
-		_automode_timer.wait_time = CasteletConfig.get_config(CasteletConfig.AUTOMODE_TIMEOUT)
+	if CasteletConfig.get_config(CasteletConfig.ConfigList.AUTOMODE_TIMEOUT) != null:
+		_automode_timer.wait_time = CasteletConfig.get_config(CasteletConfig.ConfigList.AUTOMODE_TIMEOUT)
 	else:
 		_automode_timer.wait_time = 3
-		CasteletConfig.set_config(CasteletConfig.AUTOMODE_TIMEOUT, 3)
+		CasteletConfig.set_config(CasteletConfig.ConfigList.AUTOMODE_TIMEOUT, 3)
 	_automode_timer.timeout.connect(_on_automode_timer_timeout)
 
 	if auto_active:
@@ -188,7 +188,7 @@ func _on_automode_timer_timeout():
 
 
 func _on_automode_timeout_changed(conf, val):
-	if conf == CasteletConfig.AUTOMODE_TIMEOUT:
+	if conf == CasteletConfig.ConfigList.AUTOMODE_TIMEOUT:
 		_automode_timer.wait_time = val
 	
 	# TODO: restart the timer if auto-mode is active
