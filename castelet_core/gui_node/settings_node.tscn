@@ -1,11 +1,12 @@
-[gd_scene load_steps=5 format=3 uid="uid://tgsnni7av3vm"]
+[gd_scene load_steps=6 format=3 uid="uid://tgsnni7av3vm"]
 
 [ext_resource type="Script" path="res://castelet_core/gui_node/settings_node.gd" id="1_6jcys"]
 [ext_resource type="StyleBox" uid="uid://c2c1o4ao7016i" path="res://castelet_default_assets/default_speaker_window.tres" id="1_tydg6"]
 [ext_resource type="FontFile" uid="uid://kgrh7hs65hcq" path="res://castelet_default_assets/fonts/liberation_serif/liberation_serif_bold.ttf" id="2_ul4na"]
 [ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://castelet_default_assets/fonts/liberation_serif/liberation_serif_regular.ttf" id="3_71efw"]
+[ext_resource type="PackedScene" uid="uid://ckpvo6kyncuo" path="res://castelet_core/gui_node/settings_slider_node.tscn" id="5_5hi2x"]
 
-[node name="SettingsNode" type="Control"]
+[node name="SettingsNode" type="Control" node_paths=PackedStringArray("window_mode_option", "text_speed_slider", "auto_mode_timeout_slider", "stop_skip_checkbox", "resume_skip_checkbox", "master_volume_slider", "master_volume_mute_button", "bgm_volume_slider", "bgm_volume_mute_button", "sfx_volume_slider", "sfx_volume_mute_button", "voice_volume_slider", "voice_volume_mute_button")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -13,6 +14,19 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_6jcys")
+window_mode_option = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/DisplayVBoxContainer/HBoxContainer/WindowModeOptionButton")
+text_speed_slider = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/TextSpeedSettingsSliderHBox")
+auto_mode_timeout_slider = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/AutoModeSettingsSliderHBox")
+stop_skip_checkbox = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/HBoxContainer3/SkipOnChoiceCheckBox")
+resume_skip_checkbox = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/HBoxContainer4/ResumeSkipAfterChoiceCheckBox")
+master_volume_slider = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/MasterHBoxContainer/SettingsSliderHBox")
+master_volume_mute_button = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/MasterHBoxContainer/Button")
+bgm_volume_slider = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/BGMHBoxContainer/SettingsSliderHBox")
+bgm_volume_mute_button = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/BGMHBoxContainer/Button")
+sfx_volume_slider = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/SFXHBoxContainer/SettingsSliderHBox")
+sfx_volume_mute_button = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/SFXHBoxContainer/Button")
+voice_volume_slider = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/VoiceHBoxContainer/SettingsSliderHBox")
+voice_volume_mute_button = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/VoiceHBoxContainer/Button")
 
 [node name="PanelContainer" type="PanelContainer" parent="."]
 custom_minimum_size = Vector2(1280, 720)
@@ -42,10 +56,13 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 30
 
-[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="DisplayVBoxContainer" type="VBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="WindowModeLabel" type="RichTextLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/DisplayVBoxContainer"]
+layout_mode = 2
+
+[node name="WindowModeLabel" type="RichTextLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/DisplayVBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
@@ -54,7 +71,7 @@ theme_override_font_sizes/normal_font_size = 30
 text = "Window Mode"
 fit_content = true
 
-[node name="WindowModeOptionButton" type="OptionButton" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer"]
+[node name="WindowModeOptionButton" type="OptionButton" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/DisplayVBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
@@ -68,29 +85,32 @@ popup/item_0/text = "Fullscreen"
 popup/item_1/text = "Windowed"
 popup/item_1/id = 1
 
-[node name="HBoxContainer2" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="TextVBoxContainer" type="VBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="TextSpeedLabel" type="RichTextLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer2"]
-custom_minimum_size = Vector2(400, 0)
+[node name="TextSpeedSettingsSliderHBox" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer" instance=ExtResource("5_5hi2x")]
 layout_mode = 2
-theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
-theme_override_fonts/normal_font = ExtResource("2_ul4na")
-theme_override_font_sizes/normal_font_size = 30
+label_text = "Text Speed"
+
+[node name="SettingsSliderLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/TextSpeedSettingsSliderHBox" index="0"]
 text = "Text Speed"
-fit_content = true
 
-[node name="TextSpeedSlider" type="HSlider" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer2"]
-custom_minimum_size = Vector2(800, 0)
+[node name="AutoModeSettingsSliderHBox" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer" instance=ExtResource("5_5hi2x")]
 layout_mode = 2
-size_flags_vertical = 1
-min_value = 1.0
-value = 1.0
+min_slider_value = 1.0
+max_slider_value = 10.0
 
-[node name="HBoxContainer3" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="SettingsSliderLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/AutoModeSettingsSliderHBox" index="0"]
+text = "Auto-Mode Timeout"
+
+[node name="SettingsSlider" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/AutoModeSettingsSliderHBox" index="1"]
+max_value = 10.0
+
+[node name="HBoxContainer3" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 
-[node name="SkipOnChoiceLabel" type="RichTextLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer3"]
+[node name="SkipOnChoiceLabel" type="RichTextLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/HBoxContainer3"]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
@@ -99,7 +119,7 @@ theme_override_font_sizes/normal_font_size = 30
 text = "Stop Skipping on Choices"
 fit_content = true
 
-[node name="SkipOnChoiceCheckBox" type="CheckBox" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer3"]
+[node name="SkipOnChoiceCheckBox" type="CheckBox" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/HBoxContainer3"]
 layout_mode = 2
 theme_override_colors/font_pressed_color = Color(0.160784, 0.054902, 0.0509804, 1)
 theme_override_colors/font_color = Color(0.160784, 0.054902, 0.0509804, 1)
@@ -108,10 +128,10 @@ theme_override_font_sizes/font_size = 30
 button_pressed = true
 text = "Force-stop skipping on choices."
 
-[node name="HBoxContainer4" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+[node name="HBoxContainer4" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer"]
 layout_mode = 2
 
-[node name="ResumeSkipAfterChoiceLabel" type="RichTextLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer4"]
+[node name="ResumeSkipAfterChoiceLabel" type="RichTextLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/HBoxContainer4"]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
@@ -120,7 +140,7 @@ theme_override_font_sizes/normal_font_size = 30
 text = "Resume Skipping After Choices"
 fit_content = true
 
-[node name="ResumeSkipAfterChoiceCheckBox" type="CheckBox" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer4"]
+[node name="ResumeSkipAfterChoiceCheckBox" type="CheckBox" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/HBoxContainer4"]
 layout_mode = 2
 theme_override_colors/font_pressed_color = Color(0.160784, 0.054902, 0.0509804, 1)
 theme_override_colors/font_color = Color(0.160784, 0.054902, 0.0509804, 1)
@@ -128,12 +148,101 @@ theme_override_fonts/font = ExtResource("3_71efw")
 theme_override_font_sizes/font_size = 30
 text = "Resume skipping after choices."
 
+[node name="AudioVBoxContainer" type="VBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="MasterHBoxContainer" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer"]
+layout_mode = 2
+
+[node name="SettingsSliderHBox" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/MasterHBoxContainer" instance=ExtResource("5_5hi2x")]
+layout_mode = 2
+
+[node name="SettingsSliderLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/MasterHBoxContainer/SettingsSliderHBox" index="0"]
+text = "Master Volume
+"
+
+[node name="SettingsSlider" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/MasterHBoxContainer/SettingsSliderHBox" index="1"]
+min_value = 0.0
+
+[node name="Button" type="Button" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/MasterHBoxContainer"]
+layout_mode = 2
+toggle_mode = true
+text = "Mute"
+
+[node name="BGMHBoxContainer" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer"]
+layout_mode = 2
+
+[node name="SettingsSliderHBox" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/BGMHBoxContainer" instance=ExtResource("5_5hi2x")]
+layout_mode = 2
+
+[node name="SettingsSliderLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/BGMHBoxContainer/SettingsSliderHBox" index="0"]
+text = "BGM Volume
+"
+
+[node name="SettingsSlider" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/BGMHBoxContainer/SettingsSliderHBox" index="1"]
+min_value = 0.0
+
+[node name="Button" type="Button" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/BGMHBoxContainer"]
+layout_mode = 2
+toggle_mode = true
+text = "Mute"
+
+[node name="SFXHBoxContainer" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer"]
+layout_mode = 2
+
+[node name="SettingsSliderHBox" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/SFXHBoxContainer" instance=ExtResource("5_5hi2x")]
+layout_mode = 2
+
+[node name="SettingsSliderLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/SFXHBoxContainer/SettingsSliderHBox" index="0"]
+text = "SFX Volume"
+
+[node name="SettingsSlider" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/SFXHBoxContainer/SettingsSliderHBox" index="1"]
+min_value = 0.0
+
+[node name="Button" type="Button" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/SFXHBoxContainer"]
+layout_mode = 2
+toggle_mode = true
+text = "Mute"
+
+[node name="VoiceHBoxContainer" type="HBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer"]
+layout_mode = 2
+
+[node name="SettingsSliderHBox" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/VoiceHBoxContainer" instance=ExtResource("5_5hi2x")]
+layout_mode = 2
+
+[node name="SettingsSliderLabel" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/VoiceHBoxContainer/SettingsSliderHBox" index="0"]
+text = "Voice Volume"
+
+[node name="SettingsSlider" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/VoiceHBoxContainer/SettingsSliderHBox" index="1"]
+min_value = 0.0
+
+[node name="Button" type="Button" parent="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/VoiceHBoxContainer"]
+layout_mode = 2
+toggle_mode = true
+text = "Mute"
+
 [node name="Return Button" type="Button" parent="PanelContainer/VBoxContainer"]
 layout_mode = 2
 text = "Return"
 
-[connection signal="item_selected" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer/WindowModeOptionButton" to="." method="_on_window_mode_option_button_item_selected"]
-[connection signal="drag_ended" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer2/TextSpeedSlider" to="." method="_on_text_speed_slider_drag_ended"]
-[connection signal="toggled" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer3/SkipOnChoiceCheckBox" to="." method="_on_skip_on_choice_check_box_toggled"]
-[connection signal="toggled" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/HBoxContainer4/ResumeSkipAfterChoiceCheckBox" to="." method="_on_resume_skip_after_choice_check_box_toggled"]
+[connection signal="item_selected" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/DisplayVBoxContainer/HBoxContainer/WindowModeOptionButton" to="." method="_on_window_mode_option_button_item_selected"]
+[connection signal="slider_updated" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/TextSpeedSettingsSliderHBox" to="." method="_on_text_speed_slider_updated"]
+[connection signal="slider_updated" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/AutoModeSettingsSliderHBox" to="." method="_on_auto_mode_slider_updated"]
+[connection signal="toggled" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/HBoxContainer3/SkipOnChoiceCheckBox" to="." method="_on_skip_on_choice_check_box_toggled"]
+[connection signal="toggled" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/HBoxContainer4/ResumeSkipAfterChoiceCheckBox" to="." method="_on_resume_skip_after_choice_check_box_toggled"]
+[connection signal="slider_updated" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/MasterHBoxContainer/SettingsSliderHBox" to="." method="_on_master_volume_slider_updated"]
+[connection signal="toggled" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/MasterHBoxContainer/Button" to="." method="_on_master_mute_button_toggled"]
+[connection signal="slider_updated" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/BGMHBoxContainer/SettingsSliderHBox" to="." method="_on_bgm_volume_slider_updated"]
+[connection signal="toggled" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/BGMHBoxContainer/Button" to="." method="_on_bgm_mute_button_toggled"]
+[connection signal="slider_updated" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/SFXHBoxContainer/SettingsSliderHBox" to="." method="_on_sfx_volume_slider_updated"]
+[connection signal="toggled" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/SFXHBoxContainer/Button" to="." method="_on_sfx_mute_button_toggled"]
+[connection signal="slider_updated" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/VoiceHBoxContainer/SettingsSliderHBox" to="." method="_on_voice_volume_slider_updated"]
+[connection signal="toggled" from="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/VoiceHBoxContainer/Button" to="." method="_on_voice_mute_button_toggled"]
 [connection signal="button_down" from="PanelContainer/VBoxContainer/Return Button" to="." method="_on_return_button_button_down"]
+
+[editable path="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/TextSpeedSettingsSliderHBox"]
+[editable path="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/TextVBoxContainer/AutoModeSettingsSliderHBox"]
+[editable path="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/MasterHBoxContainer/SettingsSliderHBox"]
+[editable path="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/BGMHBoxContainer/SettingsSliderHBox"]
+[editable path="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/SFXHBoxContainer/SettingsSliderHBox"]
+[editable path="PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/AudioVBoxContainer/VoiceHBoxContainer/SettingsSliderHBox"]

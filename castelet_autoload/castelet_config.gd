@@ -2,7 +2,7 @@
 # Throw the save/load/data management in the castelet_config_data instead.
 
 # Configuration is comprised of several subcategories:
-# - Window display
+# - Display configs (window, resolution)
 # - Text and dialogue display
 # - Audio
 # - Input control
@@ -10,22 +10,37 @@
 extends Node
 
 enum {
+	# Display Settings
 	WINDOW_MODE,
+	WINDOW_RESOLUTION,
+
+	# Dialogue Settings
 	TEXT_SPEED,
 	AUTOMODE_TIMEOUT,
 	FORCE_STOP_FFWD_ON_CHOICE,
 	CONTINUE_FFWD_ON_CHOICE,
+	
+	# Audio Settings
+	MASTER_VOLUME,
+	BGM_VOLUME,
+	SFX_VOLUME,
+	VOICE_VOLUME,
+	MASTER_MUTE,
+	BGM_MUTE,
+	SFX_MUTE,
+	VOICE_MUTE
 }
 enum WindowMode {WINDOWED, FULLSCREEN, BORDERLESS}
 
 
-# Text and dialogue config
+# Display config
 @export var _window_mode = WindowMode.FULLSCREEN
+
+# Text and dialogue config
 @export var _base_text_speed : float = 30
 @export var _base_automode_timeout : float = 3
 @export var default_dialogue_box : StyleBoxTexture
 @export var default_speaker_box : StyleBoxTexture
-
 
 # A configuration that forces the player to stay on choice screen until
 # a choice is made. Otherwise, "default" choice or previously-given choice
@@ -35,6 +50,18 @@ enum WindowMode {WINDOWED, FULLSCREEN, BORDERLESS}
 # After choice is made, configure whether the skipping mode will resume
 # or will be stopped.
 @export var _continue_ffwd_after_choices := false
+
+
+# Audio config
+@export var _base_master_volume : float = 50
+@export var _base_bgm_volume : float = 50
+@export var _base_sfx_volume : float = 50
+@export var _base_voice_volume : float = 50
+var _master_mute := false
+var _bgm_mute := false
+var _sfx_mute := false
+var _voice_mute := false
+
 
 const _config_name_map = {
 	WINDOW_MODE : {
@@ -55,6 +82,38 @@ const _config_name_map = {
 	},
 	CONTINUE_FFWD_ON_CHOICE : {
 		"field_name" : "_continue_ffwd_after_choices",
+		"type" : TYPE_BOOL,
+	},
+	MASTER_VOLUME : {
+		"field_name" : "_base_master_volume",
+		"type" : TYPE_FLOAT,
+	},
+	MASTER_MUTE : {
+		"field_name" : "_master_mute",
+		"type" : TYPE_BOOL,
+	},
+	BGM_VOLUME : {
+		"field_name" : "_base_bgm_volume",
+		"type" : TYPE_FLOAT,
+	},
+	BGM_MUTE : {
+		"field_name" : "_bgm_mute",
+		"type" : TYPE_BOOL,
+	},
+	SFX_VOLUME : {
+		"field_name" : "_base_sfx_volume",
+		"type" : TYPE_FLOAT,
+	},
+	SFX_MUTE : {
+		"field_name" : "_sfx_mute",
+		"type" : TYPE_BOOL,
+	},
+	VOICE_VOLUME : {
+		"field_name" : "_base_voice_volume",
+		"type" : TYPE_FLOAT,
+	},
+	VOICE_MUTE : {
+		"field_name" : "_voice_mute",
 		"type" : TYPE_BOOL,
 	},
 }

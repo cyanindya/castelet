@@ -41,7 +41,9 @@ func _ready():
 	$SubViewport.size = Vector2i(CasteletViewportManager.base_viewport_width as int,
 			CasteletViewportManager.base_viewport_height as int)
 	CasteletTransitionManager.vp = $SubViewport
+	
 	dialogue_tools = DialogueTools.new()
+	
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
 	CasteletGameManager.progress.connect(_on_progress)

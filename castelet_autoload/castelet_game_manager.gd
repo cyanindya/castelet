@@ -88,7 +88,7 @@ func _ready():
 
 	ffwd_hold.connect(_on_ffwd_hold)
 	ffwd_toggle.connect(_on_ffwd_toggle)
-	
+	CasteletConfig.config_updated.connect(_on_automode_timeout_changed)
 
 	# Initialize automode timer
 	_automode_timer = Timer.new()
@@ -97,6 +97,7 @@ func _ready():
 		_automode_timer.wait_time = CasteletConfig.get_config(CasteletConfig.AUTOMODE_TIMEOUT)
 	else:
 		_automode_timer.wait_time = 3
+		CasteletConfig.set_config(CasteletConfig.AUTOMODE_TIMEOUT, 3)
 	_automode_timer.timeout.connect(_on_automode_timer_timeout)
 
 	if auto_active:
@@ -186,6 +187,13 @@ func _on_automode_timer_timeout():
 	confirm.emit()
 
 
+func _on_automode_timeout_changed(conf, val):
+	if conf == CasteletConfig.AUTOMODE_TIMEOUT:
+		_automode_timer.wait_time = val
+	
+	# TODO: restart the timer if auto-mode is active
+
+
 func _on_progress():
 	_standby = false
 	if auto_active:
@@ -198,6 +206,7 @@ func _on_ffwd_hold(state: bool):
 
 func _on_ffwd_toggle():
 	ffwd_active = !ffwd_active
+
 
 func print(s1 : String, s2: String):
 	prints(s1, s2)
