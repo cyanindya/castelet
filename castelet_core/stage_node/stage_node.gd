@@ -7,6 +7,9 @@ extends Node2D
 # - CasteletAssetsManager
 #
 
+@onready var _assets_manager : CasteletAssetsManager = get_node("/root/CasteletAssetsManager")
+@onready var _game_manager = get_node("/root/CasteletGameManager")
+
 signal stage_updated
 
 
@@ -17,7 +20,7 @@ func scene(prop_name := "", prop_variant := "default", args := {}):
 	if prop_name != "none":
 		show_prop(prop_name, prop_variant, args)
 	else:
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 	
 
 func show_prop(prop_name := "", prop_variant := "default", args := {}):
@@ -36,7 +39,7 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	# If this is a newly shown prop, add it to the stage. Otherwise, keep
 	# track of the last known location
 	if prop == null:
-		prop = CasteletAssetsManager.props[prop_name]
+		prop = _assets_manager.props[prop_name]
 		add_child(prop)
 
 		if args.has("transition"):
@@ -111,7 +114,7 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 		prop.in_viewport_scale = CasteletViewportManager.base_scale_factor * scale_factor
 	
 	stage_updated.emit()
-	CasteletGameManager.progress.emit()
+	_game_manager.progress.emit()
 
 
 func hide_prop(prop_name : String, args := {}):
@@ -142,7 +145,7 @@ func hide_prop(prop_name : String, args := {}):
 		remove_child(prop)
 
 		stage_updated.emit()
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 
 
 func clear_props():

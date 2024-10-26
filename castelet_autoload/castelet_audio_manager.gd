@@ -1,9 +1,12 @@
 extends Node
+class_name CasteletAudioManager
 
 #
 # This node is dependent on the following singletons:
 # - CasteletAssetsManager
 #
+
+@onready var _assets_manager : CasteletAssetsManager = get_node("/root/CasteletAssetsManager")
 
 @onready var _config_bus_map = {
 	CasteletConfig.ConfigList.MASTER_VOLUME : 0,
@@ -24,10 +27,10 @@ func play_audio(audio_file : String, args := {}, channel:="BGM"):
 	
 	var audio_stream : AudioStream
 
-	if (CasteletAssetsManager.audio_shorthand as Dictionary).has(audio_file):
-		audio_stream = CasteletAssetsManager.audio_shorthand[audio_file]
+	if (_assets_manager.audio_shorthand as Dictionary).has(audio_file):
+		audio_stream = _assets_manager.audio_shorthand[audio_file]
 	else:
-		var full_path = CasteletAssetsManager.resource_dir.path_join(audio_file)
+		var full_path = _assets_manager.resource_dir.path_join(audio_file)
 		audio_stream = load(full_path)
 
 	var audio_node = get_node(channel)
@@ -47,10 +50,10 @@ func queue_audio(audio_files := [], args := {}, channel:="BGM"):
 
 		var audio_stream : AudioStream
 		
-		if (CasteletAssetsManager.audio_shorthand as Dictionary).has(audio_file):
-			audio_stream = CasteletAssetsManager.audio_shorthand[audio_file]
+		if (_assets_manager.audio_shorthand as Dictionary).has(audio_file):
+			audio_stream = _assets_manager.audio_shorthand[audio_file]
 		else:
-			var full_path = CasteletAssetsManager.resource_dir.path_join(audio_file)
+			var full_path = _assets_manager.resource_dir.path_join(audio_file)
 			audio_stream = load(full_path)
 		audio_stream.set_loop(false)
 		queue.append(audio_stream)

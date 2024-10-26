@@ -26,8 +26,9 @@
 #
 
 extends Node
+class_name CasteletGameManager
 
-var parser = preload("res://castelet_core/parser/castelet_script_parser.gd").new()
+var _parser = preload("res://castelet_core/parser/castelet_script_parser.gd").new()
 var script_trees = {}
 var jump_checkpoints_list = {}
 var _vars = {}
@@ -53,7 +54,9 @@ var _standby := false :
 
 var menu_showing = false
 
+var _mutex : Mutex
 
+signal game_ready
 signal confirm
 signal ffwd_hold(state : bool)
 signal ffwd_toggle
@@ -64,24 +67,36 @@ signal enter_standby
 signal progress
 
 signal persistent_updated(name, value)
-signal request_save_game
-signal request_load_game
-signal request_save_persistent
-signal save_persistent_completed
-signal request_load_persistent
-signal load_persistent_completed
 
 
 func _script_loader_callback(file_name : String):
 
 	if file_name.ends_with(".tsc"):		
-		parser.execute_parser(file_name)
-		
+		_parser.execute_parser(file_name)
 
-func _ready():
+
+func _init() -> void:
+	_mutex = Mutex.new()
+
+	_parser.add_to_checkpoints_list.connect(
+		func(checkpoint_name : String, checkpoint_data : Dictionary):
+			jump_checkpoints_list[checkpoint_name] = checkpoint_data
+	)
+	_parser.add_to_script_tree.connect(
+		func(tree_name : String, tree : CasteletSyntaxTree):
+			script_trees[tree_name] = tree
+	)
 
 	# Go through the resource directory to check all script files
-	CasteletResourceLoader.load_all_resources_of_type("res://", self, "_script_loader_callback")
+	_mutex.lock()
+	var _res_loader : CasteletResourceLoader = CasteletResourceLoader.new()
+	_res_loader.load_all_resources_of_type("res://", self, "_script_loader_callback")
+	_mutex.unlock()
+	print_debug("foo")
+
+
+func _ready():
+	print_debug("foofoo")
 
 	# Initialize some signal connections, whether from internal or other nodes
 	enter_standby.connect(_on_standby)
@@ -91,9 +106,6 @@ func _ready():
 	ffwd_hold.connect(_on_ffwd_hold)
 	ffwd_toggle.connect(_on_ffwd_toggle)
 	CasteletConfig.config_updated.connect(_on_automode_timeout_changed)
-
-	# Load persistent data
-	request_load_persistent.emit()
 
 	# Initialize automode timer
 	_automode_timer = Timer.new()
@@ -107,7 +119,10 @@ func _ready():
 
 	if auto_active:
 		_automode_timer.start()
-	
+
+	print_debug("foofoofoo")
+	game_ready.emit()
+
 
 func append_dialogue(dialogue_data: Dictionary):
 
@@ -238,14 +253,3 @@ func get_all_variables(persistent := false) -> Dictionary:
 		return _persistent
 	else:
 		return _vars
-
-
-func save_persistent_data():
-	request_save_persistent.emit.call()
-
-
-func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST:
-		save_persistent_data()
-		await save_persistent_completed
-		get_tree().quit()

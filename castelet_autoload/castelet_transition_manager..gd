@@ -27,7 +27,6 @@ extends CanvasLayer
 ## - do the tweening in StageNode based on the transition data
 ## - have the StageNode emit transition_completed signal
 
-
 ## The signal to be emitted once a transition is completed.
 ## This is meant to control/block certain functions of Castelet so they won't
 ## be executed until this signal is emitted.
@@ -108,7 +107,8 @@ var object_transition_data = {}
 func _ready():
 	# Command the resource loader singleton to load predefined image-dissolve
 	# transitions and put them to the dissolve_transition_presets variable.
-	CasteletResourceLoader.load_all_resources_of_type("res://", self,
+	var _res_loader : CasteletResourceLoader = CasteletResourceLoader.new()
+	_res_loader.load_all_resources_of_type("res://", self,
 			"_load_dissolve_presets")
 
 	# Connect the "transition_completed" signal to _on_transition_completed()

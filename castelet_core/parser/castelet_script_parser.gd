@@ -6,6 +6,9 @@ extends RefCounted
 
 const Tokenizer = preload("castelet_tokenizer.gd")
 
+signal add_to_script_tree(tree_name : String, tree : CasteletSyntaxTree)
+signal add_to_checkpoints_list(checkpoint_name : String, checkpoint_data : Dictionary)
+
 
 func load_script_file(script_file : String) -> String:
 	var script_content = ""
@@ -30,7 +33,16 @@ func execute_parser(input_file : String) -> CasteletSyntaxTree:
 	
 	var tree_builder = CasteletSyntaxTreeBuilder.new(input_file.get_file()
 				.trim_suffix(".tsc"), tokenizer)
+	tree_builder.add_to_checkpoints_list.connect(
+		func(checkpoint_name : String, checkpoint_data : Dictionary):
+			add_to_checkpoints_list.emit(checkpoint_name, checkpoint_data)
+	)
+	tree_builder.add_to_script_tree.connect(
+		func(tree_name : String, tree_to_add : CasteletSyntaxTree):
+			add_to_script_tree.emit(tree_name, tree_to_add)
+	)
 	var tree = tree_builder.parse(true)
+	await tree_builder.parsing_completed
 	#print_debug(tree.body)
 	
 	return tree

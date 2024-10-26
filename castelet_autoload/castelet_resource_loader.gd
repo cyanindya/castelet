@@ -1,4 +1,6 @@
-extends Node
+extends RefCounted
+class_name CasteletResourceLoader
+
 
 # An all-purpose function to go through a specified directory and
 # its subdirectories to load a specified type of file.
@@ -36,3 +38,4 @@ func load_all_resources_of_type(starting_dir : String, node : Node, callback_fun
 
 	else:
 		printerr("Cannot open the specified assets folder. Please re-check the location.")
+	

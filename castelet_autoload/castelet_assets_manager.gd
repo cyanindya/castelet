@@ -14,13 +14,17 @@
 #
 
 extends Node
+class_name CasteletAssetsManager
 
 @export_dir var resource_dir : String
 var props := {}
 var audio_shorthand = {}
 
+
 func _ready():
-	CasteletResourceLoader.load_all_resources_of_type(resource_dir, self, "_prop_loader_callback")
+	var _res_loader : CasteletResourceLoader = CasteletResourceLoader.new()
+	_res_loader.load_all_resources_of_type(resource_dir, self, "_prop_loader_callback")
+
 
 func _prop_loader_callback(file_name : String):
 
