@@ -48,6 +48,8 @@ func _ready():
 	end_of_script.connect(_on_end_of_script)
 	CasteletGameManager.progress.connect(_on_progress)
 
+	await CasteletGameManager.load_persistent_completed
+
 
 func _next():
 
@@ -162,6 +164,15 @@ func _next():
 
 	elif next is CasteletSyntaxTree.AssignmentExpression:
 		var assignment = self._tree.next()
+
+		# Check if this begins with "default" keyword.
+		# If it begins with one, it will only assign the variable
+		# when the variable is nonexistent, and won't override
+		# existing values
+		var is_default = (assignment.lhs.value as String).begins_with("default.")
+		if is_default:
+			assignment.lhs.value = (assignment.lhs.value as String).trim_prefix("default.")
+
 		var is_persistent = (assignment.lhs.value as String).begins_with("persistent.")
 		var varname = assignment.lhs.value
 		if is_persistent:
@@ -189,7 +200,12 @@ func _next():
 			CasteletGameManager.set_variable(varname, current_var_value, is_persistent)
 
 		else:
-			CasteletGameManager.set_variable(varname, result, is_persistent)
+			# Do nothing if default is defined and the variable already had
+			# existing value.
+			if is_default and current_var_value != null:
+				pass
+			else:
+				CasteletGameManager.set_variable(varname, result, is_persistent)
 		
 		CasteletGameManager.progress.emit()
 	
@@ -500,8 +516,12 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	CasteletGameManager.progress.emit()
 
 
-# Terminates this node. Intended to be called
+# Terminates this node. Intended to be called externally.
 func end():
+
+	# Make sure the persistent data is saved upon terminating the theater
+	# player
+	CasteletGameManager.save_persistent_data()
 	
 	stop_scene()
 

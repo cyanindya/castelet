@@ -67,7 +67,9 @@ signal persistent_updated(name, value)
 signal request_save_game
 signal request_load_game
 signal request_save_persistent
+signal save_persistent_completed
 signal request_load_persistent
+signal load_persistent_completed
 
 
 func _script_loader_callback(file_name : String):
@@ -89,6 +91,9 @@ func _ready():
 	ffwd_hold.connect(_on_ffwd_hold)
 	ffwd_toggle.connect(_on_ffwd_toggle)
 	CasteletConfig.config_updated.connect(_on_automode_timeout_changed)
+
+	# Load persistent data
+	request_load_persistent.emit()
 
 	# Initialize automode timer
 	_automode_timer = Timer.new()
@@ -208,17 +213,10 @@ func _on_ffwd_toggle():
 	ffwd_active = !ffwd_active
 
 
-func print(s1 : String, s2: String):
-	prints(s1, s2)
-
-
 func set_variable(var_name : String, var_value, persistent := false):
 	if persistent == true:
 		_persistent[var_name] = var_value
-		persistent_updated.emit(var_name, var_value)
-
-		# TODO: cleanup later -- this is just to see if the save persistent works
-		request_save_persistent.emit()
+		persistent_updated.emit.call_deferred(var_name, var_value)
 	else:
 		_vars[var_name] = var_value
 	
@@ -233,3 +231,21 @@ func get_variable(var_name : String, persistent := false) -> Variant:
 	if not _vars.keys().has(var_name):
 		return null
 	return _vars[var_name]
+
+
+func get_all_variables(persistent := false) -> Dictionary:
+	if persistent == true:
+		return _persistent
+	else:
+		return _vars
+
+
+func save_persistent_data():
+	request_save_persistent.emit.call()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+		save_persistent_data()
+		await save_persistent_completed
+		get_tree().quit()
