@@ -170,7 +170,10 @@ func _next():
 		var result = _translate_expression(assignment.rhs)
 		var current_var_value = CasteletGameManager.get_variable(varname, is_persistent)
 
-		if assignment is CasteletSyntaxTree.CompoundAssignmentExpression:
+		if (
+			assignment is CasteletSyntaxTree.CompoundAssignmentExpression
+			and current_var_value != null
+		):
 			if assignment.compound_operator == "+=":
 				current_var_value += result
 			elif assignment.compound_operator == "-=":

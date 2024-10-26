@@ -31,10 +31,16 @@ enum ConfigList {
 	VOICE_MUTE
 }
 enum WindowMode {WINDOWED, FULLSCREEN, BORDERLESS}
-
+enum WindowResolutions {
+	RES_1280_720,
+	RES_1366_768,
+	RES_1600_900,
+	RES_1920_1080,
+}
 
 # Display config
 @export var _window_mode = WindowMode.FULLSCREEN
+@export var _window_resolution = WindowResolutions.RES_1280_720
 
 # Text and dialogue config
 @export var _base_text_speed : float = 30
@@ -118,8 +124,24 @@ const _config_name_map = {
 	},
 }
 
+const _window_resolution_map = {
+	WindowResolutions.RES_1280_720 : {
+		"resolution" : [1280, 720],
+	},
+	WindowResolutions.RES_1366_768 : {
+		"resolution" : [1366, 768],
+	},
+	WindowResolutions.RES_1600_900 : {
+		"resolution" : [1600, 900],
+	},
+	WindowResolutions.RES_1920_1080 : {
+		"resolution" : [1920, 1080],
+	},
+}
+
 signal config_updated(config_name, value)
 signal config_finalized()
+
 
 func _ready() -> void:
 	# print_debug(_config_name_map.keys())
@@ -128,7 +150,12 @@ func _ready() -> void:
 
 func set_config(conf : int, value : Variant) -> void:
 	set(_config_name_map[conf]["field_name"], value)
-	config_updated.emit(conf, value)
+
+	# It is possible that the set_config is run in a separate
+	# thread (e.g. the config loading thread), so we use deferred
+	# signal to ensure it will only be emitted after whatever the
+	# business in the calling thread is completed.
+	config_updated.emit.call_deferred(conf, value)
 
 
 func get_config(conf : int):

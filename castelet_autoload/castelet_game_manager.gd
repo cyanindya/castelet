@@ -216,6 +216,9 @@ func set_variable(var_name : String, var_value, persistent := false):
 	if persistent == true:
 		_persistent[var_name] = var_value
 		persistent_updated.emit(var_name, var_value)
+
+		# TODO: cleanup later -- this is just to see if the save persistent works
+		request_save_persistent.emit()
 	else:
 		_vars[var_name] = var_value
 	
@@ -223,13 +226,10 @@ func set_variable(var_name : String, var_value, persistent := false):
 func get_variable(var_name : String, persistent := false) -> Variant:
 
 	if persistent == true:
-
 		if not _persistent.keys().has(var_name): # find_key() bonked for some reasons
-			push_warning("No persistent variable with the name %s is found." % var_name)
-			return
+			return null
 		return _persistent[var_name]
 	
 	if not _vars.keys().has(var_name):
-		push_warning("No variable with the name %s is found." % var_name)
-		return
+		return null
 	return _vars[var_name]
