@@ -23,10 +23,13 @@ var _paused = false
 var DialogueTools = load("res://castelet_core/dialogue_processing_tools.gd")
 var dialogue_tools
 var _timer : Timer
-var _is_menu := false
+var _can_play := false
+var _script_id := ""
 
 var _thread : Thread
 var _mutex : Mutex
+var _semaphore : Semaphore
+var _ending_thread = false
 
 @onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
 @onready var _state_manager : CasteletStateManager = get_node("/root/CasteletStateManager")
@@ -38,14 +41,49 @@ signal end_of_script
 
 
 func load_script(script_id : String):
-	print_debug("meowmeow")
-	print_debug.call(_game_manager)
-	self._tree = _game_manager.script_trees[script_id]
+	if _mutex == null:
+		_mutex = Mutex.new()
+	if _semaphore == null:
+		_semaphore = Semaphore.new()
+	
+	_mutex.lock()
+	_script_id = script_id
+	_mutex.unlock()
 
-	load_script_finished.emit.call_deferred()
+	if _thread == null:
+		_thread = Thread.new()
+	if not _thread.is_started():
+		_thread.start(_load_script_subprocess)
+	
+	_semaphore.post()
+
+	await load_script_finished
+
+
+func _load_script_subprocess():
+	while true:
+		
+		_semaphore.wait()
+
+		if _ending_thread == true:
+			break
+
+		_mutex.lock()
+		while not _can_play:
+			pass
+		self._tree = _game_manager.script_trees[_script_id]
+		load_script_finished.emit.call_deferred()
+		_mutex.unlock()
 
 
 func _ready():
+	if _mutex == null:
+		_mutex = Mutex.new()
+	if _semaphore == null:
+		_semaphore = Semaphore.new()
+	if _thread == null:
+		_thread = Thread.new()
+	
 	_timer = Timer.new()
 	_timer.wait_time = 0.1
 	add_child(_timer)
@@ -61,6 +99,7 @@ func _ready():
 	_game_manager.progress.connect(_on_progress)
 
 	await _state_manager.persistent_load_finish
+	_can_play = true
 
 
 func _next():
@@ -104,10 +143,12 @@ func _next():
 
 		if next.value in _game_manager.script_trees.keys():
 			self.load_script(next.value)
+			await load_script_finished
 			self._tree.reset()
 		else:
 			if _game_manager.jump_checkpoints_list[next.value]["tree"] != self._tree.name:
 				self.load_script(_game_manager.jump_checkpoints_list[next.value]["tree"])
+				await load_script_finished
 			self._tree.set_index(_game_manager.jump_checkpoints_list[next.value]["index"])
 	
 		_game_manager.progress.emit()
@@ -116,6 +157,7 @@ func _next():
 		if _game_manager.get_context_level() > 0:
 			var origin = _game_manager.pop_callsub_stack()
 			self.load_script(origin["tree"])
+			await load_script_finished
 			self._tree.set_index(origin["index"] + 1)
 			_game_manager.progress.emit()
 		# TODO: terminate the script
@@ -156,7 +198,9 @@ func _next():
 		for condition in if_else_block.value:
 			var eval = _translate_expression(condition.evaluator)
 			if eval == true:
-				self._tree = _game_manager.script_trees[condition.subroutine]
+				# self._tree = _game_manager.script_trees[condition.subroutine]
+				self.load_script(condition.subroutine)
+				await load_script_finished
 				self._tree.reset()
 				break
 		
@@ -169,7 +213,9 @@ func _next():
 		# condition's associated subroutines
 		var eval = _translate_expression(while_block.value.evaluator)
 		if eval == true:
-			self._tree = _game_manager.script_trees[while_block.value.subroutine]
+			# self._tree = _game_manager.script_trees[while_block.value.subroutine]
+			self.load_script(while_block.value.subroutine)
+			await load_script_finished
 			self._tree.reset()
 		
 		_game_manager.progress.emit()
@@ -479,18 +525,28 @@ func _on_progress():
 
 
 func play_scene(from_beginning = true):
+	_mutex.lock()
+	while not _can_play:
+		pass
+	
 	if from_beginning:
 		_tree.reset()
 	_paused = false
+	_mutex.unlock()
+
 	_next()
 
 
 func pause_scene():
-	_paused = true	
+	_mutex.lock()
+	_paused = true
+	_mutex.unlock()
 
 
 func stop_scene():
+	_mutex.lock()
 	_tree.reset()
+	_mutex.unlock()
 
 
 func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
@@ -521,6 +577,7 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	print_debug(next_tree)
 
 	self.load_script(next_tree)
+	await load_script_finished
 	self._tree.reset()
 
 	# _game_manager.set_block_signals(false)
@@ -551,3 +608,8 @@ func end():
 	
 	queue_free()
 	
+
+func _exit_tree() -> void:
+	_ending_thread = true
+	_semaphore.post()
+	_thread.wait_to_finish()
