@@ -73,7 +73,7 @@ func _setup_viewport_dimension(
 		# The width or height of the viewport/content will be adjusted accordingly to the ratio
 		#
 		# Do note that this works optimally only with the stretch aspects "ignore" and "keep".
-		# For "expand"
+		# For "expand", further work is required.
 		var vp_ratio = base_viewport_width / base_viewport_height
 		if _reference_ratio > vp_ratio: # bigger height
 			base_viewport_height = base_viewport_width / _reference_ratio

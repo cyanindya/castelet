@@ -10,13 +10,15 @@ const ChoiceNode = preload("res://castelet_core/gui_node/choice_node.tscn")
 
 @onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
+@onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
 
 signal choice_made(sub)
 
-func _ready():
 
+func _ready():
 	_game_manager.confirm.connect(_dialogue_node_interrupt)
 	_game_manager.backlog_update.connect(_on_backlog_updated)
+	_viewport_manager.viewport_resized.connect(_on_viewport_resized)
 	
 	choice_made.connect(_on_choice_made)
 
@@ -139,3 +141,26 @@ func _on_choice_made(_sub : String):
 func _on_config_button_pressed() -> void:
 	$QuickMenuControl.accept_event()
 	$SettingsNode.show()
+
+
+func _on_config_updated(conf, val):
+	if conf == _config_manager.ConfigList.TEXT_SPEED:
+		$DialogueNode.cps = val
+
+
+func _on_viewport_resized():
+	var ui_scale : float
+	
+	if _config_manager.get_config(_config_manager.ConfigList.WINDOW_MODE) == _config_manager.WindowMode.FULLSCREEN:
+		ui_scale = _config_manager.WINDOW_RESOLUTION_MAP[_config_manager.WindowResolutions.RES_1920_1080]["ui_scaling"]
+	else:
+		ui_scale = _config_manager.WINDOW_RESOLUTION_MAP[
+			_config_manager.get_config(_config_manager.ConfigList.WINDOW_RESOLUTION)
+		]["ui_scaling"]
+	
+	# Dirty scaling and may result in blurry UI elements, but this works for now.
+	$DialogueNode.resize_node(ui_scale)
+	$SettingsNode.resize_node(ui_scale)
+	$BacklogNode.resize_node(ui_scale)
+	$MenuNode.scale = Vector2(ui_scale, ui_scale)
+	$QuickMenuControl.scale = Vector2(ui_scale, ui_scale)

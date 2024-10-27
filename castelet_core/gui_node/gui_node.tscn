@@ -64,3 +64,4 @@ visible = false
 [connection signal="pressed" from="QuickMenuControl/ButtonContainers/BacklogButton" to="." method="_on_backlog_button_pressed"]
 [connection signal="toggled" from="QuickMenuControl/ButtonContainers/AutomodeButton" to="." method="_on_automode_button_toggled"]
 [connection signal="visibility_changed" from="BacklogNode" to="." method="_on_backlog_window_visibility_changed"]
+[connection signal="set_fullscreen" from="SettingsNode" to="." method="_on_viewport_resized"]

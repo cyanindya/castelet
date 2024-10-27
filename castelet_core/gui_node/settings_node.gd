@@ -23,6 +23,8 @@ extends Control
 
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 
+signal set_fullscreen
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -40,9 +42,13 @@ func _initialize_settings_node() -> void:
 	
 	for rs in _config_manager.WindowResolutions.values():
 		window_resolution_option.set_item_id(rs, rs)
-		window_resolution_option.select(
-			_config_manager.get_config(_config_manager.ConfigList.WINDOW_RESOLUTION)
-		)
+	window_resolution_option.select(
+		_config_manager.get_config(_config_manager.ConfigList.WINDOW_RESOLUTION)
+	)
+	if window_mode_option.get_selected_id() == _config_manager.WindowMode.FULLSCREEN:
+		window_resolution_option.disabled = true
+	else:
+		window_resolution_option.disabled = false
 	
 	text_speed_slider.set_value_no_signal(
 		_config_manager.get_config(_config_manager.ConfigList.TEXT_SPEED)
@@ -88,6 +94,10 @@ func _process(delta: float) -> void:
 	pass
 
 
+func resize_node(new_scale : float):
+	scale = Vector2(new_scale, new_scale)
+
+
 func _on_return_button_button_down() -> void:
 	_config_manager.finalize_config()
 	accept_event()
@@ -96,6 +106,13 @@ func _on_return_button_button_down() -> void:
 
 func _on_window_mode_option_button_item_selected(_index: int) -> void:	
 	_config_manager.set_config(_config_manager.ConfigList.WINDOW_MODE, window_mode_option.get_selected_id())
+
+	if window_mode_option.get_selected_id() == _config_manager.WindowMode.FULLSCREEN:
+		window_resolution_option.disabled = true
+		set_fullscreen.emit()
+	else:
+		window_resolution_option.disabled = false
+		_config_manager.set_config(_config_manager.ConfigList.WINDOW_RESOLUTION, window_resolution_option.selected)
 
 
 func _on_window_res_option_button_item_selected(index: int) -> void:	

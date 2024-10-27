@@ -135,24 +135,31 @@ const _config_name_map = {
 const WINDOW_RESOLUTION_MAP = {
 	WindowResolutions.RES_1280_720 : {
 		"resolution" : [1280, 720],
+		"ui_scaling" : 0.937,
 	},
 	WindowResolutions.RES_1280_800 : {
 		"resolution" : [1280, 800],
+		"ui_scaling" : 0.937,
 	},
 	WindowResolutions.RES_1366_768 : {
 		"resolution" : [1366, 768],
+		"ui_scaling" : 1.0,
 	},
 	WindowResolutions.RES_1440_900 : {
 		"resolution" : [1440, 900],
+		"ui_scaling" : 1.055,
 	},
 	WindowResolutions.RES_1600_900 : {
 		"resolution" : [1600, 900],
+		"ui_scaling" : 1.171,
 	},
 	WindowResolutions.RES_1600_1000 : {
 		"resolution" : [1600, 1000],
+		"ui_scaling" : 1.171,
 	},
 	WindowResolutions.RES_1920_1080 : {
 		"resolution" : [1920, 1080],
+		"ui_scaling" : 1.4,
 	},
 }
 

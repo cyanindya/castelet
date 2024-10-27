@@ -8,11 +8,15 @@
 
 [node name="SettingsNode" type="Control" node_paths=PackedStringArray("window_mode_option", "window_resolution_option", "text_speed_slider", "auto_mode_timeout_slider", "stop_skip_checkbox", "resume_skip_checkbox", "master_volume_slider", "master_volume_mute_button", "bgm_volume_slider", "bgm_volume_mute_button", "sfx_volume_slider", "sfx_volume_mute_button", "voice_volume_slider", "voice_volume_mute_button")]
 layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 script = ExtResource("1_6jcys")
 window_mode_option = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/DisplayVBoxContainer/HBoxContainer/WindowModeOptionButton")
 window_resolution_option = NodePath("PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer/DisplayVBoxContainer/HBoxContainer2/WindowModeOptionButton")
@@ -37,10 +41,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+offset_left = -640.0
+offset_top = -360.0
+offset_right = 640.0
+offset_bottom = 360.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = ExtResource("1_tydg6")
