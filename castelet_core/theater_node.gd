@@ -96,9 +96,13 @@ func _ready():
 	_timer = Timer.new()
 	_timer.wait_time = 0.1
 	add_child(_timer)
-
-	$SubViewport.size = Vector2i(_viewport_manager.base_viewport_width as int,
-			_viewport_manager.base_viewport_height as int)
+	
+	_viewport_manager.viewport_resized.connect(func():
+		if _viewport_manager.enable_window_content_resize:
+			$SubViewport.size = Vector2i(_viewport_manager.base_viewport_width as int,
+				_viewport_manager.base_viewport_height as int)	
+	)
+	$SubViewport.size = get_window().content_scale_size
 	_transition_manager.vp = $SubViewport
 	
 	dialogue_tools = DialogueTools.new()
