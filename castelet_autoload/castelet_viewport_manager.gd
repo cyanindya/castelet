@@ -1,4 +1,5 @@
 extends Node
+class_name CasteletViewportManager
 
 var base_viewport_width : float
 var base_viewport_height : float
@@ -6,22 +7,23 @@ var base_scale_factor = 1.0
 @export var reference_window_width : float = 1920
 @export var reference_window_height : float = 1080
 
+@onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 
 func _ready():
-	CasteletConfig.config_updated.connect(_on_config_updated)
-	_set_viewport(CasteletConfig.get_config(CasteletConfig.ConfigList.WINDOW_MODE))
+	_config_manager.config_updated.connect(_on_config_updated)
+	_set_viewport(_config_manager.get_config(_config_manager.ConfigList.WINDOW_MODE))
 	
 
-func _set_viewport(win : CasteletConfig.WindowMode):
+func _set_viewport(win : CasteletConfigManager.WindowMode):
 	_set_window_mode(win)
 	_setup_viewport_dimension()
 	_calculate_base_scale_factor()
 
 
-func _set_window_mode(win : CasteletConfig.WindowMode):
-	if win == CasteletConfig.WindowMode.FULLSCREEN:
+func _set_window_mode(win : CasteletConfigManager.WindowMode):
+	if win == _config_manager.WindowMode.FULLSCREEN:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_EXCLUSIVE_FULLSCREEN)
-	elif win == CasteletConfig.WindowMode.WINDOWED:
+	elif win == _config_manager.WindowMode.WINDOWED:
 		DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
 
 
@@ -40,5 +42,5 @@ func _calculate_base_scale_factor():
 
 func _on_config_updated(config, value):
 	# print(config, value)
-	if config == CasteletConfig.ConfigList.WINDOW_MODE:
+	if config == _config_manager.ConfigList.WINDOW_MODE:
 		_set_window_mode(value)

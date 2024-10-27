@@ -35,11 +35,20 @@ var _ending_thread = false
 @onready var _state_manager : CasteletStateManager = get_node("/root/CasteletStateManager")
 @onready var _assets_manager : CasteletAssetsManager = get_node("/root/CasteletAssetsManager")
 @onready var _audio_manager : CasteletAudioManager = get_node("/root/CasteletAudioManager")
+@onready var _transition_manager : CasteletTransitionManager = get_node("/root/CasteletTransitionManager")
+@onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
+@onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
+
 
 signal load_script_finished
 signal end_of_script
 
 
+# There is always chance that this function gets executed
+# early before the nodes are even ready, potentially resulting
+# in lack of script data. As such, multithreading is used to
+# ensure the script data retrieval doesn't block the main thread,
+# while also ensuring the script will be executed properly later.
 func load_script(script_id : String):
 	if _mutex == null:
 		_mutex = Mutex.new()
@@ -88,9 +97,9 @@ func _ready():
 	_timer.wait_time = 0.1
 	add_child(_timer)
 
-	$SubViewport.size = Vector2i(CasteletViewportManager.base_viewport_width as int,
-			CasteletViewportManager.base_viewport_height as int)
-	CasteletTransitionManager.vp = $SubViewport
+	$SubViewport.size = Vector2i(_viewport_manager.base_viewport_width as int,
+			_viewport_manager.base_viewport_height as int)
+	_transition_manager.vp = $SubViewport
 	
 	dialogue_tools = DialogueTools.new()
 	
@@ -117,9 +126,9 @@ func _next():
 	# expressions.
 	if next is CasteletSyntaxTree.StageCommandExpression:
 		if next.type in [Tokenizer.KEYWORDS.SCENE, Tokenizer.KEYWORDS.SHOW]:
-			_update_stage_prop(CasteletTransitionManager.object_transition_data)
+			_update_stage_prop(_transition_manager.object_transition_data)
 		elif next.type == Tokenizer.KEYWORDS.HIDE:
-			_hide_stage_prop(CasteletTransitionManager.object_transition_data)
+			_hide_stage_prop(_transition_manager.object_transition_data)
 		elif next.type in [Tokenizer.KEYWORDS.BGM, Tokenizer.KEYWORDS.SFX]:
 			_update_audio_channel()
 		elif next.type == Tokenizer.KEYWORDS.VOICE:
@@ -391,9 +400,9 @@ func _update_transition():
 	if not _game_manager.ffwd_active:
 
 		
-		if CasteletTransitionManager.transitioning == true:
+		if _transition_manager.transitioning == true:
 			_game_manager.set_block_signals(true)
-			await CasteletTransitionManager.transition_completed
+			await _transition_manager.transition_completed
 			
 			_timer.start()
 			await _timer.timeout
@@ -401,15 +410,15 @@ func _update_transition():
 			_game_manager.set_block_signals(false)
 			
 
-		if CasteletTransitionManager.TransitionScope.OBJECT not in CasteletTransitionManager.transition_types[transition_name]:
-			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.VIEWPORT, transition_properties)
-		elif CasteletTransitionManager.TransitionScope.VIEWPORT not in CasteletTransitionManager.transition_types[transition_name]:
-			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.OBJECT, transition_properties)
+		if _transition_manager.TransitionScope.OBJECT not in _transition_manager.transition_types[transition_name]:
+			_transition_manager.transition(transition_name, _transition_manager.TransitionScope.VIEWPORT, transition_properties)
+		elif _transition_manager.TransitionScope.VIEWPORT not in _transition_manager.transition_types[transition_name]:
+			_transition_manager.transition(transition_name, _transition_manager.TransitionScope.OBJECT, transition_properties)
 		else:
 			if command.args.has("object") and command.args["object"] == true:
-				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.OBJECT, transition_properties)
+				_transition_manager.transition(transition_name, _transition_manager.TransitionScope.OBJECT, transition_properties)
 			else:
-				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.VIEWPORT, transition_properties)
+				_transition_manager.transition(transition_name, _transition_manager.TransitionScope.VIEWPORT, transition_properties)
 
 	_game_manager.progress.emit()
 
@@ -446,9 +455,9 @@ func _update_window():
 
 func _update_dialogue(command : CasteletSyntaxTree.DialogueExpression):
 	
-	if CasteletTransitionManager.transitioning == true:
+	if _transition_manager.transitioning == true:
 		_game_manager.set_block_signals(true)
-		await CasteletTransitionManager.transition_completed
+		await _transition_manager.transition_completed
 		_game_manager.set_block_signals(false)
 	
 	var dialogue = {
@@ -553,7 +562,7 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	
 	_game_manager.menu_showing = true
 
-	if not CasteletConfig.get_config(CasteletConfig.ConfigList.CONTINUE_FFWD_ON_CHOICE):
+	if not _config_manager.get_config(_config_manager.ConfigList.CONTINUE_FFWD_ON_CHOICE):
 		_game_manager.ffwd_active = false
 	
 	# _game_manager.auto_active = false
@@ -595,7 +604,7 @@ func end():
 	
 	stop_scene()
 
-	CasteletTransitionManager.vp = null
+	_transition_manager.vp = null
 	remove_child(_timer)
 	_timer.queue_free()
 

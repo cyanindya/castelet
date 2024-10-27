@@ -6,8 +6,10 @@
 
 extends CanvasLayer
 
-var ChoiceNode = load("res://castelet_core/gui_node/choice_node.tscn")
+const ChoiceNode = preload("res://castelet_core/gui_node/choice_node.tscn")
+
 @onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
+@onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 
 signal choice_made(sub)
 
@@ -18,15 +20,15 @@ func _ready():
 	
 	choice_made.connect(_on_choice_made)
 
-	if CasteletConfig.get_config(CasteletConfig.ConfigList.TEXT_SPEED) != null:
-		$DialogueNode.cps = CasteletConfig.get_config(CasteletConfig.ConfigList.TEXT_SPEED)
+	if _config_manager.get_config(_config_manager.ConfigList.TEXT_SPEED) != null:
+		$DialogueNode.cps = _config_manager.get_config(_config_manager.ConfigList.TEXT_SPEED)
 
 
 func _process(_delta):
 
 	var stop_ffwd_on_menu_show =  (
 			_game_manager.menu_showing == true
-			and CasteletConfig.get_config(CasteletConfig.ConfigList.FORCE_STOP_FFWD_ON_CHOICE) == true
+			and _config_manager.get_config(_config_manager.ConfigList.FORCE_STOP_FFWD_ON_CHOICE) == true
 	)
 
 	if _game_manager.ffwd_active and not stop_ffwd_on_menu_show:

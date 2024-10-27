@@ -8,9 +8,12 @@ extends Node2D
 #
 
 @onready var _assets_manager : CasteletAssetsManager = get_node("/root/CasteletAssetsManager")
-@onready var _game_manager = get_node("/root/CasteletGameManager")
+@onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
+@onready var _transition_manager : CasteletTransitionManager = get_node("/root/CasteletTransitionManager")
+@onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
 
 signal stage_updated
+
 
 
 func scene(prop_name := "", prop_variant := "default", args := {}):
@@ -71,13 +74,13 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 						old_xpos = 0.5
 					old_ypos = 2.0
 				
-				prop.position.x = CasteletViewportManager.base_viewport_width * old_xpos
-				prop.position.y = CasteletViewportManager.base_viewport_height * old_ypos
-				prop.in_viewport_scale = CasteletViewportManager.base_scale_factor * scale_factor
+				prop.position.x = _viewport_manager.base_viewport_width * old_xpos
+				prop.position.y = _viewport_manager.base_viewport_height * old_ypos
+				prop.in_viewport_scale = _viewport_manager.base_scale_factor * scale_factor
 	else:
-		old_xpos = prop.position.x / CasteletViewportManager.base_viewport_width
-		old_ypos = prop.position.y / CasteletViewportManager.base_viewport_height
-		scale_factor = prop.in_viewport_scale / CasteletViewportManager.base_scale_factor
+		old_xpos = prop.position.x / _viewport_manager.base_viewport_width
+		old_ypos = prop.position.y / _viewport_manager.base_viewport_height
+		scale_factor = prop.in_viewport_scale / _viewport_manager.base_scale_factor
 
 		new_xpos = old_xpos
 		new_ypos = old_ypos
@@ -99,19 +102,19 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	if flip != null:
 		prop.set_flip(flip)
 	
-	var viewport_new_xpos = CasteletViewportManager.base_viewport_width * new_xpos
-	var viewport_new_ypos = CasteletViewportManager.base_viewport_height * new_ypos
+	var viewport_new_xpos = _viewport_manager.base_viewport_width * new_xpos
+	var viewport_new_ypos = _viewport_manager.base_viewport_height * new_ypos
 
 	# Properly display the prop now
 	if args.has("transition"):
 		if args["transition"]["transition_name"] == "move":
-			CasteletTransitionManager.move_object(prop, Vector2(viewport_new_xpos, viewport_new_ypos),
+			_transition_manager.move_object(prop, Vector2(viewport_new_xpos, viewport_new_ypos),
 				prop.position, args["transition"])
-			await CasteletTransitionManager.transition_completed
+			await _transition_manager.transition_completed
 	else:
 		prop.position.x = viewport_new_xpos
 		prop.position.y = viewport_new_ypos
-		prop.in_viewport_scale = CasteletViewportManager.base_scale_factor * scale_factor
+		prop.in_viewport_scale = _viewport_manager.base_scale_factor * scale_factor
 	
 	stage_updated.emit()
 	_game_manager.progress.emit()
@@ -121,8 +124,8 @@ func hide_prop(prop_name : String, args := {}):
 	var prop : PropNode = get_node_or_null(prop_name)
 	if prop != null:
 		if args.has("transition"):
-			var new_xpos = prop.position.x / CasteletViewportManager.base_viewport_width
-			var new_ypos = prop.position.y / CasteletViewportManager.base_viewport_height
+			var new_xpos = prop.position.x / _viewport_manager.base_viewport_width
+			var new_ypos = prop.position.y / _viewport_manager.base_viewport_height
 			
 			if args["transition"].has("exit_to"):
 				if args["transition"]["exit_to"] == "left":
@@ -134,13 +137,13 @@ func hide_prop(prop_name : String, args := {}):
 				elif args["transition"]["exit_to"] == "bottom":
 					new_ypos = 2.0
 			
-			var viewport_new_xpos = CasteletViewportManager.base_viewport_width * new_xpos
-			var viewport_new_ypos = CasteletViewportManager.base_viewport_height * new_ypos
+			var viewport_new_xpos = _viewport_manager.base_viewport_width * new_xpos
+			var viewport_new_ypos = _viewport_manager.base_viewport_height * new_ypos
 			
 			if args["transition"]["transition_name"] == "move":
-				CasteletTransitionManager.move_object(prop, Vector2(viewport_new_xpos, viewport_new_ypos),
+				_transition_manager.move_object(prop, Vector2(viewport_new_xpos, viewport_new_ypos),
 					prop.position, args["transition"])
-				await CasteletTransitionManager.transition_completed
+				await _transition_manager.transition_completed
 
 		remove_child(prop)
 

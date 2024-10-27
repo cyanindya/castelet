@@ -4,7 +4,7 @@
 # accordingly.
 # 
 # This node is NOT intended to listen to other nodes, nor is it requiring dependency on another
-# except for CasteletConfig.
+# except for _config_manager.
 # Instead, this node provides events/signals those can be used by other nodes, and handle
 # changes based on the signals accordingly
 # 
@@ -55,8 +55,11 @@ var _standby := false :
 var menu_showing = false
 
 var _mutex : Mutex
+var _script_ready := false
+@export var _script_directory := "res://"
 
-signal game_ready
+@onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
+
 signal confirm
 signal ffwd_hold(state : bool)
 signal ffwd_toggle
@@ -75,29 +78,39 @@ func _script_loader_callback(file_name : String):
 		_parser.execute_parser(file_name)
 
 
-func _init() -> void:
-	_mutex = Mutex.new()
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_SCENE_INSTANTIATED:
 
-	_parser.add_to_checkpoints_list.connect(
-		func(checkpoint_name : String, checkpoint_data : Dictionary):
-			jump_checkpoints_list[checkpoint_name] = checkpoint_data
-	)
-	_parser.add_to_script_tree.connect(
-		func(tree_name : String, tree : CasteletSyntaxTree):
-			script_trees[tree_name] = tree
-	)
+		_mutex = Mutex.new()
 
+		_parser.add_to_checkpoints_list.connect(
+			func(checkpoint_name : String, checkpoint_data : Dictionary):
+				jump_checkpoints_list[checkpoint_name] = checkpoint_data
+		)
+		_parser.add_to_script_tree.connect(
+			func(tree_name : String, tree : CasteletSyntaxTree):
+				script_trees[tree_name] = tree
+		)
+
+		var thread = Thread.new()
+		thread.start(_load_script_subprocess)
+		thread.wait_to_finish()
+		_script_ready = true
+	
+
+func _load_script_subprocess():
 	# Go through the resource directory to check all script files
 	_mutex.lock()
 	var _res_loader : CasteletResourceLoader = CasteletResourceLoader.new()
-	_res_loader.load_all_resources_of_type("res://", self, "_script_loader_callback")
+	var _result = _res_loader.load_all_resources_of_type(_script_directory, self, "_script_loader_callback")
 	_mutex.unlock()
-	print_debug("foo")
+	
+
+func is_script_ready() -> bool:
+	return _script_ready
 
 
 func _ready():
-	print_debug("foofoo")
-
 	# Initialize some signal connections, whether from internal or other nodes
 	enter_standby.connect(_on_standby)
 	toggle_automode.connect(_on_toggle_automode)
@@ -105,23 +118,21 @@ func _ready():
 
 	ffwd_hold.connect(_on_ffwd_hold)
 	ffwd_toggle.connect(_on_ffwd_toggle)
-	CasteletConfig.config_updated.connect(_on_automode_timeout_changed)
+	_config_manager.config_updated.connect(_on_automode_timeout_changed)
 
 	# Initialize automode timer
 	_automode_timer = Timer.new()
 	add_child(_automode_timer)
-	if CasteletConfig.get_config(CasteletConfig.ConfigList.AUTOMODE_TIMEOUT) != null:
-		_automode_timer.wait_time = CasteletConfig.get_config(CasteletConfig.ConfigList.AUTOMODE_TIMEOUT)
+	if _config_manager.get_config(_config_manager.ConfigList.AUTOMODE_TIMEOUT) != null:
+		_automode_timer.wait_time = _config_manager.get_config(_config_manager.ConfigList.AUTOMODE_TIMEOUT)
 	else:
 		_automode_timer.wait_time = 3
-		CasteletConfig.set_config(CasteletConfig.ConfigList.AUTOMODE_TIMEOUT, 3)
+		_config_manager.set_config(_config_manager.ConfigList.AUTOMODE_TIMEOUT, 3)
 	_automode_timer.timeout.connect(_on_automode_timer_timeout)
 
 	if auto_active:
 		_automode_timer.start()
 
-	print_debug("foofoofoo")
-	game_ready.emit()
 
 
 func append_dialogue(dialogue_data: Dictionary):
@@ -208,7 +219,7 @@ func _on_automode_timer_timeout():
 
 
 func _on_automode_timeout_changed(conf, val):
-	if conf == CasteletConfig.ConfigList.AUTOMODE_TIMEOUT:
+	if conf == _config_manager.ConfigList.AUTOMODE_TIMEOUT:
 		_automode_timer.wait_time = val
 	
 	# TODO: restart the timer if auto-mode is active

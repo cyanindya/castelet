@@ -91,6 +91,7 @@ var _text_length = 0
 var _next_stop = 0
 
 @onready var _text = $Dialogue/DialogueLabel
+@onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 
 signal window_transition_completed
 signal message_display_paused(duration : float)
@@ -101,13 +102,13 @@ signal dialogue_window_status_changed(completed: bool, completed_auto: bool, dur
 
 func _ready():
 
-	cps = CasteletConfig.get_config(CasteletConfig.ConfigList.TEXT_SPEED)
+	cps = _config_manager.get_config(_config_manager.ConfigList.TEXT_SPEED)
 
 	# Connect to internal signals
 	window_transition_completed.connect(_on_window_transition_completed)
 	message_display_completed.connect(_on_message_display_completed)
 	message_display_paused.connect(_on_message_display_paused)
-	CasteletConfig.config_updated.connect(_on_config_updated)
+	_config_manager.config_updated.connect(_on_config_updated)
 	
 	# In the beginning, hide this node and all of the sub-nodes
 	_hide_subcomponents()
@@ -315,5 +316,5 @@ func _on_message_display_paused(duration : float):
 	dialogue_window_status_changed.emit(false, false, duration)
 
 func _on_config_updated(conf, val):
-	if conf == CasteletConfig.ConfigList.TEXT_SPEED:
-		cps = CasteletConfig.get_config(CasteletConfig.ConfigList.TEXT_SPEED)
+	if conf == _config_manager.ConfigList.TEXT_SPEED:
+		cps = _config_manager.get_config(_config_manager.ConfigList.TEXT_SPEED)

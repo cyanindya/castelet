@@ -1,19 +1,24 @@
 extends CasteletSaveFileHandler
 
 var _config_section_name : String = "CasteletConfig"
+var _config_manager : CasteletConfigManager
 
 
 func _init() -> void:
 	save_file_name = "user://config.ini"
 
 
+func set_config_manager(cfg : CasteletConfigManager):
+	_config_manager = cfg
+
+
 func _save_thread_subprocess():
 	# Create new config instance
 	var config = ConfigFile.new()
 
-	for conf in CasteletConfig.ConfigList.keys():
-		var conf_value = CasteletConfig.get_config(
-			CasteletConfig.ConfigList.get(conf)
+	for conf in _config_manager.ConfigList.keys():
+		var conf_value = _config_manager.get_config(
+			_config_manager.ConfigList.get(conf)
 		)
 		if conf_value != null:
 			config.set_value(_config_section_name, str(conf), conf_value)
@@ -36,8 +41,8 @@ func _load_thread_subprocess():
 			var conf_value = config.get_value(_config_section_name, conf)
 
 			# _mutex.lock()
-			CasteletConfig.set_config(
-				CasteletConfig.ConfigList.get(conf),
+			_config_manager.set_config(
+				_config_manager.ConfigList.get(conf),
 				conf_value
 			)
 			# _mutex.unlock()
@@ -106,9 +111,9 @@ func _load_thread_subprocess():
 # 		# Create new config instance
 # 		var config = ConfigFile.new()
 
-# 		for conf in CasteletConfig.ConfigList.keys():
-# 			var conf_value = CasteletConfig.get_config(
-# 				CasteletConfig.ConfigList.get(conf)
+# 		for conf in _config_manager.ConfigList.keys():
+# 			var conf_value = _config_manager.get_config(
+# 				_config_manager.ConfigList.get(conf)
 # 			)
 # 			if conf_value != null:
 # 				config.set_value(_config_section_name, str(conf), conf_value)
@@ -154,8 +159,8 @@ func _load_thread_subprocess():
 # 				var conf_value = config.get_value(_config_section_name, conf)
 
 # 				# _mutex.lock()
-# 				CasteletConfig.set_config(
-# 					CasteletConfig.ConfigList.get(conf),
+# 				_config_manager.set_config(
+# 					_config_manager.ConfigList.get(conf),
 # 					conf_value
 # 				)
 # 				# _mutex.unlock()

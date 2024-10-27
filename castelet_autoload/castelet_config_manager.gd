@@ -8,6 +8,7 @@
 # - Input control
 
 extends Node
+class_name CasteletConfigManager
 
 enum ConfigList {
 	# Display Settings

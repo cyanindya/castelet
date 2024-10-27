@@ -7,20 +7,21 @@ class_name CasteletAudioManager
 #
 
 @onready var _assets_manager : CasteletAssetsManager = get_node("/root/CasteletAssetsManager")
+@onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 
 @onready var _config_bus_map = {
-	CasteletConfig.ConfigList.MASTER_VOLUME : 0,
-	CasteletConfig.ConfigList.MASTER_MUTE : 0,
-	CasteletConfig.ConfigList.BGM_VOLUME : 1,
-	CasteletConfig.ConfigList.BGM_MUTE : 1,
-	CasteletConfig.ConfigList.SFX_VOLUME : 2,
-	CasteletConfig.ConfigList.SFX_MUTE : 2,
-	CasteletConfig.ConfigList.VOICE_VOLUME : 3,
-	CasteletConfig.ConfigList.VOICE_MUTE : 3,
+	_config_manager.ConfigList.MASTER_VOLUME : 0,
+	_config_manager.ConfigList.MASTER_MUTE : 0,
+	_config_manager.ConfigList.BGM_VOLUME : 1,
+	_config_manager.ConfigList.BGM_MUTE : 1,
+	_config_manager.ConfigList.SFX_VOLUME : 2,
+	_config_manager.ConfigList.SFX_MUTE : 2,
+	_config_manager.ConfigList.VOICE_VOLUME : 3,
+	_config_manager.ConfigList.VOICE_MUTE : 3,
 }
 
 func _ready() -> void:
-	CasteletConfig.config_updated.connect(_on_config_updated)
+	_config_manager.config_updated.connect(_on_config_updated)
 
 
 func play_audio(audio_file : String, args := {}, channel:="BGM"):
@@ -88,18 +89,18 @@ func resume_audio(channel:="BGM"):
 
 func _on_config_updated(conf, val):
 	if conf in [
-			CasteletConfig.ConfigList.MASTER_VOLUME,
-			CasteletConfig.ConfigList.BGM_VOLUME,
-			CasteletConfig.ConfigList.SFX_VOLUME,
-			CasteletConfig.ConfigList.VOICE_VOLUME,
+			_config_manager.ConfigList.MASTER_VOLUME,
+			_config_manager.ConfigList.BGM_VOLUME,
+			_config_manager.ConfigList.SFX_VOLUME,
+			_config_manager.ConfigList.VOICE_VOLUME,
 	]:
 		var vol_db = linear_to_db(val / 100)
 		AudioServer.set_bus_volume_db(_config_bus_map[conf], vol_db as float)
 	
 	if conf in [
-			CasteletConfig.ConfigList.MASTER_MUTE,
-			CasteletConfig.ConfigList.BGM_MUTE,
-			CasteletConfig.ConfigList.SFX_MUTE,
-			CasteletConfig.ConfigList.VOICE_MUTE,
+			_config_manager.ConfigList.MASTER_MUTE,
+			_config_manager.ConfigList.BGM_MUTE,
+			_config_manager.ConfigList.SFX_MUTE,
+			_config_manager.ConfigList.VOICE_MUTE,
 	]:
 		AudioServer.set_bus_mute(_config_bus_map[conf], val as bool)

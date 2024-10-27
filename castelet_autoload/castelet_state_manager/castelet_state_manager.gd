@@ -4,12 +4,12 @@ class_name CasteletStateManager
 const ConfigFileManager = preload("castelet_config_file_handler.gd")
 const PersistentFileManager = preload("castelet_persistent_file_handler.gd")
 
-var _conf_manager : ConfigFileManager
+var _conf_file_manager : ConfigFileManager
 var _persistent_manager : PersistentFileManager
 
 
 @onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
-# var _config : CasteletConfig
+@onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 
 signal config_save_start
 signal config_save_finish
@@ -26,16 +26,17 @@ signal game_load_finish
 
 
 func _ready() -> void:
-	_conf_manager = ConfigFileManager.new()
+	_conf_file_manager = ConfigFileManager.new()
 	_persistent_manager = PersistentFileManager.new()
 
-	CasteletConfig.config_finalized.connect(_on_config_finalized)
-	_conf_manager.save_start.connect(_on_save_config_start)
-	_conf_manager.save_finish.connect(_on_save_config_finish)
-	_conf_manager.load_start.connect(_on_load_config_start)
-	_conf_manager.load_finish.connect(_on_load_config_finish)
-	_conf_manager.init_threads()
-	_conf_manager.load_file()
+	_config_manager.config_finalized.connect(_on_config_finalized)
+	_conf_file_manager.set_config_manager(_config_manager)
+	_conf_file_manager.save_start.connect(_on_save_config_start)
+	_conf_file_manager.save_finish.connect(_on_save_config_finish)
+	_conf_file_manager.load_start.connect(_on_load_config_start)
+	_conf_file_manager.load_finish.connect(_on_load_config_finish)
+	_conf_file_manager.init_threads()
+	_conf_file_manager.load_file()
 
 	_persistent_manager.set_game_manager(_game_manager)
 	_persistent_manager.save_start.connect(_on_save_persistent_start)
@@ -49,12 +50,12 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	# Make sure to dispose all threads related to state data management
 	# upon quitting
-	_conf_manager.join_threads()
+	_conf_file_manager.join_threads()
 	_persistent_manager.join_threads()
 
 
 func _on_config_finalized():
-	_conf_manager.save_file()
+	_conf_file_manager.save_file()
 	await config_save_finish
 
 
