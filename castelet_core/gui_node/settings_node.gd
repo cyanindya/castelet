@@ -3,6 +3,7 @@ extends Control
 # List of settings nodes
 # Display-related nodes
 @export var window_mode_option : Control
+@export var window_resolution_option : Control
 
 # Text settings
 @export var text_speed_slider : Control
@@ -22,6 +23,7 @@ extends Control
 
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	_initialize_settings_node()
@@ -34,6 +36,12 @@ func _initialize_settings_node() -> void:
 		window_mode_option.get_item_index(
 			_config_manager.get_config(_config_manager.ConfigList.WINDOW_MODE)
 			)
+		)
+	
+	for rs in _config_manager.WindowResolutions.values():
+		window_resolution_option.set_item_id(rs, rs)
+		window_resolution_option.select(
+			_config_manager.get_config(_config_manager.ConfigList.WINDOW_RESOLUTION)
 		)
 	
 	text_speed_slider.set_value_no_signal(
@@ -88,6 +96,10 @@ func _on_return_button_button_down() -> void:
 
 func _on_window_mode_option_button_item_selected(_index: int) -> void:	
 	_config_manager.set_config(_config_manager.ConfigList.WINDOW_MODE, window_mode_option.get_selected_id())
+
+
+func _on_window_res_option_button_item_selected(index: int) -> void:	
+	_config_manager.set_config(_config_manager.ConfigList.WINDOW_RESOLUTION, index)
 
 
 func _on_skip_on_choice_check_box_toggled(toggled_on: bool) -> void:

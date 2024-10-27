@@ -34,8 +34,11 @@ enum ConfigList {
 enum WindowMode {WINDOWED, FULLSCREEN, BORDERLESS}
 enum WindowResolutions {
 	RES_1280_720,
+	RES_1280_800,
 	RES_1366_768,
+	RES_1440_900,
 	RES_1600_900,
+	RES_1600_1000,
 	RES_1920_1080,
 }
 
@@ -74,6 +77,10 @@ const _config_name_map = {
 	ConfigList.WINDOW_MODE : {
 		"field_name" : "_window_mode",
 		"type" : WindowMode,
+	},
+	ConfigList.WINDOW_RESOLUTION : {
+		"field_name" : "_window_resolution",
+		"type" : WindowResolutions,
 	},
 	ConfigList.TEXT_SPEED : {
 		"field_name" : "_base_text_speed",
@@ -125,15 +132,24 @@ const _config_name_map = {
 	},
 }
 
-const _window_resolution_map = {
+const WINDOW_RESOLUTION_MAP = {
 	WindowResolutions.RES_1280_720 : {
 		"resolution" : [1280, 720],
+	},
+	WindowResolutions.RES_1280_800 : {
+		"resolution" : [1280, 800],
 	},
 	WindowResolutions.RES_1366_768 : {
 		"resolution" : [1366, 768],
 	},
+	WindowResolutions.RES_1440_900 : {
+		"resolution" : [1440, 900],
+	},
 	WindowResolutions.RES_1600_900 : {
 		"resolution" : [1600, 900],
+	},
+	WindowResolutions.RES_1600_1000 : {
+		"resolution" : [1600, 1000],
 	},
 	WindowResolutions.RES_1920_1080 : {
 		"resolution" : [1920, 1080],
