@@ -10,7 +10,7 @@ func _ready():
 	add_child(exit_timer)
 
 	var script = TheaterNode.instantiate()
-	script.load_script("test_scene_5")
+	script.load_script("test_scene_2")
 	add_child(script)
 	await script.load_script_finished
 	script.play_scene()

@@ -18,6 +18,7 @@ signal choice_made(sub)
 func _ready():
 	_game_manager.confirm.connect(_dialogue_node_interrupt)
 	_game_manager.backlog_update.connect(_on_backlog_updated)
+	_config_manager.config_updated.connect(_on_config_updated)
 	_viewport_manager.viewport_resized.connect(_on_viewport_resized)
 	
 	choice_made.connect(_on_choice_made)
@@ -146,17 +147,19 @@ func _on_config_button_pressed() -> void:
 func _on_config_updated(conf, val):
 	if conf == _config_manager.ConfigList.TEXT_SPEED:
 		$DialogueNode.cps = val
+		print_debug($DialogueNode.cps)
 
 
 func _on_viewport_resized():
-	var ui_scale : float
+	var ui_scale : float = 1.0
 	
-	if _config_manager.get_config(_config_manager.ConfigList.WINDOW_MODE) == _config_manager.WindowMode.FULLSCREEN:
-		ui_scale = _config_manager.WINDOW_RESOLUTION_MAP[_config_manager.WindowResolutions.RES_1920_1080]["ui_scaling"]
-	else:
-		ui_scale = _config_manager.WINDOW_RESOLUTION_MAP[
-			_config_manager.get_config(_config_manager.ConfigList.WINDOW_RESOLUTION)
-		]["ui_scaling"]
+	if _viewport_manager.enable_window_content_resize:
+		if _config_manager.get_config(_config_manager.ConfigList.WINDOW_MODE) == _config_manager.WindowMode.FULLSCREEN:
+			ui_scale = _config_manager.WINDOW_RESOLUTION_MAP[_config_manager.WindowResolutions.RES_1920_1080]["ui_scaling"]
+		else:
+			ui_scale = _config_manager.WINDOW_RESOLUTION_MAP[
+				_config_manager.get_config(_config_manager.ConfigList.WINDOW_RESOLUTION)
+			]["ui_scaling"]
 	
 	# Dirty scaling and may result in blurry UI elements, but this works for now.
 	$DialogueNode.resize_node(ui_scale)

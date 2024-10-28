@@ -8,7 +8,7 @@ var base_viewport_height : float
 var base_scale_factor = 1.0
 var reference_width : float = 1920
 var reference_height : float = 1080
-var enable_window_content_resize = true
+var enable_window_content_resize = false
 var _current_display_mode_index = 0
 var _reference_ratio = reference_width / reference_height
 

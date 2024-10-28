@@ -17,10 +17,14 @@ func _save_thread_subprocess():
 
 	for persistent_data in _game_manager.get_all_variables(true):
 		var value = _game_manager.get_variable(persistent_data, true)
-		file.store_pascal_string(persistent_data)
-		file.store_pascal_string("=")
+		file.store_var(persistent_data)
+		file.store_var("=")
 		file.store_var(value)
-		file.store_pascal_string("\n")
+		file.store_var("\n")
+		# file.store_pascal_string(persistent_data)
+		# file.store_pascal_string("=")
+		# file.store_var(value)
+		# file.store_pascal_string("\n")
 
 	file.close()
 
@@ -37,10 +41,10 @@ func _load_thread_subprocess():
 
 	_mutex.lock()
 	while file.get_position() < file.get_length():
-		var key = file.get_pascal_string()
-		file.get_pascal_string()
+		var key = file.get_var()
+		file.get_var()
 		var val = file.get_var()
-		file.get_pascal_string()
+		file.get_var()
 		_game_manager.set_variable(key, val, true)
 	
 	file.close()
