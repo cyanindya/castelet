@@ -1,5 +1,5 @@
 extends Sprite2D
-class_name PropNode
+class_name CasteletPropNode
 
 
 signal _viewport_scale_changed

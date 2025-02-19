@@ -616,7 +616,7 @@ func _slide_screen(old_widget : Texture2D = null, new_widget : Texture2D = null,
 	transition_completed.emit()
 
 
-func move_object(prop : PropNode, to : Vector2 = Vector2(1.0, 0.0), from : Vector2 = Vector2(0.0, 0.0),
+func move_object(prop : CasteletPropNode, to : Vector2 = Vector2(1.0, 0.0), from : Vector2 = Vector2(0.0, 0.0),
 		args = {}):
 
 	# Set up the default values of the controlling parameters.

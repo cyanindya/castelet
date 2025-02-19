@@ -32,7 +32,7 @@ func scene(prop_name := "", prop_variant := "default", args := {}):
 func show_prop(prop_name := "", prop_variant := "default", args := {}):
 
 	# If the prop is not in active props list, grab the reference from CasteletAssetsManager
-	var prop: PropNode = get_node_or_null(prop_name)
+	var prop: CasteletPropNode = get_node_or_null(prop_name)
 	
 	# Default x-position and y-position value
 	var old_xpos = 0.5
@@ -124,7 +124,7 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 
 
 func hide_prop(prop_name : String, args := {}):
-	var prop : PropNode = get_node_or_null(prop_name)
+	var prop : CasteletPropNode = get_node_or_null(prop_name)
 	if prop != null:
 		if args.has("transition"):
 			var new_xpos = prop.position.x / get_window().content_scale_size.x
@@ -156,7 +156,7 @@ func hide_prop(prop_name : String, args := {}):
 
 func clear_props():
 	for child in get_children():
-		if child is PropNode:
+		if child is CasteletPropNode:
 			remove_child(child)
 
 # Ensures smooth appearance regardless of current resolution, since
@@ -164,7 +164,7 @@ func clear_props():
 # FIXME: Currently doesn't work well with Godot's stretch mode and content scaling
 func _on_viewport_resized():
 	for child in get_children():
-		if child is PropNode:
+		if child is CasteletPropNode:
 			var old_viewport_scale = child.in_viewport_scale
 
 			child.in_viewport_scale = _viewport_manager.base_scale_factor
