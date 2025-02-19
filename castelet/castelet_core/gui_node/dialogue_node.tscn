@@ -1,0 +1,101 @@
+[gd_scene load_steps=9 format=3 uid="uid://cb1ysu6lfx171"]
+
+[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/dialogue_node.gd" id="1_p3qt0"]
+[ext_resource type="StyleBox" uid="uid://c2c1o4ao7016i" path="res://castelet/castelet_default_assets/default_speaker_window.tres" id="2_krm3u"]
+[ext_resource type="Theme" uid="uid://d4mfepejhjvvg" path="res://castelet/castelet_default_assets/default_dialogue_rich_text_typesetting.tres" id="3_qmuy1"]
+[ext_resource type="StyleBox" uid="uid://bnnm0ag6717jh" path="res://castelet/castelet_default_assets/default_dialogue_window.tres" id="4_hbdqr"]
+[ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_regular.ttf" id="4_u25vh"]
+[ext_resource type="FontFile" uid="uid://kgrh7hs65hcq" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_bold.ttf" id="5_505fp"]
+[ext_resource type="FontFile" uid="uid://c713e1fx4f7r2" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_italic.ttf" id="6_vy27i"]
+[ext_resource type="FontFile" uid="uid://ddr1ne202uwas" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_bold_italic.ttf" id="7_mhb2j"]
+
+[node name="DialogueNode" type="Control"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_top = -14.0
+offset_bottom = -14.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+mouse_filter = 1
+script = ExtResource("1_p3qt0")
+
+[node name="Speaker" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -255.0
+offset_right = -262.0
+offset_bottom = -194.0
+grow_vertical = 0
+mouse_filter = 1
+theme_override_styles/panel = ExtResource("2_krm3u")
+
+[node name="SpeakerLabel" type="RichTextLabel" parent="Speaker"]
+layout_mode = 2
+mouse_filter = 2
+theme = ExtResource("3_qmuy1")
+theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
+theme_override_fonts/normal_font = ExtResource("4_u25vh")
+theme_override_fonts/italics_font = ExtResource("6_vy27i")
+theme_override_fonts/bold_italics_font = ExtResource("7_mhb2j")
+theme_override_fonts/bold_font = ExtResource("5_505fp")
+bbcode_enabled = true
+text = "Speaker"
+fit_content = true
+scroll_active = false
+autowrap_mode = 0
+shortcut_keys_enabled = false
+
+[node name="Dialogue" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(800, 200)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -200.0
+offset_right = 400.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 1
+theme_override_styles/panel = ExtResource("4_hbdqr")
+
+[node name="DialogueLabel" type="RichTextLabel" parent="Dialogue"]
+layout_mode = 2
+mouse_filter = 2
+theme = ExtResource("3_qmuy1")
+theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
+theme_override_constants/line_separation = 5
+theme_override_fonts/normal_font = ExtResource("4_u25vh")
+theme_override_fonts/italics_font = ExtResource("6_vy27i")
+theme_override_fonts/bold_italics_font = ExtResource("7_mhb2j")
+theme_override_fonts/bold_font = ExtResource("5_505fp")
+bbcode_enabled = true
+text = "Dialogue Line"
+scroll_active = false
+shortcut_keys_enabled = false
+
+[node name="CTC_Indicator" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_left = 370.0
+offset_top = -30.0
+offset_right = 370.0
+offset_bottom = -30.0
+grow_vertical = 2
+mouse_filter = 1
+
+[node name="CTC_Sprite" type="Polygon2D" parent="CTC_Indicator"]
+color = Color(0.160784, 0.054902, 0.0509804, 1)
+polygon = PackedVector2Array(0, 0, 0, 20, 20, 10)

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="CasteletDissolveMaterialListResource" load_steps=2 format=3 uid="uid://yggpxnv58o"]
+
+[ext_resource type="Script" path="res://castelet/castelet_core/castelet_resource_types/castelet_dissolve_material_list_resource.gd" id="1_50mru"]
+
+[resource]
+script = ExtResource("1_50mru")
+transitions = {
+"square_blinds": "res://castelet/castelet_core/transition_masks/dissolve_shaders/square_blinds.tres"
+}

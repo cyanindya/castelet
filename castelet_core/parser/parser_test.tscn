@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bnhrc6xlh2ep4"]
-
-[ext_resource type="Script" path="res://castelet_core/parser/parser_test.gd" id="1_14cpm"]
-
-[node name="ParserTest" type="Node"]
-script = ExtResource("1_14cpm")
