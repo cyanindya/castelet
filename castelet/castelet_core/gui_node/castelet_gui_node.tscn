@@ -1,12 +1,12 @@
 [gd_scene load_steps=6 format=3 uid="uid://cf8ybpujcepfc"]
 
+[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/castelet_gui_node.gd" id="1_lemi2"]
 [ext_resource type="PackedScene" uid="uid://cb1ysu6lfx171" path="res://castelet/castelet_core/gui_node/dialogue_node.tscn" id="1_h0g72"]
-[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/gui_node.gd" id="1_lemi2"]
 [ext_resource type="PackedScene" uid="uid://mj6e2n3prqpq" path="res://castelet/castelet_core/gui_node/menu_node.tscn" id="3_178xq"]
 [ext_resource type="PackedScene" uid="uid://ca1dssn5xvet0" path="res://castelet/castelet_core/gui_node/backlog_node.tscn" id="3_mumyu"]
 [ext_resource type="PackedScene" uid="uid://tgsnni7av3vm" path="res://castelet/castelet_core/gui_node/settings_node.tscn" id="5_5st5b"]
 
-[node name="GUINode" type="CanvasLayer"]
+[node name="CasteletGUINode" type="CanvasLayer"]
 layer = 10
 script = ExtResource("1_lemi2")
 

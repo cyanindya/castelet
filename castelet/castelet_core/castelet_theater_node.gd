@@ -380,7 +380,7 @@ func _update_stage_prop(transition : Dictionary = {}):
 		cb = "show_prop"
 	
 	var params = (command.value[0] as String).split(".")
-	var prop_func = Callable($SubViewport/StageNode, cb)
+	var prop_func = Callable($SubViewport/CasteletStageNode, cb)
 
 	var args = command.args
 
@@ -402,7 +402,7 @@ func _hide_stage_prop(transition = {}):
 	if not transition.is_empty():
 		args["transition"] = transition
 	
-	$SubViewport/StageNode.hide_prop(params[0], args)
+	$SubViewport/CasteletStageNode.hide_prop(params[0], args)
 	
 
 func _update_transition():
@@ -462,9 +462,9 @@ func _update_window():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 
 	if command.value[0] in ["show", "on"]:
-		$SubViewport/GUINode.show_window()
+		$SubViewport/CasteletGUINode.show_window()
 	elif command.value[0] in ["hide", "off"]:
-		$SubViewport/GUINode.hide_window()
+		$SubViewport/CasteletGUINode.hide_window()
 
 
 func _update_dialogue(command : CasteletSyntaxTree.DialogueExpression):
@@ -524,7 +524,7 @@ func _update_dialogue(command : CasteletSyntaxTree.DialogueExpression):
 			dialogue["speaker"] = _assets_manager.props[command.speaker
 									.trim_prefix("id_")].prop_name
 	
-	$SubViewport/GUINode.update_dialogue(dialogue)
+	$SubViewport/CasteletGUINode.update_dialogue(dialogue)
 
 	# Append current dialogue to the seen-dialogue cache
 	if command.speaker != "extend":
@@ -594,9 +594,9 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 				"condition" : _translate_expression(choice.condition),
 		})
 
-	$SubViewport/GUINode.show_choices(choices)
+	$SubViewport/CasteletGUINode.show_choices(choices)
 
-	var next_tree = await $SubViewport/GUINode.choice_made
+	var next_tree = await $SubViewport/CasteletGUINode.choice_made
 	print_debug(next_tree)
 
 	self.load_script(next_tree)
@@ -626,8 +626,8 @@ func end():
 	_game_manager.progress.disconnect(_on_progress)
 	end_of_script.disconnect(_on_end_of_script)
 
-	$SubViewport/StageNode.hide()
-	$SubViewport/GUINode.hide()
+	$SubViewport/CasteletStageNode.hide()
+	$SubViewport/CasteletGUINode.hide()
 	
 	queue_free()
 	

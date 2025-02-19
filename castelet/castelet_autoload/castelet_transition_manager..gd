@@ -38,7 +38,7 @@ signal transition_completed
 ## screen, while object transitions affects only the specified object.
 enum TransitionScope {VIEWPORT, OBJECT}
 
-#const TheaterNode = preload("res://castelet/castelet_core/theater_node.gd")
+#const TheaterNode = preload("res://castelet/castelet_core/castelet_theater_node.gd")
 
 ## The variable that will contains the names of predefined image-controlled
 ## dissolve transitions. This will be loaded on _ready() using the
@@ -218,7 +218,7 @@ func object_transition(transition_name, args={}):
 	pass # TODO
 
 
-#func set_theater_node(node : TheaterNode):
+#func set_theater_node(node : CasteletTheaterNode):
 	#_theater_node = node
 
 
