@@ -39,6 +39,16 @@ var _ending_thread = false
 @onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 
+@export var script_to_play : String:
+	set(value):
+		if value != "":
+			load_script(value)
+			await load_script_finished
+			play_scene()
+			
+			await end_of_script
+			end()
+
 
 signal load_script_finished
 signal end_of_script
