@@ -1,13 +1,13 @@
 [gd_scene load_steps=7 format=3 uid="uid://cgmjjwdjdb72i"]
 
-[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/single_dialogue_backlog_node.gd" id="1_etkmp"]
+[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/story_text/castelet_single_dialogue_backlog_node.gd" id="1_etkmp"]
 [ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_regular.ttf" id="1_yhm4d"]
 [ext_resource type="Theme" uid="uid://d4mfepejhjvvg" path="res://castelet/castelet_default_assets/default_dialogue_rich_text_typesetting.tres" id="2_d4khd"]
 [ext_resource type="FontFile" uid="uid://kgrh7hs65hcq" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_bold.ttf" id="4_nwjpy"]
 [ext_resource type="FontFile" uid="uid://c713e1fx4f7r2" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_italic.ttf" id="5_db5dd"]
 [ext_resource type="FontFile" uid="uid://ddr1ne202uwas" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_bold_italic.ttf" id="6_08deq"]
 
-[node name="DialogueLog" type="HBoxContainer"]
+[node name="CasteletDialogueLog" type="HBoxContainer"]
 size_flags_horizontal = 3
 size_flags_vertical = 0
 theme_override_constants/separation = 30

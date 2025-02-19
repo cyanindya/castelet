@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://cus6xh82lklmq"]
 
-[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/choice_node.gd" id="1_4bn3n"]
+[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/choice_menu/castelet_choice_node.gd" id="1_4bn3n"]
 [ext_resource type="Theme" uid="uid://d4mfepejhjvvg" path="res://castelet/castelet_default_assets/default_dialogue_rich_text_typesetting.tres" id="1_gprhr"]
 [ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_regular.ttf" id="2_avs75"]
 [ext_resource type="StyleBox" uid="uid://ddl0okwiuo1p0" path="res://castelet/castelet_default_assets/default_choice_button.tres" id="3_xs0ro"]

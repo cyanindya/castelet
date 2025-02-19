@@ -1,12 +1,12 @@
 [gd_scene load_steps=6 format=3 uid="uid://tgsnni7av3vm"]
 
-[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/settings_node.gd" id="1_6jcys"]
+[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/settings/castelet_settings_node.gd" id="1_6jcys"]
 [ext_resource type="StyleBox" uid="uid://c2c1o4ao7016i" path="res://castelet/castelet_default_assets/default_speaker_window.tres" id="1_tydg6"]
 [ext_resource type="FontFile" uid="uid://kgrh7hs65hcq" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_bold.ttf" id="2_ul4na"]
 [ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_regular.ttf" id="3_71efw"]
-[ext_resource type="PackedScene" uid="uid://ckpvo6kyncuo" path="res://castelet/castelet_core/gui_node/settings_slider_node.tscn" id="5_5hi2x"]
+[ext_resource type="PackedScene" uid="uid://ckpvo6kyncuo" path="res://castelet/castelet_core/gui_node/settings/castelet_settings_slider_node.tscn" id="5_5hi2x"]
 
-[node name="SettingsNode" type="Control" node_paths=PackedStringArray("window_mode_option", "window_resolution_option", "text_speed_slider", "auto_mode_timeout_slider", "stop_skip_checkbox", "resume_skip_checkbox", "master_volume_slider", "master_volume_mute_button", "bgm_volume_slider", "bgm_volume_mute_button", "sfx_volume_slider", "sfx_volume_mute_button", "voice_volume_slider", "voice_volume_mute_button")]
+[node name="CasteletSettingsNode" type="Control" node_paths=PackedStringArray("window_mode_option", "window_resolution_option", "text_speed_slider", "auto_mode_timeout_slider", "stop_skip_checkbox", "resume_skip_checkbox", "master_volume_slider", "master_volume_mute_button", "bgm_volume_slider", "bgm_volume_mute_button", "sfx_volume_slider", "sfx_volume_mute_button", "voice_volume_slider", "voice_volume_mute_button")]
 layout_mode = 3
 anchors_preset = 8
 anchor_left = 0.5

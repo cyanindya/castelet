@@ -6,7 +6,7 @@
 
 extends CanvasLayer
 
-const ChoiceNode = preload("res://castelet/castelet_core/gui_node/choice_node.tscn")
+const ChoiceNode = preload("res://castelet/castelet_core/gui_node/choice_menu/castelet_choice_node.tscn")
 
 @onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")

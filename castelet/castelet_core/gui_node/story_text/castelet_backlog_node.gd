@@ -1,7 +1,7 @@
 extends Control
 
 @onready var _backlog_container = $PanelContainer/VBoxContainer/ScrollContainer/VBoxContainer
-@onready var dialogue_data_node = load("res://castelet/castelet_core/gui_node/single_dialogue_backlog_node.tscn")
+@onready var dialogue_data_node = load("res://castelet/castelet_core/gui_node/story_text/castelet_single_dialogue_backlog_node.tscn")
 @onready var _scroll_container = $PanelContainer/VBoxContainer/ScrollContainer
 @onready var _scrollbar = $PanelContainer/VBoxContainer/ScrollContainer.get_v_scroll_bar()
 var max_scroll_length = 0
