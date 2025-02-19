@@ -23,26 +23,106 @@ var _paused = false
 var DialogueTools = load("res://castelet_core/dialogue_processing_tools.gd")
 var dialogue_tools
 var _timer : Timer
-var _is_menu := false
+var _can_play := false
+var _script_id := ""
 
+var _thread : Thread
+var _mutex : Mutex
+var _semaphore : Semaphore
+var _ending_thread = false
+
+@onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
+@onready var _state_manager : CasteletStateManager = get_node("/root/CasteletStateManager")
+@onready var _assets_manager : CasteletAssetsManager = get_node("/root/CasteletAssetsManager")
+@onready var _audio_manager : CasteletAudioManager = get_node("/root/CasteletAudioManager")
+@onready var _transition_manager : CasteletTransitionManager = get_node("/root/CasteletTransitionManager")
+@onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
+@onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
+
+@export var script_to_play : String:
+	set(value):
+		if value != "":
+			load_script(value)
+			await load_script_finished
+			play_scene()
+			
+			await end_of_script
+			end()
+
+
+signal load_script_finished
 signal end_of_script
 
 
+# There is always chance that this function gets executed
+# early before the nodes are even ready, potentially resulting
+# in lack of script data. As such, multithreading is used to
+# ensure the script data retrieval doesn't block the main thread,
+# while also ensuring the script will be executed properly later.
 func load_script(script_id : String):
-	print_debug(CasteletGameManager.script_trees)
-	self._tree = CasteletGameManager.script_trees[script_id]
+	if _mutex == null:
+		_mutex = Mutex.new()
+	if _semaphore == null:
+		_semaphore = Semaphore.new()
+	
+	_mutex.lock()
+	_script_id = script_id
+	_mutex.unlock()
+
+	if _thread == null:
+		_thread = Thread.new()
+	if not _thread.is_started():
+		_thread.start(_load_script_subprocess)
+	
+	_semaphore.post()
+
+	await load_script_finished
+
+
+func _load_script_subprocess():
+	while true:
+		
+		_semaphore.wait()
+
+		if _ending_thread == true:
+			break
+
+		_mutex.lock()
+		while not _can_play:
+			pass
+		self._tree = _game_manager.script_trees[_script_id]
+		load_script_finished.emit.call_deferred()
+		_mutex.unlock()
 
 
 func _ready():
+	if _mutex == null:
+		_mutex = Mutex.new()
+	if _semaphore == null:
+		_semaphore = Semaphore.new()
+	if _thread == null:
+		_thread = Thread.new()
+	
 	_timer = Timer.new()
 	_timer.wait_time = 0.1
 	add_child(_timer)
-
-	CasteletTransitionManager.vp = $SubViewport
+	
+	_viewport_manager.viewport_resized.connect(func():
+		if _viewport_manager.enable_window_content_resize:
+			$SubViewport.size = Vector2i(_viewport_manager.base_viewport_width as int,
+				_viewport_manager.base_viewport_height as int)	
+	)
+	$SubViewport.size = get_window().content_scale_size
+	_transition_manager.vp = $SubViewport
+	
 	dialogue_tools = DialogueTools.new()
+	
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
-	CasteletGameManager.progress.connect(_on_progress)
+	_game_manager.progress.connect(_on_progress)
+
+	await _state_manager.persistent_load_finish
+	_can_play = true
 
 
 func _next():
@@ -60,9 +140,9 @@ func _next():
 	# expressions.
 	if next is CasteletSyntaxTree.StageCommandExpression:
 		if next.type in [Tokenizer.KEYWORDS.SCENE, Tokenizer.KEYWORDS.SHOW]:
-			_update_stage_prop(CasteletTransitionManager.object_transition_data)
+			_update_stage_prop(_transition_manager.object_transition_data)
 		elif next.type == Tokenizer.KEYWORDS.HIDE:
-			_hide_stage_prop(CasteletTransitionManager.object_transition_data)
+			_hide_stage_prop(_transition_manager.object_transition_data)
 		elif next.type in [Tokenizer.KEYWORDS.BGM, Tokenizer.KEYWORDS.SFX]:
 			_update_audio_channel()
 		elif next.type == Tokenizer.KEYWORDS.VOICE:
@@ -76,30 +156,33 @@ func _next():
 	
 	elif next is CasteletSyntaxTree.LabelExpression:
 		self._tree.next()
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 	
 	elif next is CasteletSyntaxTree.JumptoExpression:
 
 		# If it's call function, append the call source to the stack
 		if next is CasteletSyntaxTree.CallsubExpression:
-			CasteletGameManager.append_callsub_stack(self._tree.name, self._tree.get_index())
+			_game_manager.append_callsub_stack(self._tree.name, self._tree.get_index())
 
-		if next.value in CasteletGameManager.script_trees.keys():
+		if next.value in _game_manager.script_trees.keys():
 			self.load_script(next.value)
+			await load_script_finished
 			self._tree.reset()
 		else:
-			if CasteletGameManager.jump_checkpoints_list[next.value]["tree"] != self._tree.name:
-				self.load_script(CasteletGameManager.jump_checkpoints_list[next.value]["tree"])
-			self._tree.set_index(CasteletGameManager.jump_checkpoints_list[next.value]["index"])
+			if _game_manager.jump_checkpoints_list[next.value]["tree"] != self._tree.name:
+				self.load_script(_game_manager.jump_checkpoints_list[next.value]["tree"])
+				await load_script_finished
+			self._tree.set_index(_game_manager.jump_checkpoints_list[next.value]["index"])
 	
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 	
 	elif next is CasteletSyntaxTree.ReturnExpression:
-		if CasteletGameManager.get_context_level() > 0:
-			var origin = CasteletGameManager.pop_callsub_stack()
+		if _game_manager.get_context_level() > 0:
+			var origin = _game_manager.pop_callsub_stack()
 			self.load_script(origin["tree"])
+			await load_script_finished
 			self._tree.set_index(origin["index"] + 1)
-			CasteletGameManager.progress.emit()
+			_game_manager.progress.emit()
 		# TODO: terminate the script
 		else:
 			end_of_script.emit()
@@ -107,7 +190,7 @@ func _next():
 	elif next is CasteletSyntaxTree.LoopBackExpression:
 		self._tree = next.value
 		self._tree.reset()
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 		
 	elif next is CasteletSyntaxTree.FunctionCallExpression:
 		var caller_object = self
@@ -128,7 +211,7 @@ func _next():
 		var func_callable = Callable(caller_object, func_name)
 		func_callable.callv(args)
 
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 	
 	elif next is CasteletSyntaxTree.IfElseExpression:
 		var if_else_block = self._tree.next()
@@ -138,11 +221,13 @@ func _next():
 		for condition in if_else_block.value:
 			var eval = _translate_expression(condition.evaluator)
 			if eval == true:
-				self._tree = CasteletGameManager.script_trees[condition.subroutine]
+				# self._tree = _game_manager.script_trees[condition.subroutine]
+				self.load_script(condition.subroutine)
+				await load_script_finished
 				self._tree.reset()
 				break
 		
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 
 	elif next is CasteletSyntaxTree.WhileExpression:
 		var while_block = self._tree.next()
@@ -151,39 +236,59 @@ func _next():
 		# condition's associated subroutines
 		var eval = _translate_expression(while_block.value.evaluator)
 		if eval == true:
-			self._tree = CasteletGameManager.script_trees[while_block.value.subroutine]
+			# self._tree = _game_manager.script_trees[while_block.value.subroutine]
+			self.load_script(while_block.value.subroutine)
+			await load_script_finished
 			self._tree.reset()
 		
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 
 	elif next is CasteletSyntaxTree.AssignmentExpression:
 		var assignment = self._tree.next()
+
+		# Check if this begins with "default" keyword.
+		# If it begins with one, it will only assign the variable
+		# when the variable is nonexistent, and won't override
+		# existing values
+		var is_default = (assignment.lhs.value as String).begins_with("default.")
+		if is_default:
+			assignment.lhs.value = (assignment.lhs.value as String).trim_prefix("default.")
+
 		var is_persistent = (assignment.lhs.value as String).begins_with("persistent.")
 		var varname = assignment.lhs.value
-		var var_storage = CasteletGameManager.vars
 		if is_persistent:
 			varname = (assignment.lhs.value as String).trim_prefix("persistent.")
-			var_storage = CasteletGameManager.persistent
 		
 		var result = _translate_expression(assignment.rhs)
+		var current_var_value = _game_manager.get_variable(varname, is_persistent)
 
-		if assignment is CasteletSyntaxTree.CompoundAssignmentExpression:
+		if (
+			assignment is CasteletSyntaxTree.CompoundAssignmentExpression
+			and current_var_value != null
+		):
 			if assignment.compound_operator == "+=":
-				var_storage[varname] += result
+				current_var_value += result
 			elif assignment.compound_operator == "-=":
-				var_storage[varname] -= result
+				current_var_value -= result
 			elif assignment.compound_operator == "/=":
-				var_storage[varname] /= result
+				current_var_value /= result
 			elif assignment.compound_operator == "*=":
-				var_storage[varname] *= result
+				current_var_value *= result
 			elif assignment.compound_operator == "^=":
-				var_storage[varname] ^= result
+				current_var_value ^= result
 			elif assignment.compound_operator == "%=":
-				var_storage[varname] %= result
+				current_var_value %= result
+			_game_manager.set_variable(varname, current_var_value, is_persistent)
+
 		else:
-			var_storage[varname] = result
+			# Do nothing if default is defined and the variable already had
+			# existing value.
+			if is_default and current_var_value != null:
+				pass
+			else:
+				_game_manager.set_variable(varname, result, is_persistent)
 		
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 	
 	elif next is CasteletSyntaxTree.MenuExpression:
 		var menu = self._tree.next()
@@ -206,12 +311,10 @@ func _translate_expression(expr : CasteletSyntaxTree.BaseExpression):
 	elif expr is CasteletSyntaxTree.VariableExpression:
 		var is_persistent = (expr.value as String).begins_with("persistent.")
 		var varname = expr.value
-		var var_storage = CasteletGameManager.vars
 		if is_persistent:
 			varname = (expr.value as String).trim_prefix("persistent.")
-			var_storage = CasteletGameManager.persistent
 
-		expr_result = var_storage[varname]
+		expr_result = _game_manager.get_variable(varname, is_persistent)
 	elif expr is CasteletSyntaxTree.FunctionCallExpression:
 		pass #TODO
 	else:
@@ -308,30 +411,30 @@ func _update_transition():
 	var transition_name : String = command.value[0]
 	var transition_properties : Dictionary = command.args
 
-	if not CasteletGameManager.ffwd_active:
+	if not _game_manager.ffwd_active:
 
 		
-		if CasteletTransitionManager.transitioning == true:
-			CasteletGameManager.set_block_signals(true)
-			await CasteletTransitionManager.transition_completed
+		if _transition_manager.transitioning == true:
+			_game_manager.set_block_signals(true)
+			await _transition_manager.transition_completed
 			
 			_timer.start()
 			await _timer.timeout
 
-			CasteletGameManager.set_block_signals(false)
+			_game_manager.set_block_signals(false)
 			
 
-		if CasteletTransitionManager.TransitionScope.OBJECT not in CasteletTransitionManager.transition_types[transition_name]:
-			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.VIEWPORT, transition_properties)
-		elif CasteletTransitionManager.TransitionScope.VIEWPORT not in CasteletTransitionManager.transition_types[transition_name]:
-			CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.OBJECT, transition_properties)
+		if _transition_manager.TransitionScope.OBJECT not in _transition_manager.transition_types[transition_name]:
+			_transition_manager.transition(transition_name, _transition_manager.TransitionScope.VIEWPORT, transition_properties)
+		elif _transition_manager.TransitionScope.VIEWPORT not in _transition_manager.transition_types[transition_name]:
+			_transition_manager.transition(transition_name, _transition_manager.TransitionScope.OBJECT, transition_properties)
 		else:
 			if command.args.has("object") and command.args["object"] == true:
-				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.OBJECT, transition_properties)
+				_transition_manager.transition(transition_name, _transition_manager.TransitionScope.OBJECT, transition_properties)
 			else:
-				CasteletTransitionManager.transition(transition_name, CasteletTransitionManager.TransitionScope.VIEWPORT, transition_properties)
+				_transition_manager.transition(transition_name, _transition_manager.TransitionScope.VIEWPORT, transition_properties)
 
-	CasteletGameManager.progress.emit()
+	_game_manager.progress.emit()
 
 
 func _update_audio_channel():
@@ -339,20 +442,20 @@ func _update_audio_channel():
 	var channel : String = command.type.to_upper()
 
 	if command.value[0] == "stop":
-		CasteletAudioManager.stop_audio(channel)
+		_audio_manager.stop_audio(channel)
 	elif command.value[0] == "pause":
-		CasteletAudioManager.pause_audio(channel)
+		_audio_manager.pause_audio(channel)
 	elif command.value[0] == "resume":
-		CasteletAudioManager.resume_audio(channel)
+		_audio_manager.resume_audio(channel)
 	elif command.value[0] == "":
-		CasteletAudioManager.refresh_audio(command.args, channel)
+		_audio_manager.refresh_audio(command.args, channel)
 	else:
 		if len(command.value) > 1:
-			CasteletAudioManager.queue_audio(command.value, command.args, channel)
+			_audio_manager.queue_audio(command.value, command.args, channel)
 		else:
-			CasteletAudioManager.play_audio(command.value[0], command.args, channel)
+			_audio_manager.play_audio(command.value[0], command.args, channel)
 	
-	CasteletGameManager.progress.emit()
+	_game_manager.progress.emit()
 	
 
 func _update_window():
@@ -366,10 +469,10 @@ func _update_window():
 
 func _update_dialogue(command : CasteletSyntaxTree.DialogueExpression):
 	
-	if CasteletTransitionManager.transitioning == true:
-		CasteletGameManager.set_block_signals(true)
-		await CasteletTransitionManager.transition_completed
-		CasteletGameManager.set_block_signals(false)
+	if _transition_manager.transitioning == true:
+		_game_manager.set_block_signals(true)
+		await _transition_manager.transition_completed
+		_game_manager.set_block_signals(false)
 	
 	var dialogue = {
 		"speaker": command.speaker,
@@ -384,9 +487,9 @@ func _update_dialogue(command : CasteletSyntaxTree.DialogueExpression):
 		print(vr)
 		if vr.type == Tokenizer.TOKENS.SYMBOL:
 			if vr.value.begins_with("persistent."):
-				val = CasteletGameManager.persistent[vr.value.trim_prefix("persistent.")]
+				val = _game_manager.get_variable(vr.value.trim_prefix("persistent."), true)
 			else:
-				val = CasteletGameManager.vars[vr.value]
+				val = _game_manager.get_variable(vr.value)
 		else:
 			val = vr.value
 		if vr.type == Tokenizer.TOKENS.NUMBER:
@@ -413,21 +516,21 @@ func _update_dialogue(command : CasteletSyntaxTree.DialogueExpression):
 	# If the speaker data starts with "id_", make sure to check the assets database
 	# for the proper speaker name.
 	if command.speaker.begins_with("id_"):
-		if not (CasteletAssetsManager.props.has(command.speaker.trim_prefix("id_"))):
+		if not (_assets_manager.props.has(command.speaker.trim_prefix("id_"))):
 			push_warning("The defined prop does not actually exist." +
 				" Temporarily assigning prop ID as speaker label.")
 			dialogue["speaker"] = command.speaker.trim_prefix("id_")
 		else:
-			dialogue["speaker"] = CasteletAssetsManager.props[command.speaker
+			dialogue["speaker"] = _assets_manager.props[command.speaker
 									.trim_prefix("id_")].prop_name
 	
 	$SubViewport/GUINode.update_dialogue(dialogue)
 
 	# Append current dialogue to the seen-dialogue cache
 	if command.speaker != "extend":
-		CasteletGameManager.append_dialogue(dialogue)
+		_game_manager.append_dialogue(dialogue)
 	else:
-		CasteletGameManager.append_dialogue_extend(dialogue)
+		_game_manager.append_dialogue_extend(dialogue)
 
 
 func _on_end_of_script():
@@ -445,30 +548,40 @@ func _on_progress():
 
 
 func play_scene(from_beginning = true):
+	_mutex.lock()
+	while not _can_play:
+		pass
+	
 	if from_beginning:
 		_tree.reset()
 	_paused = false
+	_mutex.unlock()
+
 	_next()
 
 
 func pause_scene():
-	_paused = true	
+	_mutex.lock()
+	_paused = true
+	_mutex.unlock()
 
 
 func stop_scene():
+	_mutex.lock()
 	_tree.reset()
+	_mutex.unlock()
 
 
 func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	
-	CasteletGameManager.menu_showing = true
+	_game_manager.menu_showing = true
 
-	if not CasteletConfig.continue_ffwd_after_choices:
-		CasteletGameManager.ffwd_active = false
+	if not _config_manager.get_config(_config_manager.ConfigList.CONTINUE_FFWD_ON_CHOICE):
+		_game_manager.ffwd_active = false
 	
-	# CasteletGameManager.auto_active = false
+	# _game_manager.auto_active = false
 
-	# CasteletGameManager.set_block_signals(true)
+	# _game_manager.set_block_signals(true)
 
 	if menu.value != null:
 		_update_dialogue(menu.value)
@@ -484,30 +597,33 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	$SubViewport/GUINode.show_choices(choices)
 
 	var next_tree = await $SubViewport/GUINode.choice_made
+	print_debug(next_tree)
 
 	self.load_script(next_tree)
+	await load_script_finished
 	self._tree.reset()
 
-	# CasteletGameManager.set_block_signals(false)
+	# _game_manager.set_block_signals(false)
 
-	CasteletGameManager.menu_showing = false
-	CasteletGameManager.progress.emit()
-
-
-	
+	_game_manager.menu_showing = false
+	_game_manager.progress.emit()
 
 
-# Terminates this node. Intended to be called
+# Terminates this node. Intended to be called externally.
 func end():
+
+	# Make sure the persistent data is saved upon terminating the theater
+	# player
+	_state_manager.save_persistent()
 	
 	stop_scene()
 
-	CasteletTransitionManager.vp = null
+	_transition_manager.vp = null
 	remove_child(_timer)
 	_timer.queue_free()
 
 	# Ensures the signal handler is disconnected before this node is destroyed, just in case.
-	CasteletGameManager.progress.disconnect(_on_progress)
+	_game_manager.progress.disconnect(_on_progress)
 	end_of_script.disconnect(_on_end_of_script)
 
 	$SubViewport/StageNode.hide()
@@ -515,3 +631,8 @@ func end():
 	
 	queue_free()
 	
+
+func _exit_tree() -> void:
+	_ending_thread = true
+	_semaphore.post()
+	_thread.wait_to_finish()

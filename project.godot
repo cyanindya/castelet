@@ -17,14 +17,14 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-CasteletAssetsManager="*res://castelet_autoload/castelet_assets_manager.tscn"
-CasteletAudioManager="*res://castelet_autoload/castelet_audio_manager.tscn"
-CasteletConfig="*res://castelet_autoload/castelet_config.tscn"
-CasteletGameManager="*res://castelet_autoload/castelet_game_manager.tscn"
+CasteletAssetsManager="res://castelet_autoload/castelet_assets_manager.tscn"
+CasteletAudioManager="res://castelet_autoload/castelet_audio_manager.tscn"
+CasteletConfigManager="res://castelet_autoload/castelet_config_manager.tscn"
+CasteletGameManager="res://castelet_autoload/castelet_game_manager.tscn"
 CasteletInputManager="res://castelet_autoload/castelet_input_manager.tscn"
-CasteletTransitionManager="*res://castelet_autoload/castelet_transition_manager.tscn"
-CasteletViewportManager="*res://castelet_autoload/castelet_viewport_manager.tscn"
-CasteletResourceLoader="*res://castelet_autoload/castelet_resource_loader.gd"
+CasteletTransitionManager="res://castelet_autoload/castelet_transition_manager.tscn"
+CasteletViewportManager="res://castelet_autoload/castelet_viewport_manager.tscn"
+CasteletStateManager="res://castelet_autoload/castelet_state_manager/castelet_state_manager.tscn"
 
 [display]
 
@@ -35,6 +35,7 @@ window/stretch/mode="canvas_items"
 
 [editor]
 
+run/main_run_args="--verbose"
 version_control/plugin_name="GitPlugin"
 version_control/autoload_on_startup=true
 

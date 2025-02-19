@@ -15,4 +15,5 @@ bus = &"SFX"
 script = ExtResource("2_sd3yx")
 
 [node name="VOICE" type="AudioStreamPlayer" parent="."]
+bus = &"VOICE"
 script = ExtResource("2_sd3yx")

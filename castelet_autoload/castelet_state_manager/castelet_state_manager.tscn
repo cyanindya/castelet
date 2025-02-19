@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c5sh7m86daxp1"]
+
+[ext_resource type="Script" path="res://castelet_autoload/castelet_state_manager/castelet_state_manager.gd" id="1_o3hqa"]
+
+[node name="CasteletStateDataManager" type="Node"]
+script = ExtResource("1_o3hqa")

@@ -4,7 +4,7 @@
 # accordingly.
 # 
 # This node is NOT intended to listen to other nodes, nor is it requiring dependency on another
-# except for CasteletConfig.
+# except for _config_manager.
 # Instead, this node provides events/signals those can be used by other nodes, and handle
 # changes based on the signals accordingly
 # 
@@ -26,12 +26,13 @@
 #
 
 extends Node
+class_name CasteletGameManager
 
-var parser = preload("res://castelet_core/parser/castelet_script_parser.gd").new()
+var _parser = preload("res://castelet_core/parser/castelet_script_parser.gd").new()
 var script_trees = {}
 var jump_checkpoints_list = {}
-var vars = {}
-var persistent = {}
+var _vars = {}
+var _persistent = {}
 
 var backlog = []
 var backlog_max_limit = 200
@@ -53,6 +54,11 @@ var _standby := false :
 
 var menu_showing = false
 
+var _mutex : Mutex
+var _script_ready := false
+@export var _script_directory := "res://"
+
+@onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 
 signal confirm
 signal ffwd_hold(state : bool)
@@ -63,18 +69,48 @@ signal toggle_automode
 signal enter_standby
 signal progress
 
+signal persistent_updated(name, value)
+
 
 func _script_loader_callback(file_name : String):
 
 	if file_name.ends_with(".tsc"):		
-		parser.execute_parser(file_name)
-		
+		_parser.execute_parser(file_name)
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_SCENE_INSTANTIATED:
+
+		_mutex = Mutex.new()
+
+		_parser.add_to_checkpoints_list.connect(
+			func(checkpoint_name : String, checkpoint_data : Dictionary):
+				jump_checkpoints_list[checkpoint_name] = checkpoint_data
+		)
+		_parser.add_to_script_tree.connect(
+			func(tree_name : String, tree : CasteletSyntaxTree):
+				script_trees[tree_name] = tree
+		)
+
+		var thread = Thread.new()
+		thread.start(_load_script_subprocess)
+		thread.wait_to_finish()
+		_script_ready = true
+	
+
+func _load_script_subprocess():
+	# Go through the resource directory to check all script files
+	_mutex.lock()
+	var _res_loader : CasteletResourceLoader = CasteletResourceLoader.new()
+	var _result = _res_loader.load_all_resources_of_type(_script_directory, self, "_script_loader_callback")
+	_mutex.unlock()
+	
+
+func is_script_ready() -> bool:
+	return _script_ready
+
 
 func _ready():
-
-	# Go through the resource directory to check all script files
-	CasteletResourceLoader.load_all_resources_of_type("res://", self, "_script_loader_callback")
-
 	# Initialize some signal connections, whether from internal or other nodes
 	enter_standby.connect(_on_standby)
 	toggle_automode.connect(_on_toggle_automode)
@@ -82,20 +118,22 @@ func _ready():
 
 	ffwd_hold.connect(_on_ffwd_hold)
 	ffwd_toggle.connect(_on_ffwd_toggle)
-	
+	_config_manager.config_updated.connect(_on_automode_timeout_changed)
 
 	# Initialize automode timer
 	_automode_timer = Timer.new()
 	add_child(_automode_timer)
-	if CasteletConfig.base_automode_timeout != null:
-		_automode_timer.wait_time = CasteletConfig.base_automode_timeout
+	if _config_manager.get_config(_config_manager.ConfigList.AUTOMODE_TIMEOUT) != null:
+		_automode_timer.wait_time = _config_manager.get_config(_config_manager.ConfigList.AUTOMODE_TIMEOUT)
 	else:
 		_automode_timer.wait_time = 3
+		_config_manager.set_config(_config_manager.ConfigList.AUTOMODE_TIMEOUT, 3)
 	_automode_timer.timeout.connect(_on_automode_timer_timeout)
 
 	if auto_active:
 		_automode_timer.start()
-	
+
+
 
 func append_dialogue(dialogue_data: Dictionary):
 
@@ -180,6 +218,13 @@ func _on_automode_timer_timeout():
 	confirm.emit()
 
 
+func _on_automode_timeout_changed(conf, val):
+	if conf == _config_manager.ConfigList.AUTOMODE_TIMEOUT:
+		_automode_timer.wait_time = val
+	
+	# TODO: restart the timer if auto-mode is active
+
+
 func _on_progress():
 	_standby = false
 	if auto_active:
@@ -193,5 +238,29 @@ func _on_ffwd_hold(state: bool):
 func _on_ffwd_toggle():
 	ffwd_active = !ffwd_active
 
-func print(s1 : String, s2: String):
-	prints(s1, s2)
+
+func set_variable(var_name : String, var_value, persistent := false):
+	if persistent == true:
+		_persistent[var_name] = var_value
+		persistent_updated.emit.call_deferred(var_name, var_value)
+	else:
+		_vars[var_name] = var_value
+	
+
+func get_variable(var_name : String, persistent := false) -> Variant:
+
+	if persistent == true:
+		if not _persistent.keys().has(var_name): # find_key() bonked for some reasons
+			return null
+		return _persistent[var_name]
+	
+	if not _vars.keys().has(var_name):
+		return null
+	return _vars[var_name]
+
+
+func get_all_variables(persistent := false) -> Dictionary:
+	if persistent == true:
+		return _persistent
+	else:
+		return _vars

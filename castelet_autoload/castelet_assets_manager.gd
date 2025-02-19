@@ -14,13 +14,33 @@
 #
 
 extends Node
+class_name CasteletAssetsManager
 
-@export_dir var resource_dir : String
+@export_dir var resource_dir : String = "res://"
 var props := {}
 var audio_shorthand = {}
+var _assets_ready := false
 
-func _ready():
-	CasteletResourceLoader.load_all_resources_of_type(resource_dir, self, "_prop_loader_callback")
+
+# Due to export variables only being initialized AFTER instantiate call,
+# we can only to execute the resource loading after _init() , otherwise it
+# settles to default value.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_SCENE_INSTANTIATED:
+		var thread = Thread.new()
+		thread.start(
+			func():
+				var _res_loader : CasteletResourceLoader = CasteletResourceLoader.new()
+				var _result = _res_loader.load_all_resources_of_type(resource_dir, self, "_prop_loader_callback")
+				print_debug("running from thread x")
+		)
+		thread.wait_to_finish()
+		_assets_ready = true
+
+
+func is_assets_ready() -> bool:
+	return _assets_ready
+
 
 func _prop_loader_callback(file_name : String):
 

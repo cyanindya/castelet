@@ -1,5 +1,5 @@
-class_name CasteletSyntaxTreeBuilder
 extends RefCounted
+class_name CasteletSyntaxTreeBuilder
 ## Generates the syntax tree from the script tokens. This is the main body of
 ## the script parser that does most of the heavy lifting until a script tree is
 ## generated.
@@ -49,6 +49,10 @@ var _sublevel = 0
 var _sub_tree_name = _name + "_sub_tree_" + str(_sub_tree_count)
 var _tokens : Tokenizer
 var _token_cache = []
+
+signal add_to_script_tree(tree_name : String, tree : CasteletSyntaxTree)
+signal add_to_checkpoints_list(checkpoint_name : String, checkpoint_data : Dictionary)
+signal parsing_completed
 
 
 func _init(tree_name : String, tokens_list : Tokenizer):
@@ -107,14 +111,14 @@ func parse(check_for_eof_token := false, args := {}) -> CasteletSyntaxTree:
 				var while_true_name = args["parent_tree"] + "_" + str(args["id"]) + "_while_true"
 				var while_true_tree : CasteletSyntaxTree = CasteletSyntaxTree.new(while_true_name)
 				while_true_tree.append(CasteletSyntaxTree.LoopBackExpression.new(tree))
-				CasteletGameManager.script_trees[while_true_name] = while_true_tree
+				add_to_script_tree.emit(while_true_name, while_true_tree)
 
 				var while_false_name = args["parent_tree"] + "_" + str(args["id"]) + "_while_false"
 				var while_false_tree : CasteletSyntaxTree = CasteletSyntaxTree.new(while_false_name)
 				while_false_tree.append(CasteletSyntaxTree.JumptoExpression.new(
 						"after_" + args["parent_tree"] + "_" + str(args["id"])
 				))
-				CasteletGameManager.script_trees[while_false_name] = while_false_tree
+				add_to_script_tree.emit(while_false_name, while_false_tree)
 
 				tree.append(CasteletSyntaxTree.IfElseExpression.new(
 					[
@@ -131,22 +135,29 @@ func parse(check_for_eof_token := false, args := {}) -> CasteletSyntaxTree:
 	
 	# Since it is possible for the tree to be generated from sub-tokens, add
 	# the resulting tree to the game manager from here.
-	CasteletGameManager.script_trees[tree.name] = tree
+	print_debug(tree.name, "foonya")
+	add_to_script_tree.emit(tree.name, tree)
 
 	# List all checkpoints in the script tree to be added to the global manager.
 	for checkpoint in tree.checkpoints:
-		CasteletGameManager.jump_checkpoints_list[checkpoint.value] = {
+		var cpl = {
 			"tree" : tree.name,
 			"index" : checkpoint.position,
 		}
+		add_to_checkpoints_list.emit(checkpoint.value, cpl)
 	
 	# Add special checkpoint for beginning of a syntax tree. Useful for jumping
 	# to the beginning of a scenario script without actually adding a label to the script's
 	# syntax tree.
-	CasteletGameManager.jump_checkpoints_list[tree.name] = {
+	var cp = {
 		"tree" : tree.name,
 		"index" : -1,
 	}
+	add_to_checkpoints_list.emit(tree.name, cp)
+
+	
+	# print_debug("parse complete for ", tree.name)
+	parsing_completed.emit.call_deferred()
 
 	return tree
 
@@ -481,6 +492,17 @@ func _parse_sub_block():
 	var sub_tokenizer = Tokenizer.new()
 	sub_tokenizer.set_from_tokens_list(subtokens_list)
 	var subtree_builder = CasteletSyntaxTreeBuilder.new(_sub_tree_name, sub_tokenizer)
+
+	# The subtree needs to have the signals data forwarded to the main tree's signals
+	subtree_builder.add_to_checkpoints_list.connect(
+		func(checkpoint_name : String, checkpoint_data : Dictionary):
+			add_to_checkpoints_list.emit(checkpoint_name, checkpoint_data)
+	)
+	subtree_builder.add_to_script_tree.connect(
+		func(tree_name : String, tree_to_add : CasteletSyntaxTree):
+			add_to_script_tree.emit(tree_name, tree_to_add)
+	)
+
 	var sub_block = subtree_builder.parse(false, {"block": block_header,
 							"parent_tree": self._name,
 							"id": str(_expression_id),

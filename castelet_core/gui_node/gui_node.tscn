@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://cf8ybpujcepfc"]
+[gd_scene load_steps=6 format=3 uid="uid://cf8ybpujcepfc"]
 
 [ext_resource type="PackedScene" uid="uid://cb1ysu6lfx171" path="res://castelet_core/gui_node/dialogue_node.tscn" id="1_h0g72"]
 [ext_resource type="Script" path="res://castelet_core/gui_node/gui_node.gd" id="1_lemi2"]
 [ext_resource type="PackedScene" uid="uid://mj6e2n3prqpq" path="res://castelet_core/gui_node/menu_node.tscn" id="3_178xq"]
 [ext_resource type="PackedScene" uid="uid://ca1dssn5xvet0" path="res://castelet_core/gui_node/backlog_node.tscn" id="3_mumyu"]
+[ext_resource type="PackedScene" uid="uid://tgsnni7av3vm" path="res://castelet_core/gui_node/settings_node.tscn" id="5_5st5b"]
 
 [node name="GUINode" type="CanvasLayer"]
 layer = 10
@@ -39,6 +40,10 @@ offset_bottom = 31.0
 grow_horizontal = 0
 alignment = 2
 
+[node name="ConfigButton" type="Button" parent="QuickMenuControl/ButtonContainers"]
+layout_mode = 2
+text = "Settings"
+
 [node name="BacklogButton" type="Button" parent="QuickMenuControl/ButtonContainers"]
 layout_mode = 2
 text = "Backlog"
@@ -51,7 +56,12 @@ text = "Auto"
 [node name="BacklogNode" parent="." instance=ExtResource("3_mumyu")]
 visible = false
 
+[node name="SettingsNode" parent="." instance=ExtResource("5_5st5b")]
+visible = false
+
 [connection signal="dialogue_window_status_changed" from="DialogueNode" to="." method="_on_dialogue_node_dialogue_window_status_changed"]
+[connection signal="pressed" from="QuickMenuControl/ButtonContainers/ConfigButton" to="." method="_on_config_button_pressed"]
 [connection signal="pressed" from="QuickMenuControl/ButtonContainers/BacklogButton" to="." method="_on_backlog_button_pressed"]
 [connection signal="toggled" from="QuickMenuControl/ButtonContainers/AutomodeButton" to="." method="_on_automode_button_toggled"]
 [connection signal="visibility_changed" from="BacklogNode" to="." method="_on_backlog_window_visibility_changed"]
+[connection signal="set_fullscreen" from="SettingsNode" to="." method="_on_viewport_resized"]

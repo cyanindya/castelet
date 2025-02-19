@@ -1,4 +1,5 @@
 extends CanvasLayer
+class_name CasteletTransitionManager
 ## The singleton that handles transition requests from the TheaterNode.
 ##
 ## When TheaterNode requests for scene changes through transition,
@@ -27,7 +28,6 @@ extends CanvasLayer
 ## - do the tweening in StageNode based on the transition data
 ## - have the StageNode emit transition_completed signal
 
-
 ## The signal to be emitted once a transition is completed.
 ## This is meant to control/block certain functions of Castelet so they won't
 ## be executed until this signal is emitted.
@@ -44,6 +44,8 @@ enum TransitionScope {VIEWPORT, OBJECT}
 ## dissolve transitions. This will be loaded on _ready() using the
 ## CasteletResourceLoaded singleton and _load_dissolve_presets function.
 var dissolve_transition_presets = {}
+var _transition_presets_ready := false
+@export var _transition_presets_directory := "res://"
 
 ## Variables containing standard transition types and the relevant functions
 ## to be executed, as well as the transition scope. Some transitions are
@@ -105,11 +107,29 @@ var color_rect : ColorRect
 var object_transition_data = {}
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_SCENE_INSTANTIATED:
+		# Command the resource loader singleton to load predefined image-dissolve
+		# transitions and put them to the dissolve_transition_presets variable.
+		var thread = Thread.new()
+		thread.start(
+			func():
+				var _res_loader : CasteletResourceLoader = CasteletResourceLoader.new()
+				var _result = _res_loader.load_all_resources_of_type(
+						_transition_presets_directory,
+						self,
+						"_load_dissolve_presets"
+				)
+		)
+		thread.wait_to_finish()
+		_transition_presets_ready = true
+
+
+func is_transitions_ready() -> bool:
+	return _transition_presets_ready
+
+
 func _ready():
-	# Command the resource loader singleton to load predefined image-dissolve
-	# transitions and put them to the dissolve_transition_presets variable.
-	CasteletResourceLoader.load_all_resources_of_type("res://", self,
-			"_load_dissolve_presets")
 
 	# Connect the "transition_completed" signal to _on_transition_completed()
 	# function.

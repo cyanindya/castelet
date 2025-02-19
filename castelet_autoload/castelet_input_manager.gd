@@ -5,6 +5,9 @@
 # To prevent the input going through during certain circumstances (e.g. while
 # game menu is active), use CasteletGameManager.set_block_signals(true) while said elements are active
 extends Node
+class_name CasteletInputManager
+
+@onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
 
 # To prevent possible double-input when using certain keyboards, see the following link for implementation reference:
 # https://stackoverflow.com/questions/69981662/godot-input-is-action-just-pressed-runs-twice
@@ -12,17 +15,17 @@ func _unhandled_input(event):
 
 	var single_key_press : bool = not (event is InputEventKey and event.echo)
 
-	if not CasteletGameManager.menu_showing:
+	if not _game_manager.menu_showing:
 		if event.is_action("confirm") and event.pressed and single_key_press:
-			CasteletGameManager.confirm.emit()
+			_game_manager.confirm.emit()
 		
 		if event.is_action("hold_ffwd"):
 			if event.pressed:
-				CasteletGameManager.ffwd_hold.emit(true)
+				_game_manager.ffwd_hold.emit(true)
 			else:
-				CasteletGameManager.ffwd_hold.emit(false)
+				_game_manager.ffwd_hold.emit(false)
 		
 		if event.is_action("toggle_ffwd") and event.pressed and single_key_press:
-			CasteletGameManager.ffwd_toggle.emit()
+			_game_manager.ffwd_toggle.emit()
 
 	

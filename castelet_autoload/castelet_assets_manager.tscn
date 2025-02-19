@@ -4,4 +4,3 @@
 
 [node name="CasteletAssetsManager" type="Node"]
 script = ExtResource("1_w7icx")
-resource_dir = "res://test_assets"

@@ -7,7 +7,16 @@ extends Node2D
 # - CasteletAssetsManager
 #
 
+@onready var _assets_manager : CasteletAssetsManager = get_node("/root/CasteletAssetsManager")
+@onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
+@onready var _transition_manager : CasteletTransitionManager = get_node("/root/CasteletTransitionManager")
+@onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
+
 signal stage_updated
+
+
+func _ready() -> void:
+	_viewport_manager.viewport_resized.connect(_on_viewport_resized)	
 
 
 func scene(prop_name := "", prop_variant := "default", args := {}):
@@ -17,7 +26,7 @@ func scene(prop_name := "", prop_variant := "default", args := {}):
 	if prop_name != "none":
 		show_prop(prop_name, prop_variant, args)
 	else:
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 	
 
 func show_prop(prop_name := "", prop_variant := "default", args := {}):
@@ -36,7 +45,7 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	# If this is a newly shown prop, add it to the stage. Otherwise, keep
 	# track of the last known location
 	if prop == null:
-		prop = CasteletAssetsManager.props[prop_name]
+		prop = _assets_manager.props[prop_name]
 		add_child(prop)
 
 		if args.has("transition"):
@@ -68,13 +77,13 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 						old_xpos = 0.5
 					old_ypos = 2.0
 				
-				prop.position.x = CasteletViewportManager.base_viewport_width * old_xpos
-				prop.position.y = CasteletViewportManager.base_viewport_height * old_ypos
-				prop.in_viewport_scale = CasteletViewportManager.base_scale_factor * scale_factor
+				prop.position.x = get_window().content_scale_size.x * old_xpos
+				prop.position.y = get_window().content_scale_size.y * old_ypos
+				prop.in_viewport_scale = _viewport_manager.base_scale_factor * scale_factor
 	else:
-		old_xpos = prop.position.x / CasteletViewportManager.base_viewport_width
-		old_ypos = prop.position.y / CasteletViewportManager.base_viewport_height
-		scale_factor = prop.in_viewport_scale / CasteletViewportManager.base_scale_factor
+		old_xpos = prop.position.x / get_window().content_scale_size.x
+		old_ypos = prop.position.y / get_window().content_scale_size.y
+		scale_factor = prop.in_viewport_scale / _viewport_manager.base_scale_factor
 
 		new_xpos = old_xpos
 		new_ypos = old_ypos
@@ -96,30 +105,30 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	if flip != null:
 		prop.set_flip(flip)
 	
-	var viewport_new_xpos = CasteletViewportManager.base_viewport_width * new_xpos
-	var viewport_new_ypos = CasteletViewportManager.base_viewport_height * new_ypos
+	var viewport_new_xpos = get_window().content_scale_size.x * new_xpos
+	var viewport_new_ypos = get_window().content_scale_size.y * new_ypos
 
 	# Properly display the prop now
 	if args.has("transition"):
 		if args["transition"]["transition_name"] == "move":
-			CasteletTransitionManager.move_object(prop, Vector2(viewport_new_xpos, viewport_new_ypos),
+			_transition_manager.move_object(prop, Vector2(viewport_new_xpos, viewport_new_ypos),
 				prop.position, args["transition"])
-			await CasteletTransitionManager.transition_completed
+			await _transition_manager.transition_completed
 	else:
 		prop.position.x = viewport_new_xpos
 		prop.position.y = viewport_new_ypos
-		prop.in_viewport_scale = CasteletViewportManager.base_scale_factor * scale_factor
+		prop.in_viewport_scale = _viewport_manager.base_scale_factor * scale_factor
 	
 	stage_updated.emit()
-	CasteletGameManager.progress.emit()
+	_game_manager.progress.emit()
 
 
 func hide_prop(prop_name : String, args := {}):
 	var prop : PropNode = get_node_or_null(prop_name)
 	if prop != null:
 		if args.has("transition"):
-			var new_xpos = prop.position.x / CasteletViewportManager.base_viewport_width
-			var new_ypos = prop.position.y / CasteletViewportManager.base_viewport_height
+			var new_xpos = prop.position.x / get_window().content_scale_size.x
+			var new_ypos = prop.position.y / get_window().content_scale_size.y
 			
 			if args["transition"].has("exit_to"):
 				if args["transition"]["exit_to"] == "left":
@@ -131,21 +140,33 @@ func hide_prop(prop_name : String, args := {}):
 				elif args["transition"]["exit_to"] == "bottom":
 					new_ypos = 2.0
 			
-			var viewport_new_xpos = CasteletViewportManager.base_viewport_width * new_xpos
-			var viewport_new_ypos = CasteletViewportManager.base_viewport_height * new_ypos
+			var viewport_new_xpos = get_window().content_scale_size.x * new_xpos
+			var viewport_new_ypos = get_window().content_scale_size.y * new_ypos
 			
 			if args["transition"]["transition_name"] == "move":
-				CasteletTransitionManager.move_object(prop, Vector2(viewport_new_xpos, viewport_new_ypos),
+				_transition_manager.move_object(prop, Vector2(viewport_new_xpos, viewport_new_ypos),
 					prop.position, args["transition"])
-				await CasteletTransitionManager.transition_completed
+				await _transition_manager.transition_completed
 
 		remove_child(prop)
 
 		stage_updated.emit()
-		CasteletGameManager.progress.emit()
+		_game_manager.progress.emit()
 
 
 func clear_props():
 	for child in get_children():
 		if child is PropNode:
 			remove_child(child)
+
+# Ensures smooth appearance regardless of current resolution, since
+# all props' size and position are recalculated.
+# FIXME: Currently doesn't work well with Godot's stretch mode and content scaling
+func _on_viewport_resized():
+	for child in get_children():
+		if child is PropNode:
+			var old_viewport_scale = child.in_viewport_scale
+
+			child.in_viewport_scale = _viewport_manager.base_scale_factor
+			child.position.x *= child.in_viewport_scale / old_viewport_scale
+			child.position.y *= child.in_viewport_scale / old_viewport_scale

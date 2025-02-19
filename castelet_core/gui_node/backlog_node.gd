@@ -21,6 +21,9 @@ func update_backlog(dialogue_data : Dictionary, replace = false):
 		dat.load_dialogue(dialogue_data['speaker'], dialogue_data['dialogue'])
 		_backlog_container.add_child(dat)
 
+
+func resize_node(new_scale : float):
+	scale = Vector2(new_scale, new_scale)
 	
 
 func _on_return_button_down():
