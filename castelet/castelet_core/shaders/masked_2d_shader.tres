@@ -1,0 +1,17 @@
+[gd_resource type="ShaderMaterial" load_steps=4 format=3 uid="uid://ccgheq05v2mia"]
+
+[ext_resource type="Shader" path="res://castelet/castelet_core/shaders/masked_2d_shader.gdshader" id="1_01al8"]
+[ext_resource type="Texture2D" uid="uid://c0kf6xbfms428" path="res://castelet/castelet_core/transition_masks/h_blind.png" id="2_2nuob"]
+[ext_resource type="Texture2D" uid="uid://b4b8bwyqw54ts" path="res://castelet/castelet_core/shaders/white_px.png" id="3_y6lk4"]
+
+[resource]
+shader = ExtResource("1_01al8")
+shader_parameter/cutoff = 0.0
+shader_parameter/smoothSize = 0.5
+shader_parameter/tiled = true
+shader_parameter/centerUV = true
+shader_parameter/invert = false
+shader_parameter/tileAdjustFactor = 1.0
+shader_parameter/tex_a = ExtResource("3_y6lk4")
+shader_parameter/tex_b = ExtResource("3_y6lk4")
+shader_parameter/maskTexture = ExtResource("2_2nuob")

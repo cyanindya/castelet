@@ -1,8 +1,0 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://fwtjl3ek18s6"]
-
-[ext_resource type="Shader" path="res://castelet_core/shaders/two_texture_hexagon_pixelate_shader.gdshader" id="1_wp55r"]
-
-[resource]
-shader = ExtResource("1_wp55r")
-shader_parameter/px_size = 1.01
-shader_parameter/old_screen_alpha = 0.0
