@@ -19,6 +19,7 @@ mono_crash.*.json
 
 # Project-specific ignores
 test_assets/
+sample_projects/
 
 # Other ignores
 *.bak
