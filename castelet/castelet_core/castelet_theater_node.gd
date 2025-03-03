@@ -280,6 +280,10 @@ func _next():
 				current_var_value %= result
 			_game_manager.set_variable(varname, current_var_value, is_persistent)
 
+			# Every time persistent is updated, auto-save the game
+			if is_persistent == true:
+				_state_manager.save_persistent()
+
 		else:
 			# Do nothing if default is defined and the variable already had
 			# existing value.

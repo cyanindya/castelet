@@ -256,10 +256,12 @@ func _parse_commands():
 		self._tokens.next()
 		next_token_preview = _tokens.peek()
 
-		while next_token_preview.type in [Tokenizer.TOKENS.SYMBOL, ","]:
+		while next_token_preview.type in [
+			Tokenizer.TOKENS.SYMBOL, Tokenizer.TOKENS.STRING_LITERAL, ","
+		]:
 			
 			var token = self._tokens.next()
-			if next_token_preview.type == Tokenizer.TOKENS.SYMBOL:
+			if next_token_preview.type in [Tokenizer.TOKENS.SYMBOL, Tokenizer.TOKENS.STRING_LITERAL]:
 				value.append(token.value)
 		
 			next_token_preview = _tokens.peek()
@@ -273,9 +275,19 @@ func _parse_commands():
 	elif next_token_preview.type == Tokenizer.TOKENS.SYMBOL:
 		var token = self._tokens.next()
 		value.append(token.value)
+
+	elif (next_token_preview.type == Tokenizer.TOKENS.STRING_LITERAL) \
+		and (type in [
+			Tokenizer.KEYWORDS.SFX,
+			Tokenizer.KEYWORDS.BGM,
+			Tokenizer.KEYWORDS.VOICE,
+		]):
+			var token = self._tokens.next()
+			value.append(token.value)
 	
 	else:
-		push_error("This keyword must be followed by symbol.")
+		push_error("Expected Symbol-type token to follow \"%s\" keyword, but found %s instead."
+			% [type, next_token_preview.type])
 
 	if type == Tokenizer.KEYWORDS.LABEL:
 		# TODO: make sure it is a valid name format
