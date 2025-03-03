@@ -286,8 +286,8 @@ func _parse_commands():
 			value.append(token.value)
 	
 	else:
-		push_error("Expected Symbol-type token to follow this keyword, but found %s instead."
-			% next_token_preview.type)
+		push_error("Expected Symbol-type token to follow \"%s\" keyword, but found %s instead."
+			% [type, next_token_preview.type])
 
 	if type == Tokenizer.KEYWORDS.LABEL:
 		# TODO: make sure it is a valid name format
