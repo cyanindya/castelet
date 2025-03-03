@@ -281,7 +281,7 @@ func _next():
 			_game_manager.set_variable(varname, current_var_value, is_persistent)
 
 			# Every time persistent is updated, auto-save the game
-			if is_persistent:
+			if is_persistent == true:
 				_state_manager.save_persistent()
 
 		else:
