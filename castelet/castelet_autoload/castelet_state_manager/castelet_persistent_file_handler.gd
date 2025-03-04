@@ -1,4 +1,4 @@
-extends CasteletSaveFileHandler
+extends CasteletBaseSaveLoadHandler
 
 
 var _game_manager : CasteletGameManager

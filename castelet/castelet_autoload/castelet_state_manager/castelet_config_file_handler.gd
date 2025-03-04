@@ -1,4 +1,4 @@
-extends CasteletSaveFileHandler
+extends CasteletBaseSaveLoadHandler
 
 var _config_section_name : String = "CasteletConfig"
 var _config_manager : CasteletConfigManager

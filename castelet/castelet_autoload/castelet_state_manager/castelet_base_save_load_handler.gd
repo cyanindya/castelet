@@ -1,5 +1,5 @@
 extends RefCounted
-class_name CasteletSaveFileHandler
+class_name CasteletBaseSaveLoadHandler
 
 var save_file_name : String
 
