@@ -109,6 +109,36 @@ func _on_load_persistent_finish():
 	persistent_load_finish.emit()
 
 
+func load_game_data():
+	_saveload_manager.load_file()
+	await game_load_finish
+
+
+func save_game_data():
+	_saveload_manager.save_file()
+	await game_save_finish
+
+
+func _on_save_game_start():
+	print_debug("Saving game file...")
+	game_save_start.emit()
+
+
+func _on_save_game_finish():
+	print_debug("Saving game completed.")
+	game_save_finish.emit()
+
+
+func _on_load_game_start():
+	print_debug("Loading game file...")
+	game_load_start.emit()
+
+
+func _on_load_game_finish():
+	print_debug("Loading game completed.")
+	game_load_finish.emit()
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST:
 		save_persistent()
