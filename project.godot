@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Castelet"
 run/main_scene="res://test_project/scenes/sample_main.tscn"
-config/features=PackedStringArray("4.3", "Forward Plus")
+config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]

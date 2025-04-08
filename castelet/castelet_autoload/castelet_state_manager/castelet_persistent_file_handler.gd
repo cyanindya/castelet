@@ -35,7 +35,7 @@ func _load_thread_subprocess():
 
 	if file == null:
 		push_warning("Unable to load the game configuration data." +
-			"The game will use the default configuration nstead."
+			"The game will use the default configuration instead."
 		)
 		return
 

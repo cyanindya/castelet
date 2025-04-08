@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://moxgg1hn1uc7"]
 
-[ext_resource type="Script" path="res://castelet/castelet_autoload/castelet_transition_manager..gd" id="1_i01oj"]
+[ext_resource type="Script" uid="uid://cjhigu277r6gc" path="res://castelet/castelet_autoload/castelet_transition_manager..gd" id="1_i01oj"]
 [ext_resource type="Texture2D" uid="uid://b4b8bwyqw54ts" path="res://castelet/castelet_core/shaders/white_px.png" id="1_r0wxr"]
 
 [node name="CasteletTransitionManager" type="CanvasLayer"]
