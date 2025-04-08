@@ -1,11 +1,11 @@
-extends CasteletSaveFileHandler
+extends CasteletBaseSaveLoadHandler
 
 var _config_section_name : String = "CasteletConfig"
 var _config_manager : CasteletConfigManager
 
 
 func _init() -> void:
-	save_file_name = "user://config.ini"
+	_save_file_name = "user://config.ini"
 
 
 func set_config_manager(cfg : CasteletConfigManager):
@@ -23,12 +23,12 @@ func _save_thread_subprocess():
 		if conf_value != null:
 			config.set_value(_config_section_name, str(conf), conf_value)
 
-	config.save(save_file_name)
+	config.save(_save_file_name)
 
 
 func _load_thread_subprocess():
 	var config = ConfigFile.new()
-	var err = config.load(save_file_name)
+	var err = config.load(_save_file_name)
 
 	if err != OK:
 		push_warning("Unable to load the game configuration data." +

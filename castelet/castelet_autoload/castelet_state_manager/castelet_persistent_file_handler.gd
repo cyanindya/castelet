@@ -1,11 +1,11 @@
-extends CasteletSaveFileHandler
+extends CasteletBaseSaveLoadHandler
 
 
 var _game_manager : CasteletGameManager
 
 
 func _init() -> void:
-	save_file_name = "user://persistent.sav"
+	_save_file_name = "user://persistent.sav"
 
 
 func set_game_manager(obj : CasteletGameManager):
@@ -13,7 +13,7 @@ func set_game_manager(obj : CasteletGameManager):
 
 
 func _save_thread_subprocess():
-	var file = FileAccess.open(save_file_name, FileAccess.WRITE)
+	var file = FileAccess.open(_save_file_name, FileAccess.WRITE)
 
 	for persistent_data in _game_manager.get_all_variables(true):
 		var value = _game_manager.get_variable(persistent_data, true)
@@ -30,7 +30,7 @@ func _save_thread_subprocess():
 
 
 func _load_thread_subprocess():
-	var file = FileAccess.open(save_file_name, FileAccess.READ)
+	var file = FileAccess.open(_save_file_name, FileAccess.READ)
 	_mutex.unlock()
 
 	if file == null:
