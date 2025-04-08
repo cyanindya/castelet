@@ -3,11 +3,9 @@ class_name CasteletStateManager
 
 const ConfigFileManager = preload("castelet_config_file_handler.gd")
 const PersistentFileManager = preload("castelet_persistent_file_handler.gd")
-# const GameSaveLoadManager = preload("castelet_game_save_load_handler.gd")
 
 var _conf_file_manager : ConfigFileManager
 var _persistent_manager : PersistentFileManager
-# var _saveload_manager : GameSaveLoadManager
 
 
 @onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
