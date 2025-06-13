@@ -38,6 +38,8 @@ var _ending_thread = false
 @onready var _transition_manager : CasteletTransitionManager = get_node("/root/CasteletTransitionManager")
 @onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
+@onready var _theater_manager : CasteletTheaterStateManager = get_node("/root/CasteletTheaterStageManager")
+
 
 @export var script_to_play : String:
 	set(value):
@@ -120,12 +122,16 @@ func _ready():
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
 	_game_manager.progress.connect(_on_progress)
+	_theater_manager.request_reconstruct_stage.connect(_on_request_reconstruct_stage)
 
 	await _state_manager.persistent_load_finish
 	_can_play = true
 
 
 func _next():
+
+	# Emit the signal in the game manager to tell where we are right now.
+	_game_manager.script_tree_updated.emit(self._tree.name, self._tree.get_index())
 
 	# Preview the next expression on the tree before
 	# actually grabbing them
@@ -611,6 +617,11 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 
 	_game_manager.menu_showing = false
 	_game_manager.progress.emit()
+
+
+func _on_request_reconstruct_stage(stage_props : Array, bgm):
+	for prop in stage_props:
+		_update_stage_prop()
 
 
 # Terminates this node. Intended to be called externally.

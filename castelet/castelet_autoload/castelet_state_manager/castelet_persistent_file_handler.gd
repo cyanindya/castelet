@@ -15,7 +15,10 @@ func set_game_manager(obj : CasteletGameManager):
 func _save_thread_subprocess():
 	var file = FileAccess.open(_save_file_name, FileAccess.WRITE)
 
+	# print_debug(_game_manager.get_all_variables(true))
+
 	for persistent_data in _game_manager.get_all_variables(true):
+		# print_debug(persistent_data)
 		var value = _game_manager.get_variable(persistent_data, true)
 		file.store_var(persistent_data)
 		file.store_var("=")

@@ -11,6 +11,7 @@ var _saveload_manager : GameSaveLoadManager
 
 
 @onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
+@onready var _theater_manager : CasteletTheaterStateManager = get_node("/root/CasteletTheaterStateManager")
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 
 
@@ -53,6 +54,7 @@ func _ready() -> void:
 	_persistent_manager.load_file()
 
 	_saveload_manager.set_game_manager(_game_manager)
+	_saveload_manager.set_theater_manager(_theater_manager)
 	_saveload_manager.save_start.connect(_on_save_game_start)
 	_saveload_manager.save_finish.connect(_on_save_game_finish)
 	_saveload_manager.load_start.connect(_on_load_game_start)
@@ -133,6 +135,8 @@ func load_game_data(filename : String):
 	_saveload_manager.set_save_file_name(filename)
 	_saveload_manager.load_file()
 	await game_load_finish
+	
+	_theater_manager.request_reconstruct_stage.emit()
 
 
 func _on_save_game_start():
