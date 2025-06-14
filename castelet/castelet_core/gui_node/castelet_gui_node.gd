@@ -11,7 +11,6 @@ const ChoiceNode = preload("res://castelet/castelet_core/gui_node/choice_menu/ca
 @onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 @onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
-@onready var _state_manager : CasteletStateManager = get_node("/root/CasteletStateManager")
 
 signal choice_made(sub)
 signal game_loaded
@@ -172,11 +171,10 @@ func _on_viewport_resized():
 
 
 func _on_quicksave_button_pressed():
-	_state_manager.save_game_data("user://qsave.sav")
+	$SaveLoadNode.save("user://qsave.sav")
 
 
 func _on_quickload_button_pressed():
-	_state_manager.load_game_data("user://qsave.sav")
-	await _state_manager.game_load_finish
+	$SaveLoadNode.load("user://qsave.sav")
+	await $SaveLoadNode.load_confirmed
 	game_loaded.emit()
-	

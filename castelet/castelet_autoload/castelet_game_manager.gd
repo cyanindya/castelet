@@ -42,6 +42,11 @@ var _current_script_tree_index = 0
 var _callsub_stack = []
 var _context_level = 0
 
+var _temp_script_tree = ""
+var _temp_script_tree_index = 0
+var _temp_callsub_stack = []
+var _temp_context_level = 0
+
 var ffwd_active := false
 var auto_active := false :
 	set(value):
@@ -71,6 +76,7 @@ signal toggle_automode
 signal enter_standby
 signal progress
 signal script_tree_updated(script_tree : String, index : int)
+signal script_tree_override
 
 signal persistent_updated(name, value)
 
@@ -124,6 +130,7 @@ func _ready():
 	_config_manager.config_updated.connect(_on_automode_timeout_changed)
 
 	script_tree_updated.connect(_on_script_tree_updated)
+	script_tree_override.connect(_on_script_tree_override)
 
 	# Initialize automode timer
 	_automode_timer = Timer.new()
@@ -286,8 +293,19 @@ func get_script_data():
 	return script_data_dict
 
 
-func set_script_data(script_data_dict : Dictionary):
-	_current_script_tree = script_data_dict["script"]
-	_current_script_tree_index = script_data_dict["index"]
-	_callsub_stack = script_data_dict["callsub_stack"]
-	_context_level = script_data_dict["context_lv"]
+func set_script_data_temp(script_data_dict : Dictionary):
+	_temp_script_tree = script_data_dict["script"]
+	_temp_script_tree_index = script_data_dict["index"]
+	_temp_callsub_stack = script_data_dict["callsub_stack"]
+	_temp_context_level = script_data_dict["context_lv"]
+
+
+func _on_script_tree_override():
+	_current_script_tree = _temp_script_tree
+	_current_script_tree_index = _temp_script_tree_index
+	_context_level = _temp_context_level
+	
+	_callsub_stack.clear()
+	for st in _temp_callsub_stack:
+		_callsub_stack.append(st)
+	_temp_callsub_stack.clear()

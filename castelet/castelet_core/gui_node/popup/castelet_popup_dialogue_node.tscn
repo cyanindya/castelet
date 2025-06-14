@@ -1,0 +1,93 @@
+[gd_scene load_steps=9 format=3 uid="uid://crpgmxmstovu2"]
+
+[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/popup/castelet_popup_dialogue_node.gd" id="1_60akm"]
+[ext_resource type="Texture2D" uid="uid://bdaj0mcn74hkc" path="res://castelet/castelet_default_assets/default_text_window.png" id="1_sjmn4"]
+[ext_resource type="Theme" uid="uid://d4mfepejhjvvg" path="res://castelet/castelet_default_assets/default_dialogue_rich_text_typesetting.tres" id="2_eg14x"]
+[ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_regular.ttf" id="3_ijphn"]
+[ext_resource type="FontFile" uid="uid://c713e1fx4f7r2" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_italic.ttf" id="4_r6xi6"]
+[ext_resource type="FontFile" uid="uid://ddr1ne202uwas" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_bold_italic.ttf" id="5_k7ofu"]
+[ext_resource type="FontFile" uid="uid://kgrh7hs65hcq" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_bold.ttf" id="6_8ri8e"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_oivg7"]
+texture = ExtResource("1_sjmn4")
+texture_margin_left = 30.0
+texture_margin_top = 30.0
+texture_margin_right = 30.0
+texture_margin_bottom = 30.0
+expand_margin_left = 30.0
+expand_margin_top = 30.0
+expand_margin_right = 30.0
+expand_margin_bottom = 30.0
+
+[node name="CasteletPopupDialogueNode" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_60akm")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(800, 200)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_oivg7")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 30
+
+[node name="PopupLabel" type="RichTextLabel" parent="PanelContainer/VBoxContainer"]
+clip_contents = false
+layout_mode = 2
+size_flags_vertical = 0
+theme = ExtResource("2_eg14x")
+theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
+theme_override_constants/line_separation = 5
+theme_override_fonts/normal_font = ExtResource("3_ijphn")
+theme_override_fonts/italics_font = ExtResource("4_r6xi6")
+theme_override_fonts/bold_italics_font = ExtResource("5_k7ofu")
+theme_override_fonts/bold_font = ExtResource("6_8ri8e")
+bbcode_enabled = true
+text = "[center]Popup[/center]"
+fit_content = true
+
+[node name="YesNo" type="HBoxContainer" parent="PanelContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 100
+alignment = 1
+
+[node name="Yes" type="Button" parent="PanelContainer/VBoxContainer/YesNo"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Confirm"
+
+[node name="No" type="Button" parent="PanelContainer/VBoxContainer/YesNo"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+text = "Cancel"
+
+[node name="SingleYes" type="Button" parent="PanelContainer/VBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+text = "Confirm"
+
+[connection signal="pressed" from="PanelContainer/VBoxContainer/YesNo/Yes" to="." method="_on_button_accept"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/YesNo/No" to="." method="_on_button_deny"]
+[connection signal="pressed" from="PanelContainer/VBoxContainer/SingleYes" to="." method="_on_button_confirm"]

@@ -682,11 +682,25 @@ func _on_stage_updated(command : String, args : Dictionary):
 
 func _on_request_reconstruct_stage(stage_props : Array, bgm_data : Dictionary):
 
+	# Invalidate the dialogue window content
+	$SubViewport/CasteletGUINode.update_dialogue({
+		"speaker": "",
+		"dialogue" : "",
+		"args" : {},
+	})
+
 	# Reconstruct the stage node. Make sure to block game manager signals
 	# to ensure we won't proceed to next line until the script is reloaded
 	_game_manager.set_block_signals(true)
+	
 	_reconstruct_stage(stage_props)
 	await _theater_manager.reconstruct_stage_finished
+
+	_transition_manager.transition(
+		"fade", _transition_manager.TransitionScope.VIEWPORT,
+		)
+	await _transition_manager.transition_completed
+			
 	_game_manager.set_block_signals(false)
 
 	# Set background music
@@ -701,6 +715,7 @@ func _on_request_reconstruct_stage(stage_props : Array, bgm_data : Dictionary):
 		_audio_manager_operation(["pause"])
 
 	# Reload the script and the dialogue to be displayed
+	_game_manager.script_tree_override.emit()
 	var scr = _game_manager.get_script_data()
 	self.load_script(scr["script"])
 	await load_script_finished

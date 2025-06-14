@@ -115,5 +115,5 @@ func _load_thread_subprocess():
 
 	file.close()
 
-	_game_manager.set_script_data(script_data)
-	_theater_manager.set_theater_data(theater_data)
+	_game_manager.set_script_data_temp(script_data)
+	_theater_manager.set_theater_data_temp(theater_data)

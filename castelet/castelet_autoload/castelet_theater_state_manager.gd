@@ -27,7 +27,7 @@ func _exit_tree() -> void:
 	reconstruct_stage_finished.disconnect(_on_reconstruct_stage_finished)
 
 
-func set_theater_data(theater_data : Dictionary):
+func set_theater_data_temp(theater_data : Dictionary):
 	_temp_props = theater_data["props"]
 	_temp_current_bgm = theater_data["current_bgm"]
 
