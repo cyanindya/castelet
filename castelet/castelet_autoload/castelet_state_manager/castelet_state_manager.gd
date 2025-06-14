@@ -135,8 +135,6 @@ func load_game_data(filename : String):
 	_saveload_manager.set_save_file_name(filename)
 	_saveload_manager.load_file()
 	await game_load_finish
-	
-	_theater_manager.request_reconstruct_stage.emit()
 
 
 func _on_save_game_start():

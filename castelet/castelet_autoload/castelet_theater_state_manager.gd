@@ -8,13 +8,28 @@ var _current_bgm = {
 	"pause" : false,
 }
 
+var _temp_props = []
+var _temp_current_bgm = {}
 
+signal override_stage
 signal request_reconstruct_stage(list_of_props, bgm)
+signal reconstruct_stage_finished
+	
 
 
+func _ready() -> void:
+	override_stage.connect(_on_override_stage)
+	reconstruct_stage_finished.connect(_on_reconstruct_stage_finished)
 
-func set_theater_data():
-	pass
+
+func _exit_tree() -> void:
+	override_stage.disconnect(_on_override_stage)
+	reconstruct_stage_finished.disconnect(_on_reconstruct_stage_finished)
+
+
+func set_theater_data(theater_data : Dictionary):
+	_temp_props = theater_data["props"]
+	_temp_current_bgm = theater_data["current_bgm"]
 
 
 func get_theater_data():
@@ -70,3 +85,12 @@ func update_bgm_data(bgm := [], args := {}):
 			_current_bgm["stop"] = args["stop"]
 		if args.has("pause"):
 			_current_bgm["pause"] = args["pause"]
+
+
+func _on_override_stage():
+	request_reconstruct_stage.emit(_temp_props, _temp_current_bgm)
+
+
+func _on_reconstruct_stage_finished():
+	_temp_props = []
+	_temp_current_bgm = {}

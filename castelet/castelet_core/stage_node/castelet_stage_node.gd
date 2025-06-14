@@ -29,7 +29,7 @@ func scene(prop_name := "", prop_variant := "default", args := {}):
 		_game_manager.progress.emit()
 	
 
-func show_prop(prop_name := "", prop_variant := "default", args := {}):
+func show_prop(prop_name := "", prop_variant := "default", args := {}, stay:= false):
 
 	# If the prop is not in active props list, grab the reference from CasteletAssetsManager
 	var prop: CasteletPropNode = get_node_or_null(prop_name)
@@ -122,15 +122,17 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 	stage_updated.emit("show", {
 		"prop" : prop_name,
 		"variant" : prop_variant,
-		"x" : prop.position.x,
-		"y" : prop.position.y,
+		"x" : new_xpos,
+		"y" : new_ypos,
+		"scale_factor" : scale_factor,
 		"flip" : prop.get_flip(),
 		# TODO: z-order without accessing get_children()
 		})
-	_game_manager.progress.emit()
+	if not stay:
+		_game_manager.progress.emit()
 
 
-func hide_prop(prop_name : String, args := {}):
+func hide_prop(prop_name : String, args := {}, stay:= false):
 	var prop : CasteletPropNode = get_node_or_null(prop_name)
 	if prop != null:
 		if args.has("transition"):
@@ -158,7 +160,9 @@ func hide_prop(prop_name : String, args := {}):
 		remove_child(prop)
 
 		stage_updated.emit("hide", {"prop" : prop_name})
-		_game_manager.progress.emit()
+		
+		if not stay:
+			_game_manager.progress.emit()
 
 
 func clear_props():

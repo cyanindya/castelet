@@ -109,11 +109,11 @@ func _load_thread_subprocess():
 		if (key.begins_with("script_")):
 			script_data[key.trim_prefix("script_")] = val
 
-		# if (key.begins_with("stage_")):
-		# 	theater_data[key.trim_prefix("stage_")] = val # TODO: iterate the stage props
+		if (key.begins_with("stage_")):
+			theater_data[key.trim_prefix("stage_")] = val # TODO: iterate the stage props
 			
 
 	file.close()
 
 	_game_manager.set_script_data(script_data)
-	# _theater_manager.set_theater_data(theater_data)
+	_theater_manager.set_theater_data(theater_data)

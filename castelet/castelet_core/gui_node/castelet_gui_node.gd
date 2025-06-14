@@ -14,6 +14,7 @@ const ChoiceNode = preload("res://castelet/castelet_core/gui_node/choice_menu/ca
 @onready var _state_manager : CasteletStateManager = get_node("/root/CasteletStateManager")
 
 signal choice_made(sub)
+signal game_loaded
 
 
 func _ready():
@@ -177,4 +178,5 @@ func _on_quicksave_button_pressed():
 func _on_quickload_button_pressed():
 	_state_manager.load_game_data("user://qsave.sav")
 	await _state_manager.game_load_finish
+	game_loaded.emit()
 	

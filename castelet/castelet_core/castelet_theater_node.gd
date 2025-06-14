@@ -124,6 +124,7 @@ func _ready():
 	_game_manager.progress.connect(_on_progress)
 	_theater_manager.request_reconstruct_stage.connect(_on_request_reconstruct_stage)
 	$SubViewport/CasteletStageNode.stage_updated.connect(_on_stage_updated)
+	$SubViewport/CasteletGUINode.game_loaded.connect(_on_game_loaded)
 
 	await _state_manager.persistent_load_finish
 	_can_play = true
@@ -416,6 +417,28 @@ func _hide_stage_prop(transition = {}):
 	$SubViewport/CasteletStageNode.hide_prop(params[0], args)
 	
 
+func _reconstruct_stage(props : Array):
+	$SubViewport/CasteletStageNode.clear_props()
+
+	for prop in props:
+		var args = {
+			"x" : prop["x"],
+			"y" : prop["y"],
+			"scale_factor" : prop["scale_factor"],
+			"flip" : prop["flip"],
+		}
+		$SubViewport/CasteletStageNode.show_prop(
+			prop["prop"],
+			prop["variant"],
+			args,
+			true
+		)
+	
+	# print_debug(props)
+	
+	_theater_manager.reconstruct_stage_finished.emit.call_deferred()
+
+
 func _update_transition():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 
@@ -652,10 +675,30 @@ func _on_stage_updated(command : String, args : Dictionary):
 		_theater_manager.update_prop_data(args)
 
 
-func _on_request_reconstruct_stage(stage_props : Array, bgm):
-	pass
-	# for prop in stage_props:
-	# 	_update_stage_prop()
+func _on_request_reconstruct_stage(stage_props : Array, bgm_data : Dictionary):
+
+	# Reconstruct the stage node. Make sure to block game manager signals
+	# to ensure we won't proceed to next line until the script is reloaded
+	_game_manager.set_block_signals(true)
+	_reconstruct_stage(stage_props)
+	await _theater_manager.reconstruct_stage_finished
+	_game_manager.set_block_signals(false)
+
+	# Set background music
+	
+
+	# Reload the script and the dialogue to be displayed
+	var scr = _game_manager.get_script_data()
+	self.load_script(scr["script"])
+	await load_script_finished
+	self._tree.set_index(scr["index"])
+
+	# Now, make sure to display the dialogue as it should be.
+	_game_manager.progress.emit()
+
+
+func _on_game_loaded():
+	_theater_manager.override_stage.emit()
 
 
 # Terminates this node. Intended to be called externally.

@@ -53,11 +53,11 @@ layout_mode = 2
 toggle_mode = true
 text = "Auto"
 
-[node name="QuickSaveButton" type="Button" parent="QuickMenuControl/ButtonContainers"]
+[node name="QSaveButton" type="Button" parent="QuickMenuControl/ButtonContainers"]
 layout_mode = 2
 text = "QSave"
 
-[node name="QuickLoadButton" type="Button" parent="QuickMenuControl/ButtonContainers"]
+[node name="QLoadButton" type="Button" parent="QuickMenuControl/ButtonContainers"]
 layout_mode = 2
 text = "QLoad"
 
@@ -71,7 +71,7 @@ visible = false
 [connection signal="pressed" from="QuickMenuControl/ButtonContainers/ConfigButton" to="." method="_on_config_button_pressed"]
 [connection signal="pressed" from="QuickMenuControl/ButtonContainers/BacklogButton" to="." method="_on_backlog_button_pressed"]
 [connection signal="toggled" from="QuickMenuControl/ButtonContainers/AutomodeButton" to="." method="_on_automode_button_toggled"]
-[connection signal="pressed" from="QuickMenuControl/ButtonContainers/QuickSaveButton" to="." method="_on_quicksave_button_pressed"]
-[connection signal="pressed" from="QuickMenuControl/ButtonContainers/QuickLoadButton" to="." method="_on_quickload_button_pressed"]
+[connection signal="pressed" from="QuickMenuControl/ButtonContainers/QSaveButton" to="." method="_on_quicksave_button_pressed"]
+[connection signal="pressed" from="QuickMenuControl/ButtonContainers/QLoadButton" to="." method="_on_quickload_button_pressed"]
 [connection signal="visibility_changed" from="BacklogNode" to="." method="_on_backlog_window_visibility_changed"]
 [connection signal="set_fullscreen" from="SettingsNode" to="." method="_on_viewport_resized"]
