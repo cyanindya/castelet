@@ -38,7 +38,7 @@ var _ending_thread = false
 @onready var _transition_manager : CasteletTransitionManager = get_node("/root/CasteletTransitionManager")
 @onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
-@onready var _theater_manager : CasteletTheaterStateManager = get_node("/root/CasteletTheaterStageManager")
+@onready var _theater_manager : CasteletTheaterStateManager = get_node("/root/CasteletTheaterStateManager")
 
 
 @export var script_to_play : String:
@@ -123,6 +123,7 @@ func _ready():
 	end_of_script.connect(_on_end_of_script)
 	_game_manager.progress.connect(_on_progress)
 	_theater_manager.request_reconstruct_stage.connect(_on_request_reconstruct_stage)
+	$SubViewport/CasteletStageNode.stage_updated.connect(_on_stage_updated)
 
 	await _state_manager.persistent_load_finish
 	_can_play = true
@@ -465,6 +466,25 @@ func _update_audio_channel():
 		else:
 			_audio_manager.play_audio(command.value[0], command.args, channel)
 	
+	# Update the theater stage manager if it's the BGM being updated
+	if channel == "BGM":
+		var args = {}
+
+		if command.value[0] == "stop":
+			args["stop"] = true
+		elif command.value[0] == "pause":
+			args["pause"] = true
+		elif command.value[0] == "resume":
+			args["stop"] = false
+			args["pause"] = false
+		else:
+			pass
+		
+		if command.value[0] not in ["stop", "pause", "resume"]:
+			_theater_manager.update_bgm_data(command.value)
+		else:
+			_theater_manager.update_bgm_data([], args)
+		
 	_game_manager.progress.emit()
 	
 
@@ -619,9 +639,23 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	_game_manager.progress.emit()
 
 
+func _on_stage_updated(command : String, args : Dictionary):
+	if command == "clear": # called when "scene none"
+		_theater_manager.clear_prop_data()
+	elif command == "hide":
+		# TODO: implement z-order in stage node signal and immediately access that
+		# index instead of iterating one by one
+		_theater_manager.remove_prop_data(args["prop"])
+	elif command == "show":
+		# TODO: implement z-order in stage node signal and immediately access that
+		# index instead of iterating one by one
+		_theater_manager.update_prop_data(args)
+
+
 func _on_request_reconstruct_stage(stage_props : Array, bgm):
-	for prop in stage_props:
-		_update_stage_prop()
+	pass
+	# for prop in stage_props:
+	# 	_update_stage_prop()
 
 
 # Terminates this node. Intended to be called externally.
@@ -640,6 +674,8 @@ func end():
 	# Ensures the signal handler is disconnected before this node is destroyed, just in case.
 	_game_manager.progress.disconnect(_on_progress)
 	end_of_script.disconnect(_on_end_of_script)
+	_theater_manager.request_reconstruct_stage.disconnect(_on_request_reconstruct_stage)
+	$SubViewport/CasteletStageNode.stage_updated.disconnect(_on_stage_updated)
 
 	$SubViewport/CasteletStageNode.hide()
 	$SubViewport/CasteletGUINode.hide()

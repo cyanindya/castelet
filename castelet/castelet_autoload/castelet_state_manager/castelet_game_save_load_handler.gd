@@ -30,50 +30,60 @@ func _save_thread_subprocess():
 	var file = FileAccess.open(_save_file_name, FileAccess.WRITE)
 
 	# Save name
-	file.store_var("name")
-	file.store_var("=")
-	file.store_var(_save_file_name.split(".")[0])
-	file.store_var("\n")
+	_store_single_item("name", _save_file_name.split(".")[0], file)
 
 	# Save date
 	var save_time = Time.get_date_string_from_system()
-	file.store_var("last_updated")
-	file.store_var("=")
-	file.store_var(save_time)
-	file.store_var("\n")
+	_store_single_item("last_updated", save_time, file)
 
 	# Thumbnail
-	# file.store_var("img")
-	# file.store_var("=")
-	# file.store_var()
-	# file.store_var("\n")
+	# _store_single_item("img", img, file)
 
 	# Game session variables
-	for game_var in _game_manager.get_all_variables():
-		# print_debug(persistent_data)
-		var value = _game_manager.get_variable(game_var)
-		file.store_var("var_" + game_var)
-		file.store_var("=")
-		file.store_var(value)
-		file.store_var("\n")
+	_store_dict(_game_manager.get_all_variables(), "var", file)
 
 	# Script status
-	var script_data = _game_manager.get_script_data()
-	for scr in _game_manager.get_script_data():
-		var value = script_data[scr]
-		file.store_var("script_" + scr)
-		file.store_var("=")
-		file.store_var(value)
-		file.store_var("\n")
-
+	_store_dict(_game_manager.get_script_data(), "script", file)
+	
 	# TheaterNode status
-
-
+	# TODO: how to save the stage props
+	_store_dict(_theater_manager.get_theater_data(), "stage", file)
+	
 	file.close()
 
 
+func _store_single_item(name : String, item, file_ref : FileAccess):
+	if not file_ref.is_open():
+		push_error("Cannot save the data with name \"" + name + "\"",
+			" because the save file is not open."
+		)
+		return
+	
+	file_ref.store_var(name)
+	file_ref.store_var("=")
+	file_ref.store_var(item)
+	file_ref.store_var("\n")
+
+
+func _store_dict(dict : Dictionary, dict_prefix : String, file_ref : FileAccess):
+	if not file_ref.is_open():
+		push_error("Cannot save the dictionary data with prefix \"" + dict_prefix + "\"",
+			" because the save file is not open."
+		)
+		return
+	
+	for item in dict:
+		var value = dict[item]
+		file_ref.store_var(dict_prefix + "_" + item)
+		file_ref.store_var("=")
+		file_ref.store_var(value)
+		file_ref.store_var("\n")
+
+
 func _load_thread_subprocess():
-	var _script_data_to_be_loaded = {}
+	var script_data = {}
+	var theater_data = {}
+
 	var file = FileAccess.open(_save_file_name, FileAccess.READ)
 	_mutex.unlock()
 
@@ -97,9 +107,13 @@ func _load_thread_subprocess():
 			_game_manager.set_variable(key.trim_prefix("var_"), val)
 
 		if (key.begins_with("script_")):
-			_script_data_to_be_loaded[key.trim_prefix("script_")] = val
+			script_data[key.trim_prefix("script_")] = val
+
+		# if (key.begins_with("stage_")):
+		# 	theater_data[key.trim_prefix("stage_")] = val # TODO: iterate the stage props
 			
 
 	file.close()
 
-	_game_manager.set_script_data(_script_data_to_be_loaded)
+	_game_manager.set_script_data(script_data)
+	# _theater_manager.set_theater_data(theater_data)
