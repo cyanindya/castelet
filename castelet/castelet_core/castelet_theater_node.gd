@@ -475,41 +475,46 @@ func _update_audio_channel():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 	var channel : String = command.type.to_upper()
 
-	if command.value[0] == "stop":
+	_audio_manager_operation(command.value, command.args, channel)
+	
+	_game_manager.progress.emit()
+
+
+func _audio_manager_operation(value : Array, args :={}, channel := "BGM"):
+	if value[0] == "stop":
 		_audio_manager.stop_audio(channel)
-	elif command.value[0] == "pause":
+	elif value[0] == "pause":
 		_audio_manager.pause_audio(channel)
-	elif command.value[0] == "resume":
+	elif value[0] == "resume":
 		_audio_manager.resume_audio(channel)
-	elif command.value[0] == "":
-		_audio_manager.refresh_audio(command.args, channel)
+	elif value[0] == "":
+		_audio_manager.refresh_audio(args, channel)
 	else:
-		if len(command.value) > 1:
-			_audio_manager.queue_audio(command.value, command.args, channel)
+		if len(value) > 1:
+			_audio_manager.queue_audio(value, args, channel)
 		else:
-			_audio_manager.play_audio(command.value[0], command.args, channel)
+			_audio_manager.play_audio(value[0], args, channel)
 	
 	# Update the theater stage manager if it's the BGM being updated
 	if channel == "BGM":
-		var args = {}
+		var th_args = {}
 
-		if command.value[0] == "stop":
-			args["stop"] = true
-		elif command.value[0] == "pause":
-			args["pause"] = true
-		elif command.value[0] == "resume":
-			args["stop"] = false
-			args["pause"] = false
+		if value[0] == "stop":
+			th_args["stop"] = true
+		elif value[0] == "pause":
+			th_args["pause"] = true
+		elif value[0] == "resume":
+			th_args["stop"] = false
+			th_args["pause"] = false
 		else:
 			pass
 		
-		if command.value[0] not in ["stop", "pause", "resume"]:
-			_theater_manager.update_bgm_data(command.value)
+		if value[0] not in ["stop", "pause", "resume"]:
+			_theater_manager.update_bgm_data(value)
 		else:
-			_theater_manager.update_bgm_data([], args)
+			_theater_manager.update_bgm_data([], th_args)
 		
-	_game_manager.progress.emit()
-	
+
 
 func _update_window():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
@@ -685,7 +690,15 @@ func _on_request_reconstruct_stage(stage_props : Array, bgm_data : Dictionary):
 	_game_manager.set_block_signals(false)
 
 	# Set background music
+	var cur_bgm = _theater_manager.get_theater_data()['current_bgm']['bgm']
+	for b in bgm_data["bgm"]:
+		if b not in cur_bgm:
+			_audio_manager_operation(bgm_data["bgm"])
 	
+	if bgm_data["stop"] == true:
+		_audio_manager_operation(["stop"])
+	elif bgm_data["pause"] == true:
+		_audio_manager_operation(["pause"])
 
 	# Reload the script and the dialogue to be displayed
 	var scr = _game_manager.get_script_data()
