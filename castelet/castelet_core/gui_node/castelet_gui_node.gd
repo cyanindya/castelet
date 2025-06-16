@@ -13,12 +13,13 @@ const ChoiceNode = preload("res://castelet/castelet_core/gui_node/choice_menu/ca
 @onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
 
 signal choice_made(sub)
-signal game_loaded
+signal gui_game_loaded
 
 
 func _ready():
 	_game_manager.confirm.connect(_dialogue_node_interrupt)
 	_game_manager.backlog_update.connect(_on_backlog_updated)
+	_game_manager.backlog_purge.connect(_on_backlog_purged)
 	_config_manager.config_updated.connect(_on_config_updated)
 	_viewport_manager.viewport_resized.connect(_on_viewport_resized)
 	
@@ -95,6 +96,10 @@ func _on_backlog_button_pressed():
 
 func _on_backlog_updated(backlog_entry : Dictionary, replace = false):
 	$BacklogNode.update_backlog(backlog_entry, replace)
+
+
+func _on_backlog_purged():
+	$BacklogNode.purge_backlog()
 
 
 func _on_backlog_window_visibility_changed():
@@ -176,5 +181,5 @@ func _on_quicksave_button_pressed():
 
 func _on_quickload_button_pressed():
 	$SaveLoadNode.load("user://qsave.sav")
-	await $SaveLoadNode.load_confirmed
-	game_loaded.emit()
+	var result : int = await $SaveLoadNode.gui_load_confirmed
+	gui_game_loaded.emit(result)

@@ -16,19 +16,19 @@ var _saveload_manager : GameSaveLoadManager
 
 
 signal config_save_start
-signal config_save_finish
+signal config_save_finish(status : int)
 signal config_load_start
-signal config_load_finish
+signal config_load_finish(status : int)
 
 signal persistent_save_start
-signal persistent_save_finish
+signal persistent_save_finish(status : int)
 signal persistent_load_start
-signal persistent_load_finish
+signal persistent_load_finish(status : int)
 
 signal game_save_start
-signal game_save_finish
+signal game_save_finish(status : int)
 signal game_load_start
-signal game_load_finish
+signal game_load_finish(status : int)
 
 
 func _ready() -> void:
@@ -80,9 +80,9 @@ func _on_save_config_start():
 	config_save_start.emit()
 
 
-func _on_save_config_finish():
+func _on_save_config_finish(status : int):
 	print_debug("Config saved.")
-	config_save_finish.emit()
+	config_save_finish.emit(status)
 
 
 func _on_load_config_start():
@@ -90,9 +90,9 @@ func _on_load_config_start():
 	config_load_start.emit()
 
 
-func _on_load_config_finish():
+func _on_load_config_finish(status : int):
 	print_debug("Config loaded.")
-	config_load_finish.emit()
+	config_load_finish.emit(status)
 
 
 func load_persistent():
@@ -110,9 +110,9 @@ func _on_save_persistent_start():
 	persistent_save_start.emit()
 
 
-func _on_save_persistent_finish():
+func _on_save_persistent_finish(status : int):
 	print_debug("Saving persistent file completed.")
-	persistent_save_finish.emit()
+	persistent_save_finish.emit(status)
 
 
 func _on_load_persistent_start():
@@ -120,9 +120,9 @@ func _on_load_persistent_start():
 	persistent_load_start.emit()
 
 
-func _on_load_persistent_finish():
+func _on_load_persistent_finish(status : int):
 	print_debug("Loading persistent file completed.")
-	persistent_load_finish.emit()
+	persistent_load_finish.emit(status)
 
 
 func save_game_data(filename : String):
@@ -142,9 +142,9 @@ func _on_save_game_start():
 	game_save_start.emit()
 
 
-func _on_save_game_finish():
+func _on_save_game_finish(status : int):
 	print_debug("Saving game completed.")
-	game_save_finish.emit()
+	game_save_finish.emit(status)
 
 
 func _on_load_game_start():
@@ -152,9 +152,9 @@ func _on_load_game_start():
 	game_load_start.emit()
 
 
-func _on_load_game_finish():
+func _on_load_game_finish(status : int):
 	print_debug("Loading game completed.")
-	game_load_finish.emit()
+	game_load_finish.emit(status)
 
 
 func _notification(what: int) -> void:

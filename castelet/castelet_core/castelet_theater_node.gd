@@ -124,7 +124,7 @@ func _ready():
 	_game_manager.progress.connect(_on_progress)
 	_theater_manager.request_reconstruct_stage.connect(_on_request_reconstruct_stage)
 	$SubViewport/CasteletStageNode.stage_updated.connect(_on_stage_updated)
-	$SubViewport/CasteletGUINode.game_loaded.connect(_on_game_loaded)
+	$SubViewport/CasteletGUINode.gui_game_loaded.connect(_on_game_loaded)
 
 	await _state_manager.persistent_load_finish
 	_can_play = true
@@ -725,8 +725,9 @@ func _on_request_reconstruct_stage(stage_props : Array, bgm_data : Dictionary):
 	_game_manager.progress.emit()
 
 
-func _on_game_loaded():
-	_theater_manager.override_stage.emit()
+func _on_game_loaded(status : int):
+	if status == 0:
+		_theater_manager.override_stage.emit()
 
 
 # Terminates this node. Intended to be called externally.

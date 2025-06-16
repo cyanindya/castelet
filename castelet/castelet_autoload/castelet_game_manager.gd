@@ -46,6 +46,7 @@ var _temp_script_tree = ""
 var _temp_script_tree_index = 0
 var _temp_callsub_stack = []
 var _temp_context_level = 0
+var _temp_backlog = []
 
 var ffwd_active := false
 var auto_active := false :
@@ -72,6 +73,7 @@ signal ffwd_hold(state : bool)
 signal ffwd_toggle
 
 signal backlog_update(new_data : Dictionary, replace : bool)
+signal backlog_purge
 signal toggle_automode
 signal enter_standby
 signal progress
@@ -289,6 +291,7 @@ func get_script_data():
 	script_data_dict["index"] = _current_script_tree_index
 	script_data_dict["callsub_stack"] = _callsub_stack
 	script_data_dict["context_lv"] = _context_level
+	script_data_dict["backlog"] = backlog
 
 	return script_data_dict
 
@@ -298,6 +301,7 @@ func set_script_data_temp(script_data_dict : Dictionary):
 	_temp_script_tree_index = script_data_dict["index"]
 	_temp_callsub_stack = script_data_dict["callsub_stack"]
 	_temp_context_level = script_data_dict["context_lv"]
+	_temp_backlog = script_data_dict["backlog"]
 
 
 func _on_script_tree_override():
@@ -309,3 +313,9 @@ func _on_script_tree_override():
 	for st in _temp_callsub_stack:
 		_callsub_stack.append(st)
 	_temp_callsub_stack.clear()
+
+	backlog.clear()
+	backlog_purge.emit()
+	for bl in range(len(_temp_backlog) - 1): # Avoid duplicate backlog entry after loading
+		append_dialogue(_temp_backlog[bl])
+	_temp_backlog.clear()

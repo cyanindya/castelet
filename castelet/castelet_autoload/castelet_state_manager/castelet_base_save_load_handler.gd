@@ -11,9 +11,9 @@ var _load_semaphore : Semaphore
 var _exiting_threads : bool = false
 
 signal save_start
-signal save_finish
+signal save_finish(status : int)
 signal load_start
-signal load_finish
+signal load_finish(status : int)
 
 
 func init_threads():
@@ -51,6 +51,8 @@ func load_file():
 
 func _saveload_thread_process(saving : bool = true):
 	while true:
+		var status : int = 0
+		
 		if saving:
 			_save_semaphore.wait()
 		else:
@@ -72,20 +74,20 @@ func _saveload_thread_process(saving : bool = true):
 
 		_mutex.lock()
 		if saving:
-			_save_thread_subprocess()
+			status = _save_thread_subprocess()
 		else:
-			_load_thread_subprocess()
+			status = _load_thread_subprocess()
 		_mutex.unlock()
 
 		if saving:
-			save_finish.emit.call_deferred()
+			save_finish.emit.call_deferred(status)
 		else:
-			load_finish.emit.call_deferred()
+			load_finish.emit.call_deferred(status)
 
 
-func _save_thread_subprocess():
-	pass
+func _save_thread_subprocess() -> int:
+	return 0
 
 
-func _load_thread_subprocess():
-	pass
+func _load_thread_subprocess() -> int:
+	return 0

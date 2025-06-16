@@ -1,4 +1,4 @@
-extends CasteletBaseSaveLoadHandler
+extends CasteletSignedSaveLoadHandler
 
 
 var _game_manager : CasteletGameManager
@@ -12,42 +12,13 @@ func set_game_manager(obj : CasteletGameManager):
 	_game_manager = obj
 
 
-func _save_thread_subprocess():
-	var file = FileAccess.open(_save_file_name, FileAccess.WRITE)
-
-	# print_debug(_game_manager.get_all_variables(true))
-
-	for persistent_data in _game_manager.get_all_variables(true):
-		# print_debug(persistent_data)
-		var value = _game_manager.get_variable(persistent_data, true)
-		file.store_var(persistent_data)
-		file.store_var("=")
-		file.store_var(value)
-		file.store_var("\n")
-		# file.store_pascal_string(persistent_data)
-		# file.store_pascal_string("=")
-		# file.store_var(value)
-		# file.store_pascal_string("\n")
-
-	file.close()
+func _create_save_dictionary(save_dict : Dictionary):
+	store_dict(_game_manager.get_all_variables(true), "persistent", save_dict)
 
 
-func _load_thread_subprocess():
-	var file = FileAccess.open(_save_file_name, FileAccess.READ)
-	_mutex.unlock()
-
-	if file == null:
-		push_warning("Unable to load the game configuration data." +
-			"The game will use the default configuration instead."
-		)
-		return
-
-	_mutex.lock()
-	while file.get_position() < file.get_length():
-		var key = file.get_var()
-		file.get_var()
-		var val = file.get_var()
-		file.get_var()
-		_game_manager.set_variable(key, val, true)
+func _process_loaded_data(data : Dictionary):
 	
-	file.close()
+	for key in data:
+		if (key.begins_with("persistent_")):
+			_game_manager.set_variable(key.trim_prefix("persistent_"), data[key], true)
+	

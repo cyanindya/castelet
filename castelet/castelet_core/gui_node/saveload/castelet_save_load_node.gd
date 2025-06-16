@@ -3,8 +3,8 @@ extends Control
 
 @onready var _state_manager : CasteletStateManager = get_node("/root/CasteletStateManager")
 
-signal save_confirmed
-signal load_confirmed
+signal gui_save_confirmed
+signal gui_load_confirmed
 
 
 # Called when the node enters the scene tree for the first time.
@@ -26,9 +26,12 @@ func save(save_name : String):
 	_state_manager.save_game_data(save_name)
 
 	$SystemPopupNode.info_popup("Saving...\nPlease do not close the game.")
-	await _state_manager.game_save_finish
+	var status : int = await _state_manager.game_save_finish
 	
-	$SystemPopupNode.confirm_popup("Save completed.")
+	if status == 0:
+		$SystemPopupNode.confirm_popup("Save completed successfully.")
+	else:
+		$SystemPopupNode.confirm_popup("Save failed.")
 	await $SystemPopupNode.confirm
 
 	hide()
@@ -48,11 +51,14 @@ func load(save_name : String):
 	_state_manager.load_game_data(save_name)
 
 	$SystemPopupNode.info_popup("Loading...\nPlease do not close the game.")
-	await _state_manager.game_load_finish
+	var status : int = await _state_manager.game_load_finish
 	
-	$SystemPopupNode.confirm_popup("Load completed.")
+	if status == 0:
+		$SystemPopupNode.confirm_popup("Load completed successfully.")
+	else:
+		$SystemPopupNode.confirm_popup("Load failed.")
 	await $SystemPopupNode.confirm
 
-	load_confirmed.emit()
+	gui_load_confirmed.emit(status)
 
 	hide()
