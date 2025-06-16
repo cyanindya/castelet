@@ -38,6 +38,8 @@ var _ending_thread = false
 @onready var _transition_manager : CasteletTransitionManager = get_node("/root/CasteletTransitionManager")
 @onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
+@onready var _theater_manager : CasteletTheaterStateManager = get_node("/root/CasteletTheaterStateManager")
+
 
 @export var script_to_play : String:
 	set(value):
@@ -120,12 +122,18 @@ func _ready():
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
 	_game_manager.progress.connect(_on_progress)
+	_theater_manager.request_reconstruct_stage.connect(_on_request_reconstruct_stage)
+	$SubViewport/CasteletStageNode.stage_updated.connect(_on_stage_updated)
+	$SubViewport/CasteletGUINode.gui_game_loaded.connect(_on_game_loaded)
 
 	await _state_manager.persistent_load_finish
 	_can_play = true
 
 
 func _next():
+
+	# Emit the signal in the game manager to tell where we are right now.
+	_game_manager.script_tree_updated.emit(self._tree.name, self._tree.get_index())
 
 	# Preview the next expression on the tree before
 	# actually grabbing them
@@ -409,6 +417,28 @@ func _hide_stage_prop(transition = {}):
 	$SubViewport/CasteletStageNode.hide_prop(params[0], args)
 	
 
+func _reconstruct_stage(props : Array):
+	$SubViewport/CasteletStageNode.clear_props()
+
+	for prop in props:
+		var args = {
+			"x" : prop["x"],
+			"y" : prop["y"],
+			"scale_factor" : prop["scale_factor"],
+			"flip" : prop["flip"],
+		}
+		$SubViewport/CasteletStageNode.show_prop(
+			prop["prop"],
+			prop["variant"],
+			args,
+			true
+		)
+	
+	# print_debug(props)
+	
+	_theater_manager.reconstruct_stage_finished.emit.call_deferred()
+
+
 func _update_transition():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 
@@ -445,22 +475,46 @@ func _update_audio_channel():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
 	var channel : String = command.type.to_upper()
 
-	if command.value[0] == "stop":
-		_audio_manager.stop_audio(channel)
-	elif command.value[0] == "pause":
-		_audio_manager.pause_audio(channel)
-	elif command.value[0] == "resume":
-		_audio_manager.resume_audio(channel)
-	elif command.value[0] == "":
-		_audio_manager.refresh_audio(command.args, channel)
-	else:
-		if len(command.value) > 1:
-			_audio_manager.queue_audio(command.value, command.args, channel)
-		else:
-			_audio_manager.play_audio(command.value[0], command.args, channel)
+	_audio_manager_operation(command.value, command.args, channel)
 	
 	_game_manager.progress.emit()
+
+
+func _audio_manager_operation(value : Array, args :={}, channel := "BGM"):
+	if value[0] == "stop":
+		_audio_manager.stop_audio(channel)
+	elif value[0] == "pause":
+		_audio_manager.pause_audio(channel)
+	elif value[0] == "resume":
+		_audio_manager.resume_audio(channel)
+	elif value[0] == "":
+		_audio_manager.refresh_audio(args, channel)
+	else:
+		if len(value) > 1:
+			_audio_manager.queue_audio(value, args, channel)
+		else:
+			_audio_manager.play_audio(value[0], args, channel)
 	
+	# Update the theater stage manager if it's the BGM being updated
+	if channel == "BGM":
+		var th_args = {}
+
+		if value[0] == "stop":
+			th_args["stop"] = true
+		elif value[0] == "pause":
+			th_args["pause"] = true
+		elif value[0] == "resume":
+			th_args["stop"] = false
+			th_args["pause"] = false
+		else:
+			pass
+		
+		if value[0] not in ["stop", "pause", "resume"]:
+			_theater_manager.update_bgm_data(value)
+		else:
+			_theater_manager.update_bgm_data([], th_args)
+		
+
 
 func _update_window():
 	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
@@ -613,6 +667,69 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	_game_manager.progress.emit()
 
 
+func _on_stage_updated(command : String, args : Dictionary):
+	if command == "clear": # called when "scene none"
+		_theater_manager.clear_prop_data()
+	elif command == "hide":
+		# TODO: implement z-order in stage node signal and immediately access that
+		# index instead of iterating one by one
+		_theater_manager.remove_prop_data(args["prop"])
+	elif command == "show":
+		# TODO: implement z-order in stage node signal and immediately access that
+		# index instead of iterating one by one
+		_theater_manager.update_prop_data(args)
+
+
+func _on_request_reconstruct_stage(stage_props : Array, bgm_data : Dictionary):
+
+	# Invalidate the dialogue window content
+	$SubViewport/CasteletGUINode.update_dialogue({
+		"speaker": "",
+		"dialogue" : "",
+		"args" : {},
+	})
+
+	# Reconstruct the stage node. Make sure to block game manager signals
+	# to ensure we won't proceed to next line until the script is reloaded
+	_game_manager.set_block_signals(true)
+	
+	_reconstruct_stage(stage_props)
+	await _theater_manager.reconstruct_stage_finished
+
+	_transition_manager.transition(
+		"fade", _transition_manager.TransitionScope.VIEWPORT,
+		)
+	await _transition_manager.transition_completed
+			
+	_game_manager.set_block_signals(false)
+
+	# Set background music
+	var cur_bgm = _theater_manager.get_theater_data()['current_bgm']['bgm']
+	for b in bgm_data["bgm"]:
+		if b not in cur_bgm:
+			_audio_manager_operation(bgm_data["bgm"])
+	
+	if bgm_data["stop"] == true:
+		_audio_manager_operation(["stop"])
+	elif bgm_data["pause"] == true:
+		_audio_manager_operation(["pause"])
+
+	# Reload the script and the dialogue to be displayed
+	_game_manager.script_tree_override.emit()
+	var scr = _game_manager.get_script_data()
+	self.load_script(scr["script"])
+	await load_script_finished
+	self._tree.set_index(scr["index"])
+
+	# Now, make sure to display the dialogue as it should be.
+	_game_manager.progress.emit()
+
+
+func _on_game_loaded(status : int):
+	if status == 0:
+		_theater_manager.override_stage.emit()
+
+
 # Terminates this node. Intended to be called externally.
 func end():
 
@@ -629,6 +746,8 @@ func end():
 	# Ensures the signal handler is disconnected before this node is destroyed, just in case.
 	_game_manager.progress.disconnect(_on_progress)
 	end_of_script.disconnect(_on_end_of_script)
+	_theater_manager.request_reconstruct_stage.disconnect(_on_request_reconstruct_stage)
+	$SubViewport/CasteletStageNode.stage_updated.disconnect(_on_stage_updated)
 
 	$SubViewport/CasteletStageNode.hide()
 	$SubViewport/CasteletGUINode.hide()

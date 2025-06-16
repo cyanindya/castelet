@@ -259,13 +259,13 @@ func _fade(_old_widget : Texture2D = null, _new_widget : Texture2D = null, args=
 	# then to the new scene.
 	_transition_tween = create_tween()
 	_transition_tween.tween_property(color_rect, "color", color, 0.0)
-	_transition_tween.parallel().tween_property(color_rect, "color:a",
+	_transition_tween.parallel().tween_property(color_rect, "modulate:a",
 			1.0, in_time)
 	_transition_tween.tween_property(sprite, "modulate:a", 0.0, 0.0)
 	#_transition_tween.tween_callback(callback)
 	_transition_tween.tween_interval(stay_time)
 	_transition_tween.tween_property(color_rect, "color", color, 0.0)
-	_transition_tween.parallel().tween_property(color_rect, "color:a",
+	_transition_tween.parallel().tween_property(color_rect, "modulate:a",
 			0.0, out_time)
 
 	# Once the tween is completed, destroy the CanvasLayer, the old

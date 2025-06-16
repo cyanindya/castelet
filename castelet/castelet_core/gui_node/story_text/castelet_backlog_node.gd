@@ -6,6 +6,7 @@ extends Control
 @onready var _scrollbar = $PanelContainer/VBoxContainer/ScrollContainer.get_v_scroll_bar()
 var max_scroll_length = 0
 
+
 func _ready():
 
 	# Credits: https://www.reddit.com/r/godot/comments/qhbi8y/how_to_scroll_a_scrollcontainer_to_the_bottom/
@@ -20,6 +21,12 @@ func update_backlog(dialogue_data : Dictionary, replace = false):
 		var dat = dialogue_data_node.instantiate()
 		dat.load_dialogue(dialogue_data['speaker'], dialogue_data['dialogue'])
 		_backlog_container.add_child(dat)
+
+
+func purge_backlog():
+	for backlog_item in _backlog_container.get_children():
+		remove_child(backlog_item)
+		backlog_item.queue_free()
 
 
 func resize_node(new_scale : float):

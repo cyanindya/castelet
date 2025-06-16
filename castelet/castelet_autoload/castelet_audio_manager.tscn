@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://c13xwfknn0lie"]
 
-[ext_resource type="Script" path="res://castelet/castelet_autoload/castelet_audio_manager.gd" id="1_xv1vu"]
-[ext_resource type="Script" path="res://castelet/castelet_core/stage_node/castelet_audio_stream_player.gd" id="2_sd3yx"]
+[ext_resource type="Script" uid="uid://bcyo4gfr08kch" path="res://castelet/castelet_autoload/castelet_audio_manager.gd" id="1_xv1vu"]
+[ext_resource type="Script" uid="uid://vcrvkuemlrjc" path="res://castelet/castelet_core/stage_node/castelet_audio_stream_player.gd" id="2_sd3yx"]
 
 [node name="CasteletAudioManager" type="Node"]
 script = ExtResource("1_xv1vu")

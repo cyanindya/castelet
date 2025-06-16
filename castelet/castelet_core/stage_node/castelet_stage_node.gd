@@ -12,7 +12,7 @@ extends Node2D
 @onready var _transition_manager : CasteletTransitionManager = get_node("/root/CasteletTransitionManager")
 @onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
 
-signal stage_updated
+signal stage_updated(command : String, args : Dictionary)
 
 
 func _ready() -> void:
@@ -29,7 +29,7 @@ func scene(prop_name := "", prop_variant := "default", args := {}):
 		_game_manager.progress.emit()
 	
 
-func show_prop(prop_name := "", prop_variant := "default", args := {}):
+func show_prop(prop_name := "", prop_variant := "default", args := {}, stay:= false):
 
 	# If the prop is not in active props list, grab the reference from CasteletAssetsManager
 	var prop: CasteletPropNode = get_node_or_null(prop_name)
@@ -119,11 +119,20 @@ func show_prop(prop_name := "", prop_variant := "default", args := {}):
 		prop.position.y = viewport_new_ypos
 		prop.in_viewport_scale = _viewport_manager.base_scale_factor * scale_factor
 	
-	stage_updated.emit()
-	_game_manager.progress.emit()
+	stage_updated.emit("show", {
+		"prop" : prop_name,
+		"variant" : prop_variant,
+		"x" : new_xpos,
+		"y" : new_ypos,
+		"scale_factor" : scale_factor,
+		"flip" : prop.get_flip(),
+		# TODO: z-order without accessing get_children()
+		})
+	if not stay:
+		_game_manager.progress.emit()
 
 
-func hide_prop(prop_name : String, args := {}):
+func hide_prop(prop_name : String, args := {}, stay:= false):
 	var prop : CasteletPropNode = get_node_or_null(prop_name)
 	if prop != null:
 		if args.has("transition"):
@@ -150,14 +159,19 @@ func hide_prop(prop_name : String, args := {}):
 
 		remove_child(prop)
 
-		stage_updated.emit()
-		_game_manager.progress.emit()
+		stage_updated.emit("hide", {"prop" : prop_name})
+		
+		if not stay:
+			_game_manager.progress.emit()
 
 
 func clear_props():
+	stage_updated.emit("clear", {})
+	
 	for child in get_children():
 		if child is CasteletPropNode:
 			remove_child(child)
+
 
 # Ensures smooth appearance regardless of current resolution, since
 # all props' size and position are recalculated.

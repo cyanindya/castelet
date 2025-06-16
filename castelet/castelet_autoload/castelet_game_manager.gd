@@ -37,8 +37,16 @@ var _persistent = {}
 var backlog = []
 var backlog_max_limit = 200
 
+var _current_script_tree = ""
+var _current_script_tree_index = 0
 var _callsub_stack = []
 var _context_level = 0
+
+var _temp_script_tree = ""
+var _temp_script_tree_index = 0
+var _temp_callsub_stack = []
+var _temp_context_level = 0
+var _temp_backlog = []
 
 var ffwd_active := false
 var auto_active := false :
@@ -65,9 +73,12 @@ signal ffwd_hold(state : bool)
 signal ffwd_toggle
 
 signal backlog_update(new_data : Dictionary, replace : bool)
+signal backlog_purge
 signal toggle_automode
 signal enter_standby
 signal progress
+signal script_tree_updated(script_tree : String, index : int)
+signal script_tree_override
 
 signal persistent_updated(name, value)
 
@@ -119,6 +130,9 @@ func _ready():
 	ffwd_hold.connect(_on_ffwd_hold)
 	ffwd_toggle.connect(_on_ffwd_toggle)
 	_config_manager.config_updated.connect(_on_automode_timeout_changed)
+
+	script_tree_updated.connect(_on_script_tree_updated)
+	script_tree_override.connect(_on_script_tree_override)
 
 	# Initialize automode timer
 	_automode_timer = Timer.new()
@@ -239,6 +253,11 @@ func _on_ffwd_toggle():
 	ffwd_active = !ffwd_active
 
 
+func _on_script_tree_updated(script_tree : String, index : int):
+	_current_script_tree = script_tree
+	_current_script_tree_index = index
+
+
 func set_variable(var_name : String, var_value, persistent := false):
 	if persistent == true:
 		_persistent[var_name] = var_value
@@ -264,3 +283,39 @@ func get_all_variables(persistent := false) -> Dictionary:
 		return _persistent
 	else:
 		return _vars
+
+
+func get_script_data():
+	var script_data_dict = {}
+	script_data_dict["script"] = _current_script_tree
+	script_data_dict["index"] = _current_script_tree_index
+	script_data_dict["callsub_stack"] = _callsub_stack
+	script_data_dict["context_lv"] = _context_level
+	script_data_dict["backlog"] = backlog
+
+	return script_data_dict
+
+
+func set_script_data_temp(script_data_dict : Dictionary):
+	_temp_script_tree = script_data_dict["script"]
+	_temp_script_tree_index = script_data_dict["index"]
+	_temp_callsub_stack = script_data_dict["callsub_stack"]
+	_temp_context_level = script_data_dict["context_lv"]
+	_temp_backlog = script_data_dict["backlog"]
+
+
+func _on_script_tree_override():
+	_current_script_tree = _temp_script_tree
+	_current_script_tree_index = _temp_script_tree_index
+	_context_level = _temp_context_level
+	
+	_callsub_stack.clear()
+	for st in _temp_callsub_stack:
+		_callsub_stack.append(st)
+	_temp_callsub_stack.clear()
+
+	backlog.clear()
+	backlog_purge.emit()
+	for bl in range(len(_temp_backlog) - 1): # Avoid duplicate backlog entry after loading
+		append_dialogue(_temp_backlog[bl])
+	_temp_backlog.clear()
