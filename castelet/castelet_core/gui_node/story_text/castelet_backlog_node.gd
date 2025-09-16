@@ -25,7 +25,7 @@ func update_backlog(dialogue_data : Dictionary, replace = false):
 
 func purge_backlog():
 	for backlog_item in _backlog_container.get_children():
-		remove_child(backlog_item)
+		remove_child(backlog_item) # FIXME: causes error Condition "p_child->data.parent != this" is true.
 		backlog_item.queue_free()
 
 

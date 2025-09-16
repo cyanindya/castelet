@@ -1,7 +1,7 @@
 [gd_resource type="Theme" load_steps=2 format=3 uid="uid://d4mfepejhjvvg"]
 
-[sub_resource type="FontVariation" id="FontVariation_7yw2x"]
+[ext_resource type="FontFile" uid="uid://6grd7dg47tt" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_regular.ttf" id="1_alp6f"]
 
 [resource]
-default_font = SubResource("FontVariation_7yw2x")
+default_font = ExtResource("1_alp6f")
 default_font_size = 24

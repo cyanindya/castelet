@@ -1,8 +1,9 @@
 extends CasteletSignedSaveLoadHandler
 
-var game_data_dir = "user://saves/"
 var _game_manager : CasteletGameManager
 var _theater_manager : CasteletTheaterStateManager
+var _peek_only : bool = false
+var _peek_result = {}
 
 
 func set_game_manager(obj : CasteletGameManager):
@@ -15,6 +16,25 @@ func set_theater_manager(obj : CasteletTheaterStateManager):
 
 func set_save_file_name(filename: String):
 	_save_file_name = filename
+
+
+func set_peek(yesno : bool = true):
+	if yesno == true:
+		_peek_only = true
+	else:
+		_peek_only = false
+
+
+func is_peeking():
+	return _peek_only
+
+
+func get_peek_result():
+	return _peek_result
+
+
+func clear_peek_result():
+	_peek_result.clear()
 
 
 # Saving sub-process for the game.
@@ -48,5 +68,11 @@ func _process_loaded_data(data : Dictionary):
 		if (key.begins_with("stage_")):
 			theater_data[key.trim_prefix("stage_")] = data[key]
 
-	_game_manager.set_script_data_temp(script_data)
-	_theater_manager.set_theater_data_temp(theater_data)
+	if _peek_only == false:
+		_game_manager.set_script_data_temp(script_data)
+		_theater_manager.set_theater_data_temp(theater_data)
+	else:
+		_peek_result = {
+			"script_data" : script_data,
+			"theater_data" : theater_data,
+		}

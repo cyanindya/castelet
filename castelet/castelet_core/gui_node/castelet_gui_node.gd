@@ -171,15 +171,30 @@ func _on_viewport_resized():
 	$DialogueNode.resize_node(ui_scale)
 	$SettingsNode.resize_node(ui_scale)
 	$BacklogNode.resize_node(ui_scale)
+	$SaveLoadNode.resize_node(ui_scale)
 	$MenuNode.scale = Vector2(ui_scale, ui_scale)
 	$QuickMenuControl.scale = Vector2(ui_scale, ui_scale)
 
 
 func _on_quicksave_button_pressed():
-	$SaveLoadNode.save("user://qsave.sav")
+	$SaveLoadNode.save("qsave")
 
 
 func _on_quickload_button_pressed():
-	$SaveLoadNode.load("user://qsave.sav")
+	$SaveLoadNode.load_data("qsave")
 	var result : int = await $SaveLoadNode.gui_load_confirmed
 	gui_game_loaded.emit(result)
+
+
+func _on_save_button_pressed():
+	$QuickMenuControl.accept_event()
+	$SaveLoadNode.show_saveload_entries(true)
+	
+	
+func _on_load_button_pressed():
+	$QuickMenuControl.accept_event()
+	$SaveLoadNode.show_saveload_entries(false)
+
+	var result : int = await $SaveLoadNode.gui_load_confirmed
+	gui_game_loaded.emit(result)
+	
