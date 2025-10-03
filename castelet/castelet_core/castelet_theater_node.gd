@@ -118,6 +118,7 @@ func _ready():
 	_transition_manager.vp = $SubViewport
 	
 	dialogue_tools = DialogueTools.new()
+	_theater_manager.set_theater_node_instance(self)
 	
 	# Connect the required signals to relevant callback functions
 	end_of_script.connect(_on_end_of_script)
@@ -751,6 +752,8 @@ func end():
 
 	$SubViewport/CasteletStageNode.hide()
 	$SubViewport/CasteletGUINode.hide()
+
+	_theater_manager.remove_theater_node_instance()
 	
 	queue_free()
 	
@@ -759,3 +762,8 @@ func _exit_tree() -> void:
 	_ending_thread = true
 	_semaphore.post()
 	_thread.wait_to_finish()
+
+
+func get_viewport_screenshot(): # FIXME: the subviewport is null?
+	var scr = $SubViewport.get_viewport().get_texture().get_image()
+	return scr

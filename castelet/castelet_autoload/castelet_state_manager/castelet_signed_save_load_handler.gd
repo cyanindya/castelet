@@ -8,7 +8,7 @@ func _save_thread_subprocess() -> int:
 
 	raw_dict["name"] = _save_file_name.split(".")[0]
 
-	var save_time = Time.get_date_string_from_system()
+	var save_time = Time.get_datetime_string_from_system()
 	raw_dict["last_updated"] = save_time
 
 	_create_save_dictionary(raw_dict)
@@ -33,12 +33,11 @@ func _save_thread_subprocess() -> int:
 func _load_thread_subprocess() -> int:
 	
 	var file = FileAccess.open_compressed(_save_file_name, FileAccess.READ, FileAccess.COMPRESSION_GZIP)
+	print_debug("FN: ", _save_file_name)
 	_mutex.unlock()
 
 	if file == null:
-		push_warning("Unable to load the game configuration data." +
-			"The game will use the default configuration instead."
-		)
+		push_warning("Unable to load the save data.")
 		return -1
 
 	_mutex.lock()
@@ -59,6 +58,8 @@ func _load_thread_subprocess() -> int:
 	
 	var saved = data_key[0].hex_decode()
 	var data = bytes_to_var(saved)
+
+	# print_debug("data=", data)
 
 	_process_loaded_data(data)
 

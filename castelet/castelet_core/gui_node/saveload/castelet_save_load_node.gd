@@ -101,12 +101,14 @@ func _on_castelet_save_load_container_page_save_load_page_dismiss() -> void:
 
 func _on_castelet_save_load_container_page_request_save_load_entry_validation(data_id : String) -> void:
 	var savefile_name = "user://saves/save_" + data_id + ".sav"
+	print_debug(savefile_name)
 	var save_load_entry_is_ok = FileAccess.file_exists(savefile_name)
 	if save_load_entry_is_ok == true:
 		#print_debug(_state_manager)
-		_state_manager.peek_game_data(savefile_name)
+		_state_manager.peek_game_data("save_" + data_id)
 		var result = await _state_manager.peek_game_data_finish
 		# print_debug("Save data preview completed. All clear.")
+		print_debug(result)
 
 		# Make sure to use deferred emit to give time to the saveload entry nodes to
 		# process stuffs first.

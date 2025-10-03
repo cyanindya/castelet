@@ -31,23 +31,54 @@ func _generate_entry_buttons() -> void:
 		
 		request_save_load_entry_validation.emit.call_deferred("%d" % num_of_save) # ensuring state manager is loaded first
 		var save_load_entry_is_ok = await self.request_save_load_entry_validation_completed
+		print_debug(save_load_entry_is_ok)
 		
 		# print_debug("num_of_save=", num_of_save)
 		
 		# check for existing save files. If they exist, load the latest save data from there
 		# and overwrite the node information. Otherwise, only assign the number.
 		if save_load_entry_is_ok[0] == true:
-			nod.request_saveload_entry_update.emit("%d" % num_of_save, "", "", "")
+			print_debug("File exists")
+			nod.request_saveload_entry_update.emit(
+				"%d" % num_of_save,
+				save_load_entry_is_ok[1]["header_data"]["last_updated"],
+				"",
+				save_load_entry_is_ok[1]["header_data"]["screenshot"]
+			)
 		else:
-			nod.request_saveload_entry_update.emit("%d" % num_of_save, "", "", "")
+			print_debug("File doesn't exist")
+			nod.request_saveload_entry_update.emit("%d" % num_of_save, "", "", null)
 
 
 func _save_or_load_change():
+	
+	for num_of_save in range(NUMBER_OF_SAVES):
+		request_save_load_entry_validation.emit.call_deferred("%d" % num_of_save) # ensuring state manager is loaded first
+		var save_load_entry_is_ok = await self.request_save_load_entry_validation_completed
+
+		var nod = save_load_entries_container.get_child(num_of_save)
+		if save_load_entry_is_ok[0] == true:
+			print_debug("File exists")
+			nod.request_saveload_entry_update.emit(
+				"%d" % num_of_save,
+				save_load_entry_is_ok[1]["header_data"]["last_updated"],
+				"",
+				# save_load_entry_is_ok[1]["header_data"]["screenshot"] # FIXME: check for null
+				null
+			)
+
+		if saving == true:
+			nod.enable()
+
+		else:
+			if save_load_entry_is_ok[0] == false:
+				nod.disable()
+
 	if saving == true:
 		save_load_page_title_label.text = "Save Data"
 	else:
 		save_load_page_title_label.text = "Load Data"
-		
+
 
 func _on_saveload_entry_event(data_id : String):
 	save_load_entry_interaction.emit(data_id)

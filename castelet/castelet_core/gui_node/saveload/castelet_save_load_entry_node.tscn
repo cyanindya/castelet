@@ -1,8 +1,11 @@
-[gd_scene load_steps=4 format=3 uid="uid://cquiroudqybso"]
+[gd_scene load_steps=5 format=3 uid="uid://cquiroudqybso"]
 
 [ext_resource type="Theme" uid="uid://d4mfepejhjvvg" path="res://castelet/castelet_default_assets/default_dialogue_rich_text_typesetting.tres" id="1_ruiqs"]
 [ext_resource type="Script" path="res://castelet/castelet_core/gui_node/saveload/castelet_save_load_entry_node.gd" id="1_tsra6"]
 [ext_resource type="StyleBox" uid="uid://ddl0okwiuo1p0" path="res://castelet/castelet_default_assets/default_choice_button.tres" id="3_wu86m"]
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_y8h1n"]
+size = Vector2(240, 135)
 
 [node name="SaveLoadEntryNode" type="Control"]
 custom_minimum_size = Vector2(1000, 200)
@@ -45,6 +48,8 @@ size_flags_horizontal = 4
 size_flags_vertical = 3
 
 [node name="Sprite2D" type="Sprite2D" parent="Button/SaveDataContainer/VBoxContainer2"]
+texture = SubResource("PlaceholderTexture2D_y8h1n")
+offset = Vector2(160, 90)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="Button/SaveDataContainer"]
 layout_mode = 2

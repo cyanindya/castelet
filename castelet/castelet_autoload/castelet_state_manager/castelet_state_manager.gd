@@ -174,7 +174,7 @@ func _on_load_game_finish(status : int):
 		peek_game_data_finish.emit(status, _saveload_manager.get_peek_result())
 	else:
 		game_load_finish.emit(status)
-	_saveload_manager.set_peek(false)
+	# _saveload_manager.set_peek(false)
 
 
 func _notification(what: int) -> void:
