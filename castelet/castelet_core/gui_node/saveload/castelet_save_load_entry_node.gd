@@ -13,6 +13,7 @@ signal request_saveload_entry_update(data_id, save_time, comment, screenshot)
 
 var saveload_entry_prefix = "#"
 var saveload_entry_suffix = ""
+var thumbnail_distance_from_border : Vector2 = Vector2(7, 7)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -40,4 +41,6 @@ func _on_request_saveload_entry_update(data_id: Variant, save_time: Variant, com
 	if comment.length() > 0:
 		data_comment_node.text = comment	
 	if thumbnail != null:
-		thumbnail_node.texture = ImageTexture.create_from_image(thumbnail)
+		var tex : ImageTexture = ImageTexture.create_from_image(thumbnail)
+		thumbnail_node.texture = tex
+		thumbnail_node.offset = tex.get_size() / 2 + thumbnail_distance_from_border

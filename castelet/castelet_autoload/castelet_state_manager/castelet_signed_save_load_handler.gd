@@ -2,17 +2,27 @@ extends CasteletBaseSaveLoadHandler
 class_name CasteletSignedSaveLoadHandler
 
 
-func _save_thread_subprocess() -> int:
+var sub_thread : Thread
+var sub_mutex : Mutex
+var raw_dict = {}
 
-	var raw_dict = {}
+
+func _save_thread_subprocess() -> int:
+	raw_dict.clear()
+	sub_thread = Thread.new()
+	sub_mutex = Mutex.new()
 
 	raw_dict["name"] = _save_file_name.split(".")[0]
 
 	var save_time = Time.get_datetime_string_from_system()
 	raw_dict["last_updated"] = save_time
 
-	_create_save_dictionary(raw_dict)
+	sub_thread.start(_sub_save)
+	sub_thread.wait_to_finish()
 
+	sub_mutex.lock()
+	
+	# print_debug.call_deferred(raw_dict)
 	var data_to_save = var_to_bytes(raw_dict)
 	
 	var data_hex : String = data_to_save.hex_encode()
@@ -26,6 +36,9 @@ func _save_thread_subprocess() -> int:
 	
 
 	file.close()
+	sub_mutex.unlock()
+
+	print_debug.call_deferred(raw_dict.keys())
 
 	return 0
 
@@ -78,3 +91,8 @@ func _create_save_dictionary(save_dict : Dictionary):
 
 func _process_loaded_data(data : Dictionary):
 	pass
+
+func _sub_save():
+	sub_mutex.lock()
+	_create_save_dictionary(raw_dict)
+	sub_mutex.unlock()

@@ -106,7 +106,7 @@ func _on_reconstruct_stage_finished():
 	_temp_current_bgm = {}
 
 
-func process_viewport_texture_request():
-	var scr = _current_theater_instance.get_viewport_screenshot()
+func process_viewport_texture_request() -> void:
+	var scr : Image = _current_theater_instance.get_viewport_screenshot()
 	viewport_texture_processed.emit.call_deferred(scr)
 	# return scr

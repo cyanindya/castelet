@@ -63,8 +63,7 @@ func _save_or_load_change():
 				"%d" % num_of_save,
 				save_load_entry_is_ok[1]["header_data"]["last_updated"],
 				"",
-				# save_load_entry_is_ok[1]["header_data"]["screenshot"] # FIXME: check for null
-				null
+				save_load_entry_is_ok[1]["header_data"]["screenshot"]
 			)
 
 		if saving == true:

@@ -51,16 +51,22 @@ func clear_peek_result():
 # This can be extended later depending on the game's context.
 func _create_save_dictionary(save_dict : Dictionary):
 
-	# FIXME: caused race condition that prevents the rest of the data not to be saved
-	# var screenshot = await _capture_viewport_screenshot()
-	# save_dict["screenshot"] = screenshot
+	sub_mutex.lock()
+
+	var screenshot : Image = await _capture_viewport_screenshot()
+	# print_debug.call_deferred(screenshot)
+	save_dict["screenshot"] = screenshot.save_png_to_buffer()
 	
 	store_dict(_game_manager.get_all_variables(), "var", save_dict)
 	store_dict(_game_manager.get_script_data(), "script", save_dict)
 	store_dict(_theater_manager.get_theater_data(), "stage", save_dict)
+
+	sub_mutex.unlock()
 	
 	
 func _process_loaded_data(data : Dictionary):
+
+	# print_debug.call_deferred(data.keys())
 
 	var header_data = {}
 	var script_data = {}
@@ -71,7 +77,10 @@ func _process_loaded_data(data : Dictionary):
 			header_data["last_updated"] = data[key]
 
 		if key == "screenshot":
-			header_data["screenshot"] = data[key]
+			var scr = Image.new()
+			scr.load_png_from_buffer(data[key])
+			print_debug.call_deferred(scr)
+			header_data["screenshot"] = scr
 		
 		if (key.begins_with("var_")):
 			_game_manager.set_variable(key.trim_prefix("var_"), data[key])
@@ -94,11 +103,11 @@ func _process_loaded_data(data : Dictionary):
 		print_debug(_peek_result)
 
 
-func _capture_viewport_screenshot(width : int = 320, height : int = 180):
-	# FIXME: find out how to get value from deferred call
+func _capture_viewport_screenshot(width : int = 320, height : int = 180) -> Image:
 	_theater_manager.call_thread_safe("process_viewport_texture_request")
-	var scr = await screenshot_ready
-	scr.save_png("user://saves/Screenshot.png")
+	var scr : Image = await screenshot_ready
+	scr.resize(width, height)
+	# scr.save_png("user://saves/Screenshot.png")
 	return scr
 
 

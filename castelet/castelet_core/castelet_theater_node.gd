@@ -764,6 +764,6 @@ func _exit_tree() -> void:
 	_thread.wait_to_finish()
 
 
-func get_viewport_screenshot(): # FIXME: the subviewport is null?
-	var scr = $SubViewport.get_viewport().get_texture().get_image()
+func get_viewport_screenshot() -> Image: # FIXME: the subviewport is null?
+	var scr : Image = $SubViewport.get_viewport().get_texture().get_image()
 	return scr
