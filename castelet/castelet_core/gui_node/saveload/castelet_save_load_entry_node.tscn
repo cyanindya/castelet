@@ -93,7 +93,6 @@ text = "HH:MM:SS"
 layout_mode = 2
 theme = ExtResource("1_ruiqs")
 theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
-text = "Save title"
 fit_content = true
 
 [connection signal="request_saveload_entry_update" from="." to="." method="_on_request_saveload_entry_update"]

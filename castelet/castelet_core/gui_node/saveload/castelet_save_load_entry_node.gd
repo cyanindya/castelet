@@ -39,7 +39,9 @@ func _on_request_saveload_entry_update(data_id: Variant, save_time: Variant, com
 		data_date_node.text = datetime[0].replace("-", "/")
 		data_time_node.text = datetime[1]
 	if comment.length() > 0:
-		data_comment_node.text = comment	
+		data_comment_node.text = comment
+	else:
+		data_comment_node.text = ""
 	if thumbnail != null:
 		var tex : ImageTexture = ImageTexture.create_from_image(thumbnail)
 		thumbnail_node.texture = tex

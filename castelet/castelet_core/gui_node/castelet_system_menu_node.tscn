@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://xjjqsfs1k7va"]
+
+[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/castelet_system_menu_node.gd" id="1_oeimk"]
+[ext_resource type="PackedScene" uid="uid://tgsnni7av3vm" path="res://castelet/castelet_core/gui_node/settings/castelet_settings_node.tscn" id="1_qe6es"]
+[ext_resource type="PackedScene" uid="uid://csk7ph1puyfpu" path="res://castelet/castelet_core/gui_node/saveload/castelet_save_load_node.tscn" id="2_jmgmb"]
+
+[node name="SystemMenuNode" type="CanvasLayer"]
+script = ExtResource("1_oeimk")
+
+[node name="SettingsNode" parent="." instance=ExtResource("1_qe6es")]
+visible = false
+
+[node name="SaveLoadNode" parent="." instance=ExtResource("2_jmgmb")]
+visible = false
