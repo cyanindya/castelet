@@ -11,10 +11,12 @@ var _current_bgm = {
 var _temp_props = []
 var _temp_current_bgm = {}
 
+var _current_theater_instance : Node = null
+
 signal override_stage
 signal request_reconstruct_stage(list_of_props, bgm)
 signal reconstruct_stage_finished
-	
+signal viewport_texture_processed(tex)
 
 
 func _ready() -> void:
@@ -87,6 +89,14 @@ func update_bgm_data(bgm := [], args := {}):
 			_current_bgm["pause"] = args["pause"]
 
 
+func set_theater_node_instance(node : Node):
+	_current_theater_instance = node
+
+
+func remove_theater_node_instance():
+	_current_theater_instance = null
+
+
 func _on_override_stage():
 	request_reconstruct_stage.emit(_temp_props, _temp_current_bgm)
 
@@ -94,3 +104,9 @@ func _on_override_stage():
 func _on_reconstruct_stage_finished():
 	_temp_props = []
 	_temp_current_bgm = {}
+
+
+func process_viewport_texture_request() -> void:
+	var scr : Image = _current_theater_instance.get_viewport_screenshot()
+	viewport_texture_processed.emit.call_deferred(scr)
+	# return scr

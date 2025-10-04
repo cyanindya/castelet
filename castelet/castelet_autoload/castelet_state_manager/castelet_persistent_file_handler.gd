@@ -13,7 +13,9 @@ func set_game_manager(obj : CasteletGameManager):
 
 
 func _create_save_dictionary(save_dict : Dictionary):
+	sub_mutex.lock()
 	store_dict(_game_manager.get_all_variables(true), "persistent", save_dict)
+	sub_mutex.unlock()
 
 
 func _process_loaded_data(data : Dictionary):

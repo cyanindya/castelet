@@ -1,0 +1,54 @@
+[gd_scene load_steps=5 format=3 uid="uid://j5vddc72njby"]
+
+[ext_resource type="Script" path="res://castelet/castelet_core/gui_node/saveload/castelet_save_load_container_page.gd" id="1_nowm0"]
+[ext_resource type="StyleBox" uid="uid://bnnm0ag6717jh" path="res://castelet/castelet_default_assets/default_dialogue_window.tres" id="1_v5qq0"]
+[ext_resource type="Theme" uid="uid://d4mfepejhjvvg" path="res://castelet/castelet_default_assets/default_dialogue_rich_text_typesetting.tres" id="2_5yh70"]
+[ext_resource type="FontFile" uid="uid://kgrh7hs65hcq" path="res://castelet/castelet_default_assets/fonts/liberation_serif/liberation_serif_bold.ttf" id="3_p1xfj"]
+
+[node name="CasteletSaveLoadContainerPage" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_nowm0")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 25.0
+offset_top = 59.0
+offset_right = 1341.0
+offset_bottom = 709.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = ExtResource("1_v5qq0")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="SaveLoadLabel" type="RichTextLabel" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+theme = ExtResource("2_5yh70")
+theme_override_colors/default_color = Color(0.160784, 0.054902, 0.0509804, 1)
+theme_override_fonts/bold_italics_font = ExtResource("3_p1xfj")
+theme_override_font_sizes/bold_italics_font_size = 32
+theme_override_font_sizes/normal_font_size = 32
+bbcode_enabled = true
+text = "[b]Save Game[/b]"
+fit_content = true
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SaveLoadEntriesContainer" type="VBoxContainer" parent="PanelContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 20
+
+[node name="Return Button" type="Button" parent="PanelContainer/VBoxContainer"]
+layout_mode = 2
+text = "Return"
+
+[connection signal="pressed" from="PanelContainer/VBoxContainer/Return Button" to="." method="_on_return_button_pressed"]

@@ -26,6 +26,7 @@ CasteletTransitionManager="res://castelet/castelet_autoload/castelet_transition_
 CasteletViewportManager="res://castelet/castelet_autoload/castelet_viewport_manager.tscn"
 CasteletStateManager="res://castelet/castelet_autoload/castelet_state_manager/castelet_state_manager.tscn"
 CasteletTheaterStateManager="res://castelet/castelet_autoload/castelet_theater_state_manager.tscn"
+CasteletSystemMenuNode="*res://castelet/castelet_core/gui_node/castelet_system_menu_node.tscn"
 
 [display]
 

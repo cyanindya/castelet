@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://csk7ph1puyfpu"]
+[gd_scene load_steps=4 format=3 uid="uid://csk7ph1puyfpu"]
 
 [ext_resource type="Script" path="res://castelet/castelet_core/gui_node/saveload/castelet_save_load_node.gd" id="1_uayq5"]
+[ext_resource type="PackedScene" uid="uid://j5vddc72njby" path="res://castelet/castelet_core/gui_node/saveload/castelet_save_load_container_page.tscn" id="2_q44gh"]
 [ext_resource type="PackedScene" uid="uid://crpgmxmstovu2" path="res://castelet/castelet_core/gui_node/popup/castelet_popup_dialogue_node.tscn" id="2_r8rks"]
 
 [node name="CasteletSaveLoadNode" type="Control"]
@@ -12,6 +13,13 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_uayq5")
 
+[node name="CasteletSaveLoadContainerPage" parent="." instance=ExtResource("2_q44gh")]
+visible = false
+
 [node name="SystemPopupNode" parent="." instance=ExtResource("2_r8rks")]
 visible = false
 layout_mode = 1
+
+[connection signal="request_save_load_entry_validation" from="CasteletSaveLoadContainerPage" to="." method="_on_castelet_save_load_container_page_request_save_load_entry_validation"]
+[connection signal="save_load_entry_interaction" from="CasteletSaveLoadContainerPage" to="." method="_on_save_load_entry_interaction"]
+[connection signal="save_load_page_dismiss" from="CasteletSaveLoadContainerPage" to="." method="_on_castelet_save_load_container_page_save_load_page_dismiss"]

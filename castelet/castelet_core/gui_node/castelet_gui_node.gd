@@ -11,6 +11,8 @@ const ChoiceNode = preload("res://castelet/castelet_core/gui_node/choice_menu/ca
 @onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
 @onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
+@onready var _system_menu : CasteletSystemMenuNode = get_node("/root/CasteletSystemMenuNode")
+
 
 signal choice_made(sub)
 signal gui_game_loaded
@@ -147,7 +149,7 @@ func _on_choice_made(_sub : String):
 
 func _on_config_button_pressed() -> void:
 	$QuickMenuControl.accept_event()
-	$SettingsNode.show()
+	_system_menu.show_config_menu()
 
 
 func _on_config_updated(conf, val):
@@ -169,17 +171,29 @@ func _on_viewport_resized():
 	
 	# Dirty scaling and may result in blurry UI elements, but this works for now.
 	$DialogueNode.resize_node(ui_scale)
-	$SettingsNode.resize_node(ui_scale)
 	$BacklogNode.resize_node(ui_scale)
 	$MenuNode.scale = Vector2(ui_scale, ui_scale)
 	$QuickMenuControl.scale = Vector2(ui_scale, ui_scale)
 
 
 func _on_quicksave_button_pressed():
-	$SaveLoadNode.save("user://qsave.sav")
+	_system_menu.quick_save()
 
 
 func _on_quickload_button_pressed():
-	$SaveLoadNode.load("user://qsave.sav")
-	var result : int = await $SaveLoadNode.gui_load_confirmed
+	_system_menu.quick_load()
+	var result : int = await _system_menu.system_load_confirmed
 	gui_game_loaded.emit(result)
+
+
+func _on_save_button_pressed():
+	$QuickMenuControl.accept_event()
+	_system_menu.show_saveload_menu(true)
+	
+	
+func _on_load_button_pressed():
+	$QuickMenuControl.accept_event()
+	_system_menu.show_saveload_menu(false)
+	var result : int = await _system_menu.system_load_confirmed
+	gui_game_loaded.emit(result)
+	

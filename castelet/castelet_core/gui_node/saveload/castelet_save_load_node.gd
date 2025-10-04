@@ -34,10 +34,13 @@ func save(save_name : String):
 		$SystemPopupNode.confirm_popup("Save failed.")
 	await $SystemPopupNode.confirm
 
+	if $CasteletSaveLoadContainerPage.visible:
+		$CasteletSaveLoadContainerPage.hide()
+
 	hide()
 
 
-func load(save_name : String):
+func load_data(save_name : String):
 	show()
 
 	$SystemPopupNode.yesno_popup(
@@ -60,5 +63,59 @@ func load(save_name : String):
 	await $SystemPopupNode.confirm
 
 	gui_load_confirmed.emit(status)
+	
+	if $CasteletSaveLoadContainerPage.visible:
+		$CasteletSaveLoadContainerPage.hide()
 
 	hide()
+
+
+func show_saveload_entries(saving : bool = true):
+	$CasteletSaveLoadContainerPage.saving = saving
+	show()
+	$CasteletSaveLoadContainerPage.show()
+
+
+func hide_saveload_entries():
+	hide()
+	$CasteletSaveLoadContainerPage.hide()
+
+
+func resize_node(new_scale : float):
+	scale = Vector2(new_scale, new_scale)
+	
+
+func _on_save_load_entry_interaction(data_id: String) -> void:
+	var filename = "save_" + data_id
+	if $CasteletSaveLoadContainerPage.saving == true:
+		#print_debug("requesting save")
+		save(filename)
+	else:
+		#print_debug("requesting load")
+		load_data(filename)
+
+
+func _on_castelet_save_load_container_page_save_load_page_dismiss() -> void:
+	hide_saveload_entries()
+
+
+func _on_castelet_save_load_container_page_request_save_load_entry_validation(data_id : String) -> void:
+	var savefile_name = "user://saves/save_" + data_id + ".sav"
+	print_debug(savefile_name)
+	var save_load_entry_is_ok = FileAccess.file_exists(savefile_name)
+	if save_load_entry_is_ok == true:
+		#print_debug(_state_manager)
+		_state_manager.peek_game_data("save_" + data_id)
+		var result = await _state_manager.peek_game_data_finish
+		# print_debug("Save data preview completed. All clear.")
+		print_debug(result)
+
+		# Make sure to use deferred emit to give time to the saveload entry nodes to
+		# process stuffs first.
+		if result[0] == 0:
+			$CasteletSaveLoadContainerPage.request_save_load_entry_validation_completed.emit.call_deferred(true, result[1])
+		else:
+			$CasteletSaveLoadContainerPage.request_save_load_entry_validation_completed.emit.call_deferred(false, null)
+	else:
+		print_debug("Save data preview completed. The data doesn't exist.")
+		$CasteletSaveLoadContainerPage.request_save_load_entry_validation_completed.emit.call_deferred(false, null)
