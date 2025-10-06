@@ -160,6 +160,8 @@ func _next():
 			_update_transition()
 		elif next.type == Tokenizer.KEYWORDS.WINDOW:
 			_update_window()
+		elif next.type == Tokenizer.KEYWORDS.NVL:
+			_update_nvl()
 		else:
 			pass
 	
@@ -524,6 +526,17 @@ func _update_window():
 		$SubViewport/CasteletGUINode.show_window()
 	elif command.value[0] in ["hide", "off"]:
 		$SubViewport/CasteletGUINode.hide_window()
+
+
+func _update_nvl():
+	var command : CasteletSyntaxTree.StageCommandExpression = self._tree.next()
+
+	if command.value[0] in ["on", "enable"]:
+		$SubViewport/CasteletGUINode.nvl_enable()
+	elif command.value[0] in ["clear"]:
+		$SubViewport/CasteletGUINode.nvl_clear()
+	elif command.value[0] in ["off", "disable"]:
+		$SubViewport/CasteletGUINode.nvl_disable()
 
 
 func _update_dialogue(command : CasteletSyntaxTree.DialogueExpression):

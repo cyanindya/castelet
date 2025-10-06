@@ -56,6 +56,7 @@ const KEYWORDS := {
 	MENU = "menu",
 	CHOICE = "choice",
 	ENDMENU = "endmenu",
+	NVL = "nvl",
 }
 
 var tokens = []:

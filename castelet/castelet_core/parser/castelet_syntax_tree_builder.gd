@@ -72,6 +72,7 @@ func parse(check_for_eof_token := false, args := {}) -> CasteletSyntaxTree:
 			or self._tokens.is_at_end()
 	):
 		var expression = self._parse_token()
+		print_debug(expression)
 
 		if expression != null:
 			_expression_id += 1
@@ -135,7 +136,6 @@ func parse(check_for_eof_token := false, args := {}) -> CasteletSyntaxTree:
 	
 	# Since it is possible for the tree to be generated from sub-tokens, add
 	# the resulting tree to the game manager from here.
-	print_debug(tree.name, "foonya")
 	add_to_script_tree.emit(tree.name, tree)
 
 	# List all checkpoints in the script tree to be added to the global manager.
@@ -304,7 +304,7 @@ func _parse_commands():
 			args["time"] = _tokens.next().value as float
 
 	# Check for arguments until newline is reached
-	while _tokens.peek().type != Tokenizer.TOKENS.NEWLINE:
+	while _tokens.peek().type not in [Tokenizer.TOKENS.NEWLINE, Tokenizer.TOKENS.EOF]:
 		var argument : CasteletSyntaxTree.CommandArgExpression = _parse_args()
 		args[argument.param] = argument.value
 

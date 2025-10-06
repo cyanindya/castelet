@@ -76,6 +76,7 @@
 #                                         Displays click-to-continue indicator by default.
 #
 extends Control
+class_name CasteletDialogueNode
 
 const _CPS_MAX_VALUE = 100
 

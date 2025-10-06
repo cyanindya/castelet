@@ -13,6 +13,7 @@ const ChoiceNode = preload("res://castelet/castelet_core/gui_node/choice_menu/ca
 @onready var _viewport_manager : CasteletViewportManager = get_node("/root/CasteletViewportManager")
 @onready var _system_menu : CasteletSystemMenuNode = get_node("/root/CasteletSystemMenuNode")
 
+var nvl_enabled = false
 
 signal choice_made(sub)
 signal gui_game_loaded
@@ -47,22 +48,51 @@ func _process(_delta):
 # - show the text gradually based on text speed, 
 # - when it finishes displaying, send a signal that the script can proceed
 func update_dialogue(dialogue_data : Dictionary):
-	$DialogueNode.show_dialogue(dialogue_data["speaker"], dialogue_data["dialogue"],
-								_game_manager.ffwd_active,
-								dialogue_data["args"]
-								)
+	# TODO: change to handle of possible NVL mode
+	if nvl_enabled == false:
+		$DialogueNode.show_dialogue(dialogue_data["speaker"], dialogue_data["dialogue"],
+									_game_manager.ffwd_active,
+									dialogue_data["args"]
+									)
+	else:
+		pass
+
 
 func show_window():
-	await $DialogueNode.window_transition(0.0, 1.0)
+	# TODO: change to handle of possible NVL mode
+	if nvl_enabled == false:
+		await $DialogueNode.window_transition(0.0, 1.0)
+	else:
+		pass
 	_game_manager.progress.emit()
 
 
 func hide_window():
-	await $DialogueNode.window_transition(1.0, 0.0)
+	# TODO: change to handle of possible NVL mode
+	if nvl_enabled == false:
+		await $DialogueNode.window_transition(1.0, 0.0)
+	else:
+		pass
 	_game_manager.progress.emit()
-	
+
+
+func nvl_enable():
+	nvl_enabled = true
+	print_debug("NVL mode enabled")
+
+
+func nvl_disable():
+	nvl_enabled = false
+	print_debug("NVL mode disabled.")
+
+
+func nvl_clear():
+	print_debug("Clearing the NVL window.")
+
 
 func _dialogue_node_interrupt(instant : bool = false):
+	# TODO: change to handle of possible NVL mode
+	
 	if $DialogueNode.completed:
 		_game_manager.progress.emit()
 	else:
@@ -81,6 +111,8 @@ func _on_automode_button_toggled(button_pressed: bool):
 # To avoid execution order conflict, we use the signal from DialogueNode that will only
 # be emitted when all of the status changes had been completed.
 func _on_dialogue_node_dialogue_window_status_changed(completed, completed_auto, duration):
+	# TODO: change to handle of possible NVL mode
+	
 	if not completed:
 		if duration == 0.0:
 			_game_manager.enter_standby.emit()
@@ -110,6 +142,8 @@ func _on_backlog_window_visibility_changed():
 
 
 func show_choices(choices := []):
+	# TODO: change to handle of possible NVL mode
+	
 	for choice in choices:
 		# modify this if you want to make the choice still visible
 		# but still disabled when the conditions aren't fulfilled.
@@ -126,6 +160,8 @@ func show_choices(choices := []):
 
 
 func _process_choice(choice : String, sub : String):
+	# TODO: change to handle of possible NVL mode
+	
 	var choice_dialogue = {
 		"speaker": "(Choice)",
 		"dialogue" : choice,
@@ -137,6 +173,8 @@ func _process_choice(choice : String, sub : String):
 
 
 func _on_choice_made(_sub : String):
+	# TODO: change to handle of possible NVL mode
+	
 	var buttons = $MenuNode.get_children()
 	
 	for button in buttons:
