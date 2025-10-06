@@ -1,6 +1,9 @@
-[gd_resource type="StyleBoxTexture" format=3 uid="uid://bcp532dsrt7cm"]
+[gd_resource type="StyleBoxTexture" load_steps=2 format=3 uid="uid://bcp532dsrt7cm"]
+
+[ext_resource type="Texture2D" uid="uid://bdaj0mcn74hkc" path="res://castelet/castelet_default_assets/default_text_window.png" id="1_ddo44"]
 
 [resource]
+texture = ExtResource("1_ddo44")
 texture_margin_left = 30.0
 texture_margin_top = 30.0
 texture_margin_right = 30.0

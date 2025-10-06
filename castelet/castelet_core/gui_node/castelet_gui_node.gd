@@ -50,12 +50,21 @@ func _process(_delta):
 func update_dialogue(dialogue_data : Dictionary):
 	# TODO: change to handle of possible NVL mode
 	if nvl_enabled == false:
+		if $NVLNode.visible:
+			$NVLNode.hide()
+			$DialogueNode.show()
 		$DialogueNode.show_dialogue(dialogue_data["speaker"], dialogue_data["dialogue"],
 									_game_manager.ffwd_active,
 									dialogue_data["args"]
 									)
 	else:
-		pass
+		if $DialogueNode.visible:
+			$DialogueNode.hide()
+			$NVLNode.show()
+		$NVLNode.show_dialogue(dialogue_data["speaker"], dialogue_data["dialogue"],
+									_game_manager.ffwd_active,
+									dialogue_data["args"]
+									)
 
 
 func show_window():
@@ -63,7 +72,7 @@ func show_window():
 	if nvl_enabled == false:
 		await $DialogueNode.window_transition(0.0, 1.0)
 	else:
-		pass
+		await $NVLNode.window_transition(0.0, 1.0)
 	_game_manager.progress.emit()
 
 
@@ -72,22 +81,26 @@ func hide_window():
 	if nvl_enabled == false:
 		await $DialogueNode.window_transition(1.0, 0.0)
 	else:
-		pass
+		await $NVLNode.window_transition(1.0, 0.0)
 	_game_manager.progress.emit()
 
 
 func nvl_enable():
 	nvl_enabled = true
 	print_debug("NVL mode enabled")
+	_game_manager.progress.emit()
 
 
 func nvl_disable():
 	nvl_enabled = false
 	print_debug("NVL mode disabled.")
+	_game_manager.progress.emit()
 
 
 func nvl_clear():
+	$NVLNode.clear_nvl_window()
 	print_debug("Clearing the NVL window.")
+	_game_manager.progress.emit()
 
 
 func _dialogue_node_interrupt(instant : bool = false):

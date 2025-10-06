@@ -91,7 +91,9 @@ var _pause_durations : Array = []
 var _text_length = 0
 var _next_stop = 0
 
-@onready var _text = $Dialogue/DialogueLabel
+var _text : RichTextLabel
+var _speaker : Node
+var _speaker_label : RichTextLabel
 
 signal window_transition_completed
 signal message_display_paused(duration : float)
@@ -103,14 +105,22 @@ signal dialogue_window_status_changed(completed: bool, completed_auto: bool, dur
 func _ready():
 
 	# Connect to internal signals
-	window_transition_completed.connect(_on_window_transition_completed)
-	message_display_completed.connect(_on_message_display_completed)
-	message_display_paused.connect(_on_message_display_paused)
+	_init_signals()
+
+	_text = $Dialogue/DialogueLabel
+	_speaker = $Speaker
+	_speaker_label = $Speaker/SpeakerLabel
 	
 	# In the beginning, hide this node and all of the sub-nodes
 	_hide_subcomponents()
 	hide()
-	
+
+
+func _init_signals():
+	window_transition_completed.connect(_on_window_transition_completed)
+	message_display_completed.connect(_on_message_display_completed)
+	message_display_paused.connect(_on_message_display_paused)
+
 
 func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool = false,
 					args = {}):
@@ -124,19 +134,21 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 	
 	var starting_length := 0
 	if speaker == "extend":
-		starting_length = len($Dialogue/DialogueLabel.get_parsed_text())
+		starting_length = len(_text.get_parsed_text())
 
 	# For each call, hide the click-to-continue indicator first.
 	# It will be shown again when user can continue.
-	$CTC_Indicator.hide()
+	if has_node("CTC_Indicator"):
+		$CTC_Indicator.hide()
 	
 	# Preemptively set the speaker name and the dialogue to be displayed
 	# before actually showing them, as well as some control variables.
 	if speaker != "extend":
-		$Speaker/SpeakerLabel.clear()
-		$Dialogue/DialogueLabel.clear()
-		$Speaker/SpeakerLabel.append_text(speaker)
-	$Dialogue/DialogueLabel.append_text(dialogue)
+		if _speaker_label != null:
+			_speaker_label.clear()
+			_speaker_label.append_text(speaker)
+		_text.clear()
+	_text.append_text(dialogue)
 	
 	_pause_locations = []
 	_pause_durations = []
@@ -157,10 +169,11 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 		await window_transition_completed
 	
 	# If the narrator is speaking, hide the speaker window
-	if speaker == "" or speaker == "narrator":
-		$Speaker.hide()
-	else:
-		$Speaker.show()
+	if _speaker != null && speaker != "extend":
+		if speaker == "" or speaker == "narrator":
+			_speaker.hide()
+		else:
+			_speaker.show()
 	
 	# Actually display the dialogue.
 	if not instant and cps < _CPS_MAX_VALUE:
@@ -235,9 +248,10 @@ func _animate_dialogue(initial_visible_characters := 0):
 			
 			_next_stop = _pause_locations[i]
 			
-			_tween.tween_callback($CTC_Indicator.hide)
-			_tween.tween_property(_text, "visible_characters",
-				_next_stop, duration * (_next_stop - starting) / _text_length)
+			if has_node("CTC_Indicator"):
+				_tween.tween_callback($CTC_Indicator.hide)
+				_tween.tween_property(_text, "visible_characters",
+					_next_stop, duration * (_next_stop - starting) / _text_length)
 			
 			# The lines of code below are only applicable if we're not nearing
 			# the end of the dialogue
@@ -282,7 +296,8 @@ func process_interrupt(instant : bool = false):
 					# one.
 					_tween.custom_step((_next_stop - _text.visible_characters)) # Dirty implementation.
 				else:
-					$CTC_Indicator.hide()
+					if has_node("CTC_Indicator"):
+						$CTC_Indicator.hide()
 					_tween.play()
 		# elif _text.visible_characters >= _text_length and $CTC_Indicator.visible:
 		# 	request_refresh.emit()
@@ -291,9 +306,12 @@ func process_interrupt(instant : bool = false):
 # Function to hide all sub-components of dialogue node
 func _hide_subcomponents():
 	
-	$CTC_Indicator.hide()
-	$Speaker.hide()
-	$Dialogue/DialogueLabel.hide()
+	if has_node("CTC_Indicator"):
+		$CTC_Indicator.hide()
+	if _speaker != null:
+		_speaker.hide()
+	if _text != null:
+		_text.hide()
 
 
 # Signal handling functions go here
@@ -302,13 +320,15 @@ func _on_window_transition_completed():
 
 
 func _on_message_display_completed(auto = false):
-	$CTC_Indicator.show()
+	if has_node("CTC_Indicator"):
+		$CTC_Indicator.show()
 	completed = true
 	dialogue_window_status_changed.emit(true, auto, 0.0)
 
 
 func _on_message_display_paused(duration : float):
-	$CTC_Indicator.show()
+	if has_node("CTC_Indicator"):
+		$CTC_Indicator.show()
 	completed = false
 	dialogue_window_status_changed.emit(false, false, duration)
 

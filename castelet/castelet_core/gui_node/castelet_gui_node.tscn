@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://cf8ybpujcepfc"]
+[gd_scene load_steps=6 format=3 uid="uid://cf8ybpujcepfc"]
 
 [ext_resource type="PackedScene" uid="uid://cb1ysu6lfx171" path="res://castelet/castelet_core/gui_node/story_text/castelet_dialogue_node.tscn" id="1_h0g72"]
 [ext_resource type="Script" path="res://castelet/castelet_core/gui_node/castelet_gui_node.gd" id="1_lemi2"]
 [ext_resource type="PackedScene" uid="uid://mj6e2n3prqpq" path="res://castelet/castelet_core/gui_node/choice_menu/castelet_menu_node.tscn" id="3_178xq"]
+[ext_resource type="PackedScene" uid="uid://b3mar573dabes" path="res://castelet/castelet_core/gui_node/story_text/castelet_nvl_dialogue_window_node.tscn" id="3_bwfxc"]
 [ext_resource type="PackedScene" uid="uid://ca1dssn5xvet0" path="res://castelet/castelet_core/gui_node/story_text/castelet_backlog_node.tscn" id="3_mumyu"]
 
 [node name="CasteletGUINode" type="CanvasLayer"]
@@ -16,6 +17,9 @@ anchor_bottom = 1.0
 offset_top = -38.0
 offset_bottom = -38.0
 grow_vertical = 0
+
+[node name="NVLNode" parent="." instance=ExtResource("3_bwfxc")]
+visible = false
 
 [node name="MenuNode" parent="." instance=ExtResource("3_178xq")]
 visible = false
