@@ -76,6 +76,7 @@ text = "Load"
 visible = false
 
 [connection signal="dialogue_window_status_changed" from="DialogueNode" to="." method="_on_dialogue_node_dialogue_window_status_changed"]
+[connection signal="dialogue_window_status_changed" from="NVLNode" to="." method="_on_dialogue_node_dialogue_window_status_changed"]
 [connection signal="pressed" from="QuickMenuControl/ButtonContainers/ConfigButton" to="." method="_on_config_button_pressed"]
 [connection signal="pressed" from="QuickMenuControl/ButtonContainers/BacklogButton" to="." method="_on_backlog_button_pressed"]
 [connection signal="toggled" from="QuickMenuControl/ButtonContainers/AutomodeButton" to="." method="_on_automode_button_toggled"]

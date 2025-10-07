@@ -30,6 +30,7 @@ func _ready():
 
 	if _config_manager.get_config(_config_manager.ConfigList.TEXT_SPEED) != null:
 		$DialogueNode.cps = _config_manager.get_config(_config_manager.ConfigList.TEXT_SPEED)
+		$NVLNode.cps = _config_manager.get_config(_config_manager.ConfigList.TEXT_SPEED)
 
 
 func _process(_delta):
@@ -48,7 +49,6 @@ func _process(_delta):
 # - show the text gradually based on text speed, 
 # - when it finishes displaying, send a signal that the script can proceed
 func update_dialogue(dialogue_data : Dictionary):
-	# TODO: change to handle of possible NVL mode
 	if nvl_enabled == false:
 		if $NVLNode.visible:
 			$NVLNode.hide()
@@ -68,7 +68,6 @@ func update_dialogue(dialogue_data : Dictionary):
 
 
 func show_window():
-	# TODO: change to handle of possible NVL mode
 	if nvl_enabled == false:
 		await $DialogueNode.window_transition(0.0, 1.0)
 	else:
@@ -77,7 +76,6 @@ func show_window():
 
 
 func hide_window():
-	# TODO: change to handle of possible NVL mode
 	if nvl_enabled == false:
 		await $DialogueNode.window_transition(1.0, 0.0)
 	else:
@@ -104,12 +102,16 @@ func nvl_clear():
 
 
 func _dialogue_node_interrupt(instant : bool = false):
-	# TODO: change to handle of possible NVL mode
+	var dialogue : Node
+	if not nvl_enabled:
+		dialogue = $DialogueNode
+	else:
+		dialogue = $NVLNode
 	
-	if $DialogueNode.completed:
+	if dialogue.completed:
 		_game_manager.progress.emit()
 	else:
-		$DialogueNode.process_interrupt(instant)
+		dialogue.process_interrupt(instant)
 
 
 func _on_automode_button_toggled(button_pressed: bool):
@@ -206,6 +208,7 @@ func _on_config_button_pressed() -> void:
 func _on_config_updated(conf, val):
 	if conf == _config_manager.ConfigList.TEXT_SPEED:
 		$DialogueNode.cps = val
+		$NVLNode.cps = val
 		print_debug($DialogueNode.cps)
 
 

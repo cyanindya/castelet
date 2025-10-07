@@ -168,6 +168,10 @@ func show_dialogue(speaker : String = "", dialogue : String = "", instant : bool
 		window_transition(0.0, 1.0)
 		await window_transition_completed
 	
+	# Handle incomplete modulation due to skipping
+	if visible && modulate.a < 1.0:
+		modulate.a = 1.0
+	
 	# If the narrator is speaking, hide the speaker window
 	if _speaker != null && speaker != "extend":
 		if speaker == "" or speaker == "narrator":
@@ -207,7 +211,7 @@ func window_transition(old: float = 0.0, new: float = 1.0):
 	if old > new:
 		hide()
 	
-	window_transition_completed.emit()
+	window_transition_completed.emit() # not triggered if the window tween is interrupted
 
 
 func _animate_dialogue(initial_visible_characters := 0):
@@ -316,7 +320,7 @@ func _hide_subcomponents():
 
 # Signal handling functions go here
 func _on_window_transition_completed():
-	pass
+	print_debug("Window transition completed")
 
 
 func _on_message_display_completed(auto = false):
