@@ -82,6 +82,8 @@ const _CPS_MAX_VALUE = 100
 
 @export var cps : float = 20
 @export var window_transition_speed : float = 0.5
+@export var show_continue_icon_at_text_end = false
+@export var ctc_icon_offset = Vector2i(10, 3)
 var completed = false
 var auto_dismiss = false
 
@@ -90,6 +92,7 @@ var _pause_locations : Array = []
 var _pause_durations : Array = []
 var _text_length = 0
 var _next_stop = 0
+var _default_ctc_position = Vector2i(0, 0)
 
 var _text : RichTextLabel
 var _speaker : Node
@@ -106,6 +109,9 @@ func _ready():
 
 	# Connect to internal signals
 	_init_signals()
+
+	if has_node("CTC_Indicator"):
+		_default_ctc_position = $CTC_Indicator.position
 
 	_text = $Dialogue/DialogueLabel
 	_speaker = $Speaker
@@ -324,14 +330,54 @@ func _on_window_transition_completed():
 
 
 func _on_message_display_completed(auto = false):
+
+	if has_node("CTC_Indicator") and show_continue_icon_at_text_end == true:
+		_display_ctc_at_text_end()
+
 	if has_node("CTC_Indicator"):
 		$CTC_Indicator.show()
 	completed = true
 	dialogue_window_status_changed.emit(true, auto, 0.0)
 
 
+func _display_ctc_at_text_end():
+	# The position detection is borrowed from with modifications
+	# https://forum.godotengine.org/t/is-there-a-way-to-get-the-related-position-rect-of-each-letter-in-the-label-control/52476/2
+	var text_paragraph = TextParagraph.new()
+	var text_server = TextServerManager.get_primary_interface()
+
+	var x = 0.0
+	var y = 0.0
+	var ascent = 0.0
+	var descent = 0.0
+
+	text_paragraph.set_width(_text.get_rect().size.x)
+	text_paragraph.add_string(_text.get_parsed_text(), _text.get_theme_font("font"), _text.get_theme_font_size("font_size"))
+
+	var last_line_rid = text_paragraph.get_line_rid(text_paragraph.get_line_count() - 1)
+	var glyphs = text_server.shaped_text_get_glyphs(last_line_rid)
+
+	for glyph in glyphs:
+		# get the advance (how much the we need to move x)
+		var advance = glyph.get("advance", 0)
+
+		# get the offset, I'm not sure what this does but it may be needed
+		# var offset = glyph.get("offset", Vector2.ZERO)
+		
+		# add the advance to x
+		x += advance
+	
+	y += ascent + descent
+
+	# text_paragraph.draw(_text.get_canvas_item(), Vector2i.ZERO)
+
+	if has_node("CTC_Indicator"):
+		$CTC_Indicator.position = Vector2i(_text.global_position - global_position) + Vector2i(x, y) + ctc_icon_offset
+
+
 func _on_message_display_paused(duration : float):
 	if has_node("CTC_Indicator"):
+		$CTC_Indicator.position = _default_ctc_position
 		$CTC_Indicator.show()
 	completed = false
 	dialogue_window_status_changed.emit(false, false, duration)

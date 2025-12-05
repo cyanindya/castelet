@@ -67,4 +67,4 @@ toggle_ffwd={
 
 [rendering]
 
-environment/defaults/default_clear_color=Color(0.0627451, 0.0627451, 0.0627451, 1)
+environment/defaults/default_clear_color=Color(0.733005, 0.733005, 0.733005, 1)
