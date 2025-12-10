@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://dsj711n4afjam"]
+
+[node name="CasteletMenuNode" type="VBoxContainer"]
+offset_bottom = 4.0
+size_flags_horizontal = 3
+theme_override_constants/separation = 38
+alignment = 1

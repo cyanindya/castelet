@@ -29,5 +29,5 @@ void fragment() {
 	}
 	COLOR = mix(tex_b_color, tex_a_color, clamp(fac, 0.0, 1.0));
 	//COLOR.a = mix(tex_b_color.a * (1.0 - fac), tex_a_color.a * (fac), clamp(fac, 0.0, 1.0));
-			
+
 }

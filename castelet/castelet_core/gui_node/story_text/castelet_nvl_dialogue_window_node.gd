@@ -1,6 +1,10 @@
 extends CasteletDialogueNode
 
 const NVLDialogueEntry = preload("res://castelet/castelet_core/gui_node/story_text/castelet_nvl_dialogue_entry_node.tscn")
+const NVLMenuNode = preload("res://castelet/castelet_core/gui_node/choice_menu/castelet_nvl_menu_node.tscn")
+
+var menu_node
+
 
 func _ready():
 
@@ -29,3 +33,16 @@ func clear_nvl_window():
 	for entry in $PanelContainer/VBoxContainer.get_children():
 		$PanelContainer/VBoxContainer.remove_child(entry)
 		entry.queue_free()
+
+
+func create_nvl_menu_node():
+
+	if menu_node == null:
+		menu_node = NVLMenuNode.instantiate()
+	$PanelContainer/VBoxContainer.add_child(menu_node)
+	menu_node.hide()
+
+
+func post_choice_handler(choice : Dictionary):
+	$PanelContainer/VBoxContainer.remove_child(menu_node)
+	show_dialogue(choice["speaker"], choice["dialogue"], true, choice["args"])

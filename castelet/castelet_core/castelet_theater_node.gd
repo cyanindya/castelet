@@ -657,6 +657,8 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 
 	if menu.value != null:
 		_update_dialogue(menu.value)
+		$SubViewport/CasteletGUINode.hide_ctc_indicator()
+		await $SubViewport/CasteletGUINode.gui_timer.timeout
 
 	var choices = []
 	for choice in menu.choices:
@@ -669,9 +671,9 @@ func _show_menu(menu : CasteletSyntaxTree.MenuExpression):
 	$SubViewport/CasteletGUINode.show_choices(choices)
 
 	var next_tree = await $SubViewport/CasteletGUINode.choice_made
-	print_debug(next_tree)
+	# print_debug(next_tree)
 
-	self.load_script(next_tree)
+	self.load_script(next_tree[1])
 	await load_script_finished
 	self._tree.reset()
 

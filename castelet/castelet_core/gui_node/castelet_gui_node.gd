@@ -7,6 +7,7 @@
 extends CanvasLayer
 
 const ChoiceNode = preload("res://castelet/castelet_core/gui_node/choice_menu/castelet_choice_node.tscn")
+const NVLChoiceNode = preload("res://castelet/castelet_core/gui_node/choice_menu/castelet_nvl_choice_node.tscn")
 
 @onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
@@ -14,12 +15,16 @@ const ChoiceNode = preload("res://castelet/castelet_core/gui_node/choice_menu/ca
 @onready var _system_menu : CasteletSystemMenuNode = get_node("/root/CasteletSystemMenuNode")
 
 var nvl_enabled = false
+var gui_timer : Timer
 
-signal choice_made(sub)
+signal choice_made(choice, sub)
 signal gui_game_loaded
 
 
 func _ready():
+	gui_timer = Timer.new()
+	add_child(gui_timer)
+	
 	_game_manager.confirm.connect(_dialogue_node_interrupt)
 	_game_manager.backlog_update.connect(_on_backlog_updated)
 	_game_manager.backlog_purge.connect(_on_backlog_purged)
@@ -42,6 +47,12 @@ func _process(_delta):
 
 	if _game_manager.ffwd_active and not stop_ffwd_on_menu_show:
 		_dialogue_node_interrupt(true)
+
+
+func _exit_tree() -> void:
+	gui_timer.stop()
+	remove_child(gui_timer)
+	gui_timer.queue_free()
 
 
 # The function to show the dialogue. The process is as follows:
@@ -157,25 +168,55 @@ func _on_backlog_window_visibility_changed():
 
 
 func show_choices(choices := []):
-	# TODO: change to handle of possible NVL mode
+	
+	var menu_node
+
+	if not nvl_enabled:
+		menu_node = $MenuNode
+	else:
+		$NVLNode.create_nvl_menu_node()
+		menu_node = $NVLNode.menu_node
 	
 	for choice in choices:
 		# modify this if you want to make the choice still visible
 		# but still disabled when the conditions aren't fulfilled.
 		if choice["condition"] == true:
-			var choice_node = ChoiceNode.instantiate()
+			
+			var choice_node : Control
 
+			if not nvl_enabled:
+				choice_node = ChoiceNode.instantiate()
+			else:
+				choice_node = NVLChoiceNode.instantiate()
+			
 			choice_node.get_node("Button").text = choice["choice"]
 			choice_node.subevent_id = choice["sub"]
 			choice_node.subroutine.connect(_process_choice)
 
-			$MenuNode.add_child(choice_node)
+			menu_node.add_child(choice_node)
 
-	$MenuNode.show()
+	menu_node.show()
 
+
+func hide_ctc_indicator():
+	gui_timer.wait_time = 0.5
+	gui_timer.one_shot = true
+	
+	if nvl_enabled:
+		if $NVLNode.has_node("CTC_Indicator"):
+			await $NVLNode.dialogue_window_status_changed
+			gui_timer.start()
+			await gui_timer.timeout
+			$NVLNode/CTC_Indicator.hide()
+	else:
+		if $DialogueNode.has_node("CTC_Indicator"):
+			await $DialogueNode.dialogue_window_status_changed
+			gui_timer.start()
+			await gui_timer.timeout
+			$DialogueNode/CTC_Indicator.hide()
+	
 
 func _process_choice(choice : String, sub : String):
-	# TODO: change to handle of possible NVL mode
 	
 	var choice_dialogue = {
 		"speaker": "(Choice)",
@@ -183,21 +224,34 @@ func _process_choice(choice : String, sub : String):
 		"args" : [],
 	}
 
-	_game_manager.append_dialogue(choice_dialogue)
-	choice_made.emit(sub)
+	choice_made.emit(choice_dialogue, sub)
 
 
-func _on_choice_made(_sub : String):
-	# TODO: change to handle of possible NVL mode
+func _on_choice_made(choice : Dictionary, _sub : String):
+
+	var menu_node
+
+	if not nvl_enabled:
+		menu_node = $MenuNode
+	else:
+		menu_node = $NVLNode.menu_node
 	
-	var buttons = $MenuNode.get_children()
-	
+	var buttons = menu_node.get_children()
+
 	for button in buttons:
 		button.subroutine.disconnect(_process_choice)
-		$MenuNode.remove_child(button)
+		menu_node.remove_child(button)
 		button.queue_free()
+
+	# Add the chosen dialogue to backlog, and if NVL mode is active, show the chosen as dialogue
+	# entry.
+	_game_manager.append_dialogue(choice)
 	
-	$MenuNode.hide()
+	if not nvl_enabled:
+		menu_node.hide()
+	else:
+		menu_node = null
+		$NVLNode.post_choice_handler(choice)
 
 
 func _on_config_button_pressed() -> void:
