@@ -2,6 +2,7 @@ extends Control
 
 
 @onready var _state_manager : CasteletStateManager = get_node("/root/CasteletStateManager")
+@onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
 
 signal gui_save_confirmed
 signal gui_load_confirmed
@@ -13,6 +14,9 @@ func _ready() -> void:
 
 
 func save(save_name : String):
+
+	_game_manager.set_block_signals(true)
+
 	show()
 
 	$SystemPopupNode.yesno_popup(
@@ -21,6 +25,7 @@ func save(save_name : String):
 	var yn = await $SystemPopupNode.yesno
 	if yn != true:
 		hide()
+		_game_manager.set_block_signals(false)
 		return
 	
 	_state_manager.save_game_data(save_name)
@@ -36,11 +41,17 @@ func save(save_name : String):
 
 	if $CasteletSaveLoadContainerPage.visible:
 		$CasteletSaveLoadContainerPage.hide()
-
+	
 	hide()
+	
+	_game_manager.set_block_signals(false)
+
 
 
 func load_data(save_name : String):
+	
+	_game_manager.set_block_signals(true)
+
 	show()
 
 	$SystemPopupNode.yesno_popup(
@@ -49,6 +60,7 @@ func load_data(save_name : String):
 	var yn = await $SystemPopupNode.yesno
 	if yn != true:
 		hide()
+		_game_manager.set_block_signals(false)
 		return
 	
 	_state_manager.load_game_data(save_name)
@@ -68,6 +80,8 @@ func load_data(save_name : String):
 		$CasteletSaveLoadContainerPage.hide()
 
 	hide()
+
+	_game_manager.set_block_signals(false)
 
 
 func show_saveload_entries(saving : bool = true):

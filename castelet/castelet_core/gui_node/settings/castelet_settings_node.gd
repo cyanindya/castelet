@@ -22,6 +22,7 @@ extends Control
 @export var voice_volume_mute_button : Control
 
 @onready var _config_manager : CasteletConfigManager = get_node("/root/CasteletConfigManager")
+@onready var _game_manager : CasteletGameManager = get_node("/root/CasteletGameManager")
 
 signal set_fullscreen
 
@@ -87,11 +88,6 @@ func _initialize_settings_node() -> void:
 	voice_volume_mute_button.button_pressed = (
 		_config_manager.get_config(_config_manager.ConfigList.VOICE_MUTE)
 	)
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
 
 
 func resize_node(new_scale : float):
@@ -165,3 +161,8 @@ func _on_sfx_mute_button_toggled(toggled_on: bool) -> void:
 
 func _on_voice_mute_button_toggled(toggled_on: bool) -> void:
 	_config_manager.set_config(_config_manager.ConfigList.VOICE_MUTE, toggled_on)
+
+
+func _on_visibility_changed() -> void:
+	if _game_manager: # In case game manager is still null
+		_game_manager.set_block_signals(visible)
