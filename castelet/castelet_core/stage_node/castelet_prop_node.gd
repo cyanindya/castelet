@@ -81,7 +81,6 @@ func _on_texture_changed():
 ## for flipped display first. (e.g. different sprite due to asymmetrical hair)
 ## If not, simply flip the sprite.
 func _on_flip_toggled():
-	print_debug("flip state toggled to " + ("true" if _is_flipped else "false"))
 	
 	set_variant(_active_variant)
 	
