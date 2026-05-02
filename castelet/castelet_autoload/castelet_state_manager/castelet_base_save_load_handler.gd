@@ -52,6 +52,9 @@ func load_file():
 func _saveload_thread_process(saving : bool = true):
 	while true:
 		var status : int = 0
+
+		while _save_semaphore == null or _load_semaphore == null:
+			pass
 		
 		if saving:
 			_save_semaphore.wait()
