@@ -8,37 +8,39 @@ var raw_dict = {}
 
 
 func _save_thread_subprocess() -> int:
+	
+	## Clear any data from previous save attempts
 	raw_dict.clear()
-	sub_thread = Thread.new()
+	
+	## Create new mutex instance for this subprocess
 	sub_mutex = Mutex.new()
 
+	## Generate name and date of the save file
 	raw_dict["name"] = _save_file_name.split(".")[0]
-
 	var save_time = Time.get_datetime_string_from_system()
 	raw_dict["last_updated"] = save_time
 
-	sub_thread.start(_sub_save)
-	sub_thread.wait_to_finish()
+	## Generate content of the save data
+	## FIXME: image handling (likely due to its time taken, it caused race condition in Linux)
+	_create_save_dictionary(raw_dict)
+	print_debug(raw_dict)
 
+	## Lock access to the dict and begin writing to file.
 	sub_mutex.lock()
 	
-	# print_debug.call_deferred(raw_dict)
 	var data_to_save = var_to_bytes(raw_dict)
-	
 	var data_hex : String = data_to_save.hex_encode()
 	var data_hash = data_hex.sha256_text()
 
 	var file = FileAccess.open_compressed(_save_file_name, FileAccess.WRITE, FileAccess.COMPRESSION_GZIP)
-
 	file.store_string(data_hex)
 	file.store_string("+++")
 	file.store_string(data_hash)
-	
-
 	file.close()
-	sub_mutex.unlock()
 
 	print_debug.call_deferred(raw_dict.keys())
+
+	sub_mutex.unlock()
 
 	return 0
 
@@ -91,8 +93,3 @@ func _create_save_dictionary(save_dict : Dictionary):
 
 func _process_loaded_data(data : Dictionary):
 	pass
-
-func _sub_save():
-	sub_mutex.lock()
-	_create_save_dictionary(raw_dict)
-	sub_mutex.unlock()

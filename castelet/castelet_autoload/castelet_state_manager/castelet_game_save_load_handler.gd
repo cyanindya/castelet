@@ -53,9 +53,9 @@ func _create_save_dictionary(save_dict : Dictionary):
 
 	sub_mutex.lock()
 
-	var screenshot : Image = await _capture_viewport_screenshot()
+	# var screenshot : Image = await _capture_viewport_screenshot()
 	# print_debug.call_deferred(screenshot)
-	save_dict["screenshot"] = screenshot.save_png_to_buffer()
+	# save_dict["screenshot"] = screenshot.save_png_to_buffer()
 	
 	store_dict(_game_manager.get_all_variables(), "var", save_dict)
 	store_dict(_game_manager.get_script_data(), "script", save_dict)
